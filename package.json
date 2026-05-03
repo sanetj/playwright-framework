@@ -1,0 +1,31 @@
+{
+  "name": "playwright-framework",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-grade scalable Playwright + TypeScript automation framework",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test tests/ui",
+    "test:api": "playwright test tests/api",
+    "test:e2e": "playwright test tests/e2e",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:sanity": "playwright test --grep @sanity",
+    "test:regression": "playwright test --grep @regression",
+    "report": "playwright show-report reports/html",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.0",
+    "@types/node": "^22.9.0",
+    "dotenv": "^16.4.7",
+    "eslint": "^9.14.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.7.2"
+  }
+}
