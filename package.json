@@ -15,7 +15,9 @@
     "report": "playwright show-report reports/html",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "bdd:test": "cucumber-js --config cucumber.js",
+    "bdd:report": "ts-node tests/reporting/cucumber-report.ts"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -26,6 +28,15 @@
     "dotenv": "^16.4.7",
     "eslint": "^9.14.0",
     "prettier": "^3.3.3",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "@cucumber/cucumber": "^11.1.0",
+    "ts-node": "^10.9.2",
+    "cucumber-html-reporter": "^7.2.0"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^9.9.0",
+    "@axe-core/playwright": "^4.10.2",
+    "pg": "^8.13.1",
+    "ajv": "^8.17.1"
   }
 }

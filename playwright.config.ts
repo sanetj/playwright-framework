@@ -17,11 +17,12 @@ export default defineConfig({
     ['list'],
     ['html', { outputFolder: 'reports/html', open: 'never' }],
     ['junit', { outputFile: 'reports/junit/results.xml' }],
-    ['json', { outputFile: 'reports/json/results.json' }]
+    ['json', { outputFile: 'reports/json/results.json' }],
+    ['./src/analytics/flaky-test-analyzer.ts']
   ],
   use: {
     baseURL: env.appBaseUrl,
-    trace: env.traceMode,
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     headless: env.headless,

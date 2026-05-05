@@ -12,6 +12,16 @@ export default class CartPage extends BasePage {
     this.checkoutButton = this.page.getByRole('button', { name: 'Checkout' });
   }
 
+
+  public getProductLink(productName: string): Locator {
+    return this.page.getByRole('link', { name: productName, exact: true });
+  }
+
+  public getProductQuantityInput(productName: string): Locator {
+    const productRow = this.page.locator('tr', { has: this.getProductLink(productName) });
+    return productRow.locator('input.qty-input');
+  }
+
   async removeItem(productName: string): Promise<CartPage> {
     const productRow = this.page.locator('tr', { has: this.page.getByRole('link', { name: productName, exact: true }) });
     const removeCheckbox = productRow.locator('input[name^="removefromcart"]');
