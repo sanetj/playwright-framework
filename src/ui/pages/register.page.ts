@@ -33,6 +33,11 @@ export default class RegisterPage extends BasePage {
     this.registerButton = this.page.getByRole('button', { name: 'Register' });
   }
 
+  async navigateToRegister(): Promise<RegisterPage> {
+    await this.page.goto('/register', { waitUntil: 'domcontentloaded' });
+    return this;
+  }
+
   async registerNewUser(details: RegistrationDetails): Promise<HomePage> {
     if (details.gender === 'female') {
       await this.click(this.femaleGenderRadio, 'Female gender radio');

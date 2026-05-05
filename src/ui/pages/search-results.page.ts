@@ -10,6 +10,10 @@ export default class SearchResultsPage extends BasePage {
     this.productGrid = this.page.locator('.product-grid');
   }
 
+  public getProductItems(): Locator {
+    return this.page.locator('.product-item');
+  }
+
   async openProduct(productName: string): Promise<ProductPage> {
     const productLink = this.productGrid.getByRole('link', { name: productName, exact: true });
     await this.click(productLink, `Product link: ${productName}`);
