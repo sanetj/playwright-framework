@@ -1,71 +1,65 @@
 export const browserSensorScript = `(() => {
   if ((window).__intel) return;
+  const q = [];
   let seq = 0;
-  const queue = [];
-  const emit = (type, payload = {}, causeTraceId) => {
-    const evt = { type, ts: Date.now(), href: location.href, payload, traceId: 'tr_' + (++seq), causeTraceId };
-    queue.push(evt); if (queue.length > 2000) queue.shift();
+  const emit = (type, payload = {}) => {
+    const evt = { type, ts: Date.now(), href: location.href, payload, traceId: 't_' + (++seq) };
+    q.push(evt);
+    if (q.length > 1000) q.shift();
     window.__intelNodeHook__?.(evt);
   };
-  window.__intel = { emit, queue, version: '2.1.0' };
+  window.__intel = { emit, queue: q, version: '1.0.0' };
 
-  let mutationBuffer = [];
-  let mutationFlushTimer = null;
-  const flushMutations = () => {
-    if (!mutationBuffer.length) return;
-    const payload = { count: mutationBuffer.length, sample: mutationBuffer.slice(0, 12) };
-    mutationBuffer = [];
-    emit('mutation', payload);
+  const ofetch = window.fetch;
+  window.fetch = async (...args) => {
+    const [input, init] = args;
+    const method = (init && init.method) || 'GET';
+    const url = typeof input === 'string' ? input : input.url;
+    emit('fetch_request', { method, url });
+    try {
+      const res = await ofetch(...args);
+      emit('fetch_response', { method, url, status: res.status });
+      return res;
+    } catch (error) {
+      emit('runtime_exception', { source: 'fetch', message: String(error) });
+      throw error;
+    }
   };
 
-  const recordMutation = (muts) => {
-    for (const m of muts) mutationBuffer.push({ t: m.type, n: m.target?.nodeName || 'UNK' });
-    if (mutationBuffer.length >= 50) return flushMutations();
-    if (mutationFlushTimer) return;
-    mutationFlushTimer = setTimeout(() => { mutationFlushTimer = null; flushMutations(); }, 75);
+  const ox = XMLHttpRequest.prototype.open;
+  const os = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.open = function(method, url, ...rest) { this.__intel = { method, url }; return ox.call(this, method, url, ...rest); };
+  XMLHttpRequest.prototype.send = function(body) {
+    const meta = this.__intel || {};
+    emit('xhr_request', { method: meta.method || 'GET', url: meta.url || '', bodySize: body ? String(body).length : 0 });
+    this.addEventListener('load', () => emit('xhr_response', { method: meta.method || 'GET', url: meta.url || '', status: this.status }));
+    return os.call(this, body);
   };
 
-  const wrap = (obj, key, fn) => { const orig = obj[key]; obj[key] = fn(orig); };
-  wrap(window, 'fetch', (orig) => async (...args) => {
-    const [input, init] = args; const method = (init && init.method) || 'GET'; const url = typeof input === 'string' ? input : input.url; const start='tr_'+(seq+1);
-    emit('fetch_request', { method, url }, undefined);
-    try { const res = await orig(...args); emit('fetch_response', { method, url, status: res.status }, start); return res; }
-    catch (e) { emit('runtime_exception', { source: 'fetch', message: String(e) }, start); throw e; }
-  });
+  const hp = history.pushState; history.pushState = function(...a){ const r = hp.apply(this,a); emit('route_transition',{kind:'pushState',to:location.href}); return r; };
+  const hr = history.replaceState; history.replaceState = function(...a){ const r = hr.apply(this,a); emit('route_transition',{kind:'replaceState',to:location.href}); return r; };
+  window.addEventListener('popstate', () => emit('route_transition', { kind: 'popstate', to: location.href }));
 
-  const xo = XMLHttpRequest.prototype.open; const xs = XMLHttpRequest.prototype.send;
-  XMLHttpRequest.prototype.open = function(method, url, ...rest) { this.__intelMeta = { method, url }; return xo.call(this, method, url, ...rest); };
-  XMLHttpRequest.prototype.send = function(body) { const m = this.__intelMeta || {}; const tr='tr_'+(seq+1); emit('xhr_request', { method:m.method||'GET', url:m.url||'', bodySize: body?String(body).length:0 }); this.addEventListener('load',()=>emit('xhr_response',{ method:m.method||'GET', url:m.url||'', status:this.status }, tr)); return xs.call(this, body); };
+  const mo = new MutationObserver((muts) => emit('mutation', { count: muts.length, sample: muts.slice(0,3).map(m=>m.type) }));
+  mo.observe(document.documentElement, { subtree: true, childList: true, attributes: true });
 
-  ['pushState','replaceState'].forEach((name) => { const o = history[name]; history[name] = function(...a){ const r = o.apply(this, a); emit('route_transition',{kind:name,to:location.href}); return r; }; });
-  window.addEventListener('popstate', () => emit('route_transition',{kind:'popstate',to:location.href}));
-  window.addEventListener('hashchange', () => emit('route_transition',{kind:'hashchange',to:location.href}));
+  const wrapStore = (name) => {
+    const s = window[name]; const set = s.setItem.bind(s); const get = s.getItem.bind(s);
+    s.setItem = (k,v) => { emit('storage_access', { store: name, op: 'set', key: k }); return set(k,v); };
+    s.getItem = (k) => { emit('storage_access', { store: name, op: 'get', key: k }); return get(k); };
+  };
+  wrapStore('localStorage'); wrapStore('sessionStorage');
 
-  const mo = new MutationObserver(recordMutation);
-  mo.observe(document.documentElement, { childList:true, subtree:true, attributes:true });
+  const opm = window.postMessage; window.postMessage = function(message,targetOrigin,...rest){ emit('postMessage', { targetOrigin, preview: String(message).slice(0,100) }); return opm.call(this,message,targetOrigin,...rest); };
+  const OWS = window.WebSocket; window.WebSocket = function(url, protocols){ const ws = new OWS(url, protocols); emit('websocket_open', { url }); ws.addEventListener('message',(ev)=>emit('websocket_message',{url, size: String(ev.data).length})); return ws; };
 
-  ['localStorage','sessionStorage'].forEach((n) => {
-    const s = window[n]; const set=s.setItem.bind(s); const get=s.getItem.bind(s); const rem=s.removeItem.bind(s);
-    s.setItem=(k,v)=>{ emit('storage_access',{store:n,op:'set',key:k,size:String(v).length}); return set(k,v); };
-    s.getItem=(k)=>{ emit('storage_access',{store:n,op:'get',key:k}); return get(k); };
-    s.removeItem=(k)=>{ emit('storage_access',{store:n,op:'remove',key:k}); return rem(k); };
-  });
+  window.addEventListener('error', (e) => emit('runtime_exception', { message: e.message, source: 'window.onerror' }));
+  window.addEventListener('unhandledrejection', (e) => emit('runtime_exception', { source: 'unhandledrejection', reason: String(e.reason) }));
 
-  const idbOpen = indexedDB.open.bind(indexedDB); indexedDB.open = function(name, version){ emit('indexeddb_access',{op:'open',name,version}); return idbOpen(name, version); };
-  const cookieDesc = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie');
-  if (cookieDesc && cookieDesc.set && cookieDesc.get) Object.defineProperty(document, 'cookie', { configurable: true, get() { return cookieDesc.get.call(document); }, set(v) { emit('cookie_mutation', { preview: String(v).slice(0, 120) }); return cookieDesc.set.call(document, v); } });
+  const cerr = console.error.bind(console);
+  console.error = (...args) => { emit('console_error', { args: args.map(a => String(a).slice(0,120)) }); return cerr(...args); };
 
-  const oPM = window.postMessage.bind(window); window.postMessage = (message, targetOrigin, ...rest) => { emit('postMessage',{targetOrigin,preview:String(message).slice(0,80)}); return oPM(message,targetOrigin,...rest); };
-  const OWS = window.WebSocket; window.WebSocket = function(url, protocols){ const ws = new OWS(url, protocols); emit('websocket_open',{url}); ws.addEventListener('message',(ev)=>emit('websocket_message',{url,size:String(ev.data).length})); return ws; };
-  const OES = window.EventSource; if (OES) window.EventSource = function(url, config){ const es = new OES(url, config); emit('eventsource_open',{url}); es.addEventListener('message',(ev)=>emit('eventsource_message',{url,size:String(ev.data).length})); return es; };
-
-  const addEvt = EventTarget.prototype.addEventListener;
-  EventTarget.prototype.addEventListener = function(type, listener, options){ if (['click','submit','change','input'].includes(String(type))) emit('event_listener',{type,target:(this && this.constructor && this.constructor.name) || 'unknown'}); return addEvt.call(this, type, listener, options); };
-
-  document.addEventListener('submit', (e) => { const f=e.target; emit('form_submit',{action:f?.action||location.href,method:f?.method||'GET'}); }, true);
-  document.addEventListener('change', (e) => { const t=e.target; if (t?.type === 'file') emit('file_upload',{name:t?.name||'',count:t?.files?.length||0}); }, true);
-  window.addEventListener('securitypolicyviolation', (e) => emit('csp_violation',{directive:e.violatedDirective,blocked:e.blockedURI||''}));
-  window.addEventListener('error', (e) => emit('runtime_exception',{message:e.message,source:'error'}));
-  window.addEventListener('unhandledrejection', (e) => emit('runtime_exception',{message:String(e.reason),source:'unhandledrejection'}));
-  const cErr = console.error.bind(console); console.error = (...args) => { emit('console_error',{args:args.map(a=>String(a).slice(0,120))}); return cErr(...args); };
+  document.addEventListener('click', (e) => { const t = e.target; emit('click', { tag: t?.tagName, id: t?.id, text: t?.textContent?.slice(0,80) }); }, true);
+  document.addEventListener('input', (e) => { const t = e.target; emit('input', { tag: t?.tagName, name: t?.name, type: t?.type }); }, true);
+  document.addEventListener('submit', (e) => { const f = e.target; emit('form_submit', { action: f?.action || location.href, method: f?.method || 'GET' }); }, true);
 })();`;

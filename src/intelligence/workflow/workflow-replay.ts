@@ -1,33 +1,19 @@
 import { InferredWorkflow } from './workflow-engine';
 
-export interface ReplayStep { index: number; type: string; route: string; payloadHint: string; }
+export interface ReplayStep { type: string; route: string; payloadHint: string; }
 
 export class WorkflowReplay {
   public toReplayChain(workflow: InferredWorkflow): ReplayStep[] {
-    const steps: ReplayStep[] = workflow.chain.map((step, index) => {
+    return workflow.chain.map((step) => {
       const [type, route] = step.split('@');
-      return { index, type, route, payloadHint: `${type}:${route}` };
+      return { type, route, payloadHint: `${type}:${route}` };
     });
-    return this.suppressDuplicates(steps);
   }
 
   public replayScore(workflow: InferredWorkflow): number {
     const determinism = Math.max(0, 1 - workflow.hiddenSteps.length * 0.1);
     const failures = workflow.failureStates.length > 0 ? 0.8 : 1;
-    const lengthFactor = Math.min(1, Math.max(0.35, workflow.chain.length / 8));
-    const uniquenessFactor = this.toReplayChain(workflow).length / Math.max(1, workflow.chain.length);
-    return Number((determinism * failures * lengthFactor * uniquenessFactor * 100).toFixed(2));
-  }
-
-  private suppressDuplicates(steps: ReplayStep[]): ReplayStep[] {
-    const out: ReplayStep[] = [];
-    let last = '';
-    for (const s of steps) {
-      const sig = `${s.type}@${s.route}`;
-      if (sig === last) continue;
-      out.push(s);
-      last = sig;
-    }
-    return out;
+    const lengthFactor = Math.min(1, workflow.chain.length / 8);
+    return Number((determinism * failures * lengthFactor * 100).toFixed(2));
   }
 }
