@@ -1,0 +1,22 @@
+{
+  "version": "5.2.0",
+  "canonical_authorities": {
+    "event_model": "src/intelligence/events/normalized-event.ts",
+    "event_bus": "src/intelligence/events/normalized-event-bus.ts",
+    "graph": "src/intelligence/graph/action-graph.ts",
+    "workflow": "src/intelligence/workflow/workflow-engine.ts",
+    "replay": "src/intelligence/workflow/workflow-replay.ts",
+    "kernel": "src/intelligence/kernel/intelligence-kernel.ts",
+    "signal_governance": "src/intelligence/governance/signal-governance.ts"
+  },
+  "adapter_surfaces": [
+    "src/intel/core/intelligence/normalized-event-bus.ts",
+    "src/intel/core/intelligence/action-graph.ts",
+    "src/intel/core/intelligence/workflow-engine.ts"
+  ],
+  "deprecated_candidates": [
+    "src/intel/core/intelligence/normalized-event-bus.ts",
+    "src/intel/core/intelligence/action-graph.ts",
+    "src/intel/core/intelligence/workflow-engine.ts"
+  ]
+}
