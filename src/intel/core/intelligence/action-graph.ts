@@ -23,8 +23,7 @@ export class ActionGraph {
   private adjacency = new Map<string, ActionGraphEdge[]>();
 
   public addNode(node: ActionGraphNode): void {
-    const id = node.id.trim();
-    if (!this.nodes.has(id)) this.nodes.set(id, { ...node, id });
+    if (!this.nodes.has(node.id)) this.nodes.set(node.id, node);
   }
 
   public addEdge(edge: Omit<ActionGraphEdge, 'weight'> & { weight?: number }): void {
@@ -32,10 +31,10 @@ export class ActionGraph {
     const existing = (this.adjacency.get(edge.from) ?? []).find((e) => e.to === edge.to && e.type === edge.type);
     if (existing) {
       existing.weight += normalized.weight;
-      existing.evidence = [...new Set([...existing.evidence, ...normalized.evidence])];
+      existing.evidence.push(...normalized.evidence);
       return;
     }
-    if (edge.from !== edge.to) this.adjacency.set(edge.from, [...(this.adjacency.get(edge.from) ?? []), normalized]);
+    this.adjacency.set(edge.from, [...(this.adjacency.get(edge.from) ?? []), normalized]);
   }
 
   public ingest(events: NormalizedEvent[]): void {
@@ -104,8 +103,6 @@ export class ActionGraph {
   }
 
   public toJSON(): { nodes: ActionGraphNode[]; edges: ActionGraphEdge[] } {
-    const nodes = [...this.nodes.values()].sort((a, b) => a.id.localeCompare(b.id));
-    const edges = [...this.adjacency.values()].flat().sort((a, b) => `${a.from}|${a.type}|${a.to}`.localeCompare(`${b.from}|${b.type}|${b.to}`));
-    return { nodes, edges };
+    return { nodes: [...this.nodes.values()], edges: [...this.adjacency.values()].flat() };
   }
 }

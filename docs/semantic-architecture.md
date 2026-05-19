@@ -1,60 +1,36 @@
-# Semantic Architecture Contract (Phase 5)
+# Semantic Architecture Contract
 
-## Canonical Ownership
-- Canonical event ontology, telemetry routing, and lineage contracts are owned by `src/intelligence/events/*`.
-- `src/intel/core/intelligence/*` is a compatibility consumer surface and should converge to canonical contracts incrementally.
+## Canonical Terminology
+- **interaction**: a contiguous user/runtime operation chain identified by `chainId`.
+- **action**: an explicit interaction event (`click`, `input`, `form_submit`) that may trigger transitions.
+- **transition**: a state or route change between two observable runtime conditions.
+- **state**: a SPA runtime condition represented by a state signature (`beforeState`/`afterState`).
+- **signature**: deterministic state fingerprint generated from runtime/UI features.
+- **route**: normalized URL path context (`route.path`) at event time.
+- **workflow**: ordered transition/action sequence over one or more interactions.
+- **graph edge**: directional relation between nodes with typed semantics (`triggers`, `mutates`, `unlocks`, `transitions_to`, `authenticates`, `escalates`, `depends_on`).
 
-## Core Terms
-- **Runtime Observation**: Raw captured browser/runtime signal.
-- **Canonical Event**: Immutable normalized observation with deterministic identity (`id`), ordering (`ts`,`seq`), lineage (`parentEventId`,`chainId`), and tier.
-- **Interaction**: Contiguous behavior chain represented by `chainId`.
-- **Transition**: State/route change linking `beforeState` and `afterState`.
-- **Workflow**: Ordered transition/action sequence inferred from canonical events.
-- **Replay Chain**: Deduplicated deterministic step list reconstructed from workflow and event lineage.
-- **Graph Node/Edge**: Stable semantic relationship artifacts derived from canonical events.
-- **Trust Boundary**: Role/auth/capability boundary where governance policy applies.
+## Event Lifecycle
+1. `captured` - emitted by runtime instrumentation.
+2. `normalized` - canonical type and routing fields assigned.
+3. `deduplicated` - duplicate fingerprints suppressed.
+4. `grouped` - interaction chain grouping applied.
+5. `replay_ready` - chain validated for deterministic replay.
 
-## Event Lifecycle (Append-only)
-`captured -> normalized -> deduplicated -> grouped -> replay_ready`
+## Telemetry Tier Contract
+- **CRITICAL**: security-impactful and auth-critical signals (`runtime_exception`, `console_error`, `csp_violation`, `auth_change`).
+- **WORKFLOW**: interaction-driving events (`click`, `input`, `form_submit`, route/modal transitions).
+- **STRUCTURAL**: system behavior and communication (`navigation`, API request/response, websocket/SSE).
+- **DEBUG**: high-volume diagnostics (`mutation`, storage/cookie/indexeddb operations).
+- **NOISE**: residual low-value telemetry.
 
-## Telemetry Tiers
-- `CRITICAL`: auth/security/stability-risk signals
-- `WORKFLOW`: route/modal transition signals
-- `INTERACTION`: user/runtime action signals
-- `STRUCTURAL`: navigation/network/streaming structure signals
-- `DIAGNOSTIC`: high-volume instrumentation signals
-- `NOISE`: low-value residual signals
+## Determinism Rules
+- Event ordering is `ts` then `seq`.
+- Per-session timestamps are monotonic (clamped forward).
+- Event IDs are hash-derived from trace/session/type/path/time context.
+- Parent lineage is trace-linked first, then session-last fallback.
 
-## Dependency Direction
-Runtime Capture -> Canonical Events -> State/Graph/Semantic Inference -> Replay Reconstruction -> Export/Summarization
-
-Rules:
-- Runtime collects only.
-- Semantic layers infer only.
-- Replay reconstructs only.
-- Export summarizes only.
-
-## Replay Assumptions
-- Replay is state-transition-oriented, not selector-coordinates-oriented.
-- Ordering is deterministic by (`ts`,`seq`) with monotonic per-session timestamp clamping.
-- Duplicate transitions should be suppressed before replay scoring.
-- Partial telemetry is tolerated by lineage fallbacks (`trace parent` then `session last event`).
-
-## Graph Assumptions
-- Node IDs are normalized before insertion and lookup.
-- Edge identity is deterministic by (`from`,`kind`,`to`,`layer`).
-- Duplicate edge evidence must be deduplicated.
-- Serialized graph output must be deterministically ordered.
-
-## Convergence Roadmap
-1. Adopt canonical `src/intelligence/events` contracts at ingestion boundaries.
-2. Keep `src/intel/core/intelligence` adapters thin and read-only.
-3. Migrate workflow/graph/replay consumers to canonical event chain semantics.
-4. Deprecate duplicate event ontologies once all consumers are migrated.
-
-## Duplication Hotspots
-- `src/intel/core/intelligence/normalized-event-bus.ts` vs `src/intelligence/events/normalized-event-bus.ts`
-- `src/intel/core/intelligence/action-graph.ts` vs `src/intelligence/graph/action-graph.ts`
-- `src/intel/core/intelligence/workflow-engine.ts` vs `src/intelligence/workflow/workflow-engine.ts`
-
-Canonical direction remains toward `src/intelligence/*` as semantic system-of-record.
+## Convergence Hotspots
+- Legacy overlap exists between `src/intel/core/intelligence/*` and `src/intelligence/*` event/graph/workflow modules.
+- Canonical runtime intelligence should consume `src/intelligence/events/normalized-event.ts` contracts.
+- Future convergence path: adapt legacy `src/intel/core/intelligence` readers via thin translation adapters to canonical event model.
