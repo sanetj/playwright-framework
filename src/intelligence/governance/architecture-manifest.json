@@ -86,6 +86,34 @@
     "causality-preserves-replay": {
       "authority": "src/intelligence/causality/causal-cognition-graph.ts",
       "message": "Cognitive causality graphs must preserve references back to the replay ActionGraph."
+    },
+    "perturbation-requires-policy-gates": {
+      "authority": "src/intelligence/perturbation/governed-perturbation.ts",
+      "message": "All replay perturbation must route through explicit TargetPolicyProfile boundaries and SafePerturbationBoundaries."
+    },
+    "exploit-claims-require-evidence": {
+      "authority": "src/intelligence/vulnerabilities/high-roi-targets.ts",
+      "message": "All exploitability claims must remain evidence-backed with deterministic replay lineage."
+    },
+    "artifacts-require-replay-refs": {
+      "authority": "src/intelligence/artifacts/investigation-bundle.ts",
+      "message": "Investigation bundles and artifacts MUST include references back to immutable replay traces."
+    },
+    "no-autonomous-destructive-execution": {
+      "authority": "src/intelligence/governance/target-policy-profile.ts",
+      "message": "Autonomous destruction or fuzzing of live data is strictly prohibited. Bounded replay perturbation only."
+    },
+    "differentials-preserve-tenant-isolation": {
+      "authority": "src/intelligence/differentials/role-differential.ts",
+      "message": "All multi-role differential analysis must preserve strict tenant data isolation in its artifacts."
+    },
+    "immutable-replay-telemetry": {
+      "authority": "src/intelligence/governance/replay-safety.ts",
+      "message": "Replay telemetry is strictly immutable. Perturbations only exist as explicit branches, not overwrites."
+    },
+    "sidecar-cannot-mutate-authorities": {
+      "authority": "src/intelligence/governance/architecture-manifest.json",
+      "message": "AI/sidecar cognition layers cannot mutate canonical runtime state or bypass execution policy authorities."
     }
   }
 }
