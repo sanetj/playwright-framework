@@ -19,6 +19,11 @@ export interface KernelRunResult {
   overallConfidence: number;
 }
 
+/**
+ * @canonical
+ * The definitive orchestration authority for the Browser Runtime Intelligence Platform.
+ * DO NOT create parallel orchestrators. All intelligence systems must register here.
+ */
 export class IntelligenceKernel {
   private analyzers: KernelAnalyzer[] = [];
 

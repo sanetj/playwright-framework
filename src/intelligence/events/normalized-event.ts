@@ -29,18 +29,29 @@ export interface RouteContext {
   title?: string;
 }
 
-export interface NormalizedEvent<T = Record<string, unknown>> {
+export type TelemetryTier = 'CRITICAL' | 'WORKFLOW' | 'INTERACTION' | 'STRUCTURAL' | 'DIAGNOSTIC' | 'NOISE';
+
+/**
+ * @canonical
+ * The definitive telemetry contract for the Browser Runtime Intelligence Platform.
+ */
+export interface CanonicalRuntimeEvent<T = Record<string, unknown>> {
   id: string;
   type: IntelEventType;
   ts: number;
+  tier: TelemetryTier;
   actor: ActorContext;
   route: RouteContext;
   parentEventId?: string;
   causes: string[];
+  chainId?: string;
+  seq?: number;
   beforeState?: string;
   afterState?: string;
   payload: T;
 }
+
+export type NormalizedEvent<T = Record<string, unknown>> = CanonicalRuntimeEvent<T>;
 
 export interface RawRuntimeEvent {
   type: string;

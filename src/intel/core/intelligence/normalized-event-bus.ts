@@ -34,6 +34,11 @@ export interface EventTimeline {
   causality: Map<string, string[]>;
 }
 
+/**
+ * @deprecated Legacy Subsystem
+ * @see src/intelligence/events/normalized-event-bus.ts for the canonical event bus.
+ * This class remains for backward compatibility. New systems MUST NOT use this bus.
+ */
 export class NormalizedEventBus {
   private events: NormalizedEvent[] = [];
   private lastEventByScope = new Map<string, string>();

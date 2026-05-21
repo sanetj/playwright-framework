@@ -18,6 +18,11 @@ export interface ActionGraphEdge {
   evidence: string[];
 }
 
+/**
+ * @deprecated Legacy Subsystem
+ * @see src/intelligence/graph/action-graph.ts for the canonical Semantic Graph.
+ * This class remains for backward compatibility and functions as an adapter.
+ */
 export class ActionGraph {
   private nodes = new Map<string, ActionGraphNode>();
   private adjacency = new Map<string, ActionGraphEdge[]>();
