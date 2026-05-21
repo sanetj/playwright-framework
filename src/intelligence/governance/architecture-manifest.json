@@ -107,7 +107,7 @@
       "authority": "src/intelligence/differentials/role-differential.ts",
       "message": "All multi-role differential analysis must preserve strict tenant data isolation in its artifacts."
     },
-    "immutable-replay-telemetry": {
+    "replay-perturbation-is-branch-only": {
       "authority": "src/intelligence/governance/replay-safety.ts",
       "message": "Replay telemetry is strictly immutable. Perturbations only exist as explicit branches, not overwrites."
     },
