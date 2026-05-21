@@ -122,6 +122,14 @@
     "all-validation-requires-replay-refs": {
       "authority": "src/intelligence/investigation/exploit-validation.ts",
       "message": "All exploit validation claims must carry deterministic replay evidence. No heuristic-only exploit claims."
+    },
+    "runtime-execution-requires-policy-gateway": {
+      "authority": "src/runtime/governance/runtime-policy-gateway.ts",
+      "message": "All replay and perturbation execution MUST pass through the RuntimePolicyGateway. Direct adapter execution is forbidden."
+    },
+    "canonical-evidence-decouples-adapters": {
+      "authority": "src/runtime/evidence/canonical-http-evidence.ts",
+      "message": "Playwright events must not become canonical authority. All runtime evidence must be decoupled into canonical schemas."
     }
   }
 }

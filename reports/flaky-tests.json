@@ -1,0 +1,20 @@
+[
+  {
+    "test": " > firefox > integration/investigation-pipeline.spec.ts > InvestigationPipeline E2E > should execute full differential pipeline and identify admin endpoint",
+    "retries": 0,
+    "duration": 323,
+    "unstable": false
+  },
+  {
+    "test": " > chromium > integration/investigation-pipeline.spec.ts > InvestigationPipeline E2E > should execute full differential pipeline and identify admin endpoint",
+    "retries": 0,
+    "duration": 328,
+    "unstable": false
+  },
+  {
+    "test": " > webkit > integration/investigation-pipeline.spec.ts > InvestigationPipeline E2E > should execute full differential pipeline and identify admin endpoint",
+    "retries": 0,
+    "duration": 400,
+    "unstable": false
+  }
+]
