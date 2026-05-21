@@ -62,6 +62,30 @@
     "mandatory-confidence": {
       "authority": "src/intelligence/uncertainty/confidence-propagation.ts",
       "message": "Every derived assertion must include confidence metadata."
+    },
+    "no-ai-self-validation": {
+      "authority": "src/intelligence/epistemics/epistemic-state.ts",
+      "message": "AI cannot validate AI-derived evidence. Hypotheses cannot self-stabilize or self-promote to PROVEN."
+    },
+    "deterministic-proof-supremacy": {
+      "authority": "src/intelligence/epistemics/epistemic-state.ts",
+      "message": "Deterministic replay is the sole authority for PROVEN or FALSIFIED epistemic states."
+    },
+    "influence-lineage-required": {
+      "authority": "src/intelligence/epistemics/epistemic-influence.ts",
+      "message": "All epistemic influence edges must preserve evidence lineage references to raw telemetry."
+    },
+    "no-circular-cognition": {
+      "authority": "src/intelligence/propagation/cognitive-propagation.ts",
+      "message": "Circular cognition propagation and recursive reasoning loops are explicitly prohibited."
+    },
+    "explainable-cascades": {
+      "authority": "src/intelligence/propagation/cognitive-propagation.ts",
+      "message": "Confidence decay cascades must remain explainable and bounded by propagation policies."
+    },
+    "causality-preserves-replay": {
+      "authority": "src/intelligence/causality/causal-cognition-graph.ts",
+      "message": "Cognitive causality graphs must preserve references back to the replay ActionGraph."
     }
   }
 }
