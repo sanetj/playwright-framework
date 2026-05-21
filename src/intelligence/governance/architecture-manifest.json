@@ -38,6 +38,30 @@
     "immutable-replay-telemetry": {
       "authority": "src/intelligence/replay/cognition-replay.ts",
       "message": "Replay telemetry is strictly immutable. No alternate replay systems are permitted."
+    },
+    "immutable-contradictions": {
+      "authority": "src/intelligence/contradictions/contradiction.ts",
+      "message": "Contradictions are immutable historical entities. They can change resolution state but must never be deleted."
+    },
+    "trust-lineage-required": {
+      "authority": "src/intelligence/trust/trust-composition.ts",
+      "message": "All trust assertions must include evidence lineage references. Opaque trust assertions are forbidden."
+    },
+    "probabilistic-hypotheses": {
+      "authority": "src/intelligence/hypotheses/hypothesis-runtime.ts",
+      "message": "Hypotheses are investigable claims, not deterministic truth. They must remain probabilistic."
+    },
+    "explainable-prioritization": {
+      "authority": "src/intelligence/prioritization/investigation-priority.ts",
+      "message": "All prioritization scores must include contributing signals and evidence lineage. Opaque AI ranking is forbidden."
+    },
+    "mandatory-temporal-validity": {
+      "authority": "src/intelligence/temporal/temporal-reasoning.ts",
+      "message": "All derived cognition must declare temporal validity (validFrom, validTo)."
+    },
+    "mandatory-confidence": {
+      "authority": "src/intelligence/uncertainty/confidence-propagation.ts",
+      "message": "Every derived assertion must include confidence metadata."
     }
   }
 }
