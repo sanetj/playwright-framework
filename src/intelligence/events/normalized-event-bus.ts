@@ -1,6 +1,10 @@
 import { createHash } from 'node:crypto';
 import { IntelEventType, NormalizedEvent, RawRuntimeEvent } from './normalized-event';
 
+/**
+ * @canonical
+ * The definitive event bus for the Browser Runtime Intelligence Platform.
+ */
 export class NormalizedEventBus {
   private events: NormalizedEvent[] = [];
   private lastBySession = new Map<string, string>();
@@ -16,6 +20,7 @@ export class NormalizedEventBus {
       id,
       type,
       ts: raw.ts,
+      tier: this.mapTier(type),
       actor,
       route: { url: raw.href, path },
       parentEventId,
@@ -56,6 +61,27 @@ export class NormalizedEventBus {
     if (t.includes('console_error')) return 'console_error';
     if (t.includes('runtime_exception')) return 'runtime_exception';
     return 'navigation';
+  }
+
+  private mapTier(type: IntelEventType): NormalizedEvent['tier'] {
+    switch (type) {
+      case 'runtime_exception':
+      case 'console_error': return 'CRITICAL';
+      case 'form_submit':
+      case 'file_upload':
+      case 'auth_change': return 'WORKFLOW';
+      case 'click':
+      case 'input':
+      case 'modal_open':
+      case 'modal_close': return 'INTERACTION';
+      case 'navigation':
+      case 'route_transition': return 'STRUCTURAL';
+      case 'api_request':
+      case 'api_response':
+      case 'websocket':
+      case 'storage_access': return 'DIAGNOSTIC';
+      default: return 'NOISE';
+    }
   }
 
   private safePath(url: string): string {

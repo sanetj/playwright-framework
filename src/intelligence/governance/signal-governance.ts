@@ -35,8 +35,9 @@ export class SignalGovernance {
       const entropy = this.entropy(JSON.stringify(event.payload));
       const relevance = Number(((tierRank[event.tier] / 6) * 0.7 + Math.min(entropy / 4, 1) * 0.3).toFixed(3));
 
-      const chainCount = (chainCounts.get(event.chainId) ?? 0) + 1;
-      chainCounts.set(event.chainId, chainCount);
+      const chainId = event.chainId ?? 'unknown';
+      const chainCount = (chainCounts.get(chainId) ?? 0) + 1;
+      chainCounts.set(chainId, chainCount);
 
       if (tierRank[event.tier] < minRank) {
         return { event, relevance, entropy, kept: false, reason: 'below-min-tier' };

@@ -31,9 +31,14 @@ export interface ReplayConfidenceModel {
   overall: number;
 }
 
+/**
+ * @canonical
+ * The definitive semantic replay authority. Moves beyond interaction replay
+ * toward asynchronous, non-deterministic semantic replay.
+ */
 export class ReplayDeterminismLayer {
   public snapshot(events: NormalizedEvent[], chainId: string): ReplaySnapshot {
-    const chainEvents = events.filter((e) => e.chainId === chainId).sort((a, b) => (a.ts - b.ts) || (a.seq - b.seq));
+    const chainEvents = events.filter((e) => e.chainId === chainId).sort((a, b) => (a.ts - b.ts) || ((a.seq ?? 0) - (b.seq ?? 0)));
     return {
       sessionId: chainEvents[0]?.actor.sessionId ?? 'unknown',
       chainId,

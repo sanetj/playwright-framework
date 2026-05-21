@@ -3,6 +3,10 @@ export type GraphLayer = 'structural' | 'behavioral' | 'security' | 'semantic';
 export interface GraphNode { id: string; layer: GraphLayer; kind: string; label: string; attrs: Record<string, unknown>; }
 export interface GraphEdge { from: string; to: string; kind: string; weight: number; evidence: string[]; layer: GraphLayer; }
 
+/**
+ * @canonical
+ * The definitive Semantic Graph authority for the Browser Runtime Intelligence Platform.
+ */
 export class ActionGraph {
   private nodes = new Map<string, GraphNode>();
   private adjacency = new Map<string, GraphEdge[]>();

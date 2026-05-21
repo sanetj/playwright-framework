@@ -1,0 +1,19 @@
+{
+  "name": "@playwright-intelligence/kernel",
+  "version": "1.0.0",
+  "description": "Browser Runtime Intelligence Platform Governance Manifest",
+  "rules": {
+    "no-legacy-imports": {
+      "forbidden": ["src/intel/core/intelligence/*"],
+      "message": "Do not import legacy subsystems. Use src/intelligence/* for canonical authorities."
+    },
+    "single-orchestrator": {
+      "authority": "src/intelligence/kernel/intelligence-kernel.ts",
+      "message": "All analyzers and inference engines must register via the IntelligenceKernel."
+    },
+    "canonical-events": {
+      "authority": "src/intelligence/events/normalized-event-bus.ts",
+      "message": "Use CanonicalRuntimeEvent for all telemetry payloads."
+    }
+  }
+}
