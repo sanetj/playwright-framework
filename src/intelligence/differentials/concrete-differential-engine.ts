@@ -11,8 +11,17 @@ export interface DifferentialComparisonResult {
   exclusiveToComparison: GraphNode[];
   exclusiveToBase: GraphNode[];
   
-  // APIs reachable by both
+  // APIs reachable by both with similar response codes
   sharedReachability: GraphNode[];
+
+  // APIs reachable by both but with different status codes (e.g., 200 vs 403)
+  statusContradictions: Array<{
+    nodeId: string;
+    baseStatus: number;
+    comparisonStatus: number;
+    baseNode: GraphNode;
+    comparisonNode: GraphNode;
+  }>;
 }
 
 export class ConcreteDifferentialEngine {
@@ -27,13 +36,28 @@ export class ConcreteDifferentialEngine {
     const exclusiveToBase: GraphNode[] = [];
     const exclusiveToComparison: GraphNode[] = [];
     const sharedReachability: GraphNode[] = [];
+    const statusContradictions = [];
 
     // Find nodes in base
-    for (const [id, node] of baseNodes) {
+    for (const [id, baseNode] of baseNodes) {
       if (compNodes.has(id)) {
-        sharedReachability.push(node);
+        const compNode = compNodes.get(id)!;
+        const baseStatus = (baseNode.attrs.status as number) || 0;
+        const compStatus = (compNode.attrs.status as number) || 0;
+
+        if (baseStatus !== compStatus && baseStatus !== 0 && compStatus !== 0) {
+          statusContradictions.push({
+            nodeId: id,
+            baseStatus,
+            comparisonStatus: compStatus,
+            baseNode,
+            comparisonNode: compNode
+          });
+        } else {
+          sharedReachability.push(baseNode);
+        }
       } else {
-        exclusiveToBase.push(node);
+        exclusiveToBase.push(baseNode);
       }
     }
 
@@ -49,7 +73,8 @@ export class ConcreteDifferentialEngine {
       comparisonRoleId,
       exclusiveToBase,
       exclusiveToComparison,
-      sharedReachability
+      sharedReachability,
+      statusContradictions
     };
   }
 
@@ -65,3 +90,4 @@ export class ConcreteDifferentialEngine {
     return result.sharedReachability.filter(node => knownHighPrivilegeApis.has(node.id));
   }
 }
+

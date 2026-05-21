@@ -8,16 +8,16 @@ import { WorkflowCanonicalizer } from '../workflows/workflow-canonicalizer';
 import { ConcreteDifferentialEngine, DifferentialComparisonResult } from '../differentials/concrete-differential-engine';
 import { AiBundleCompressor, InvestigationBundle } from '../artifacts/ai-bundle-compressor';
 import { RuntimeRoleProfile } from '../runtime/multi-session-runtime';
+import { GovernedCrawlEngine } from '../../runtime/execution/governed-crawl-engine';
+import { EntityOwnershipRegistry } from '../state/entity-ownership-registry';
+import { LivePerturbationInterceptor } from '../../runtime/instrumentation/live-perturbation-interceptor';
 
 export class InvestigationPipeline implements NetworkEvidenceHandler {
   private runtime: PlaywrightMultiSessionRuntime;
   private exchanges: CanonicalHttpExchange[] = [];
   private lineages: LineageExtractionResult[] = [];
+  private ownershipRegistry = new EntityOwnershipRegistry();
   
-  // Temporary storage for building ActionGraphs from captured exchanges
-  private capturedNodesBase = new Map<string, GraphNode>();
-  private capturedNodesComp = new Map<string, GraphNode>();
-
   constructor(private targetProfile: TargetSafetyProfile, private targetUrl: string) {
     this.runtime = new PlaywrightMultiSessionRuntime(targetProfile);
   }
@@ -39,26 +39,17 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
     await baseInterceptor.attach(baseCtx);
     await compInterceptor.attach(compCtx);
 
-    // 3. Execute Workflow (Simulated here. In reality, a playwright script would drive the page)
-    const basePage = await baseCtx.newPage();
-    const compPage = await compCtx.newPage();
+    // 3. Execute Workflow via Crawler
+    const baseCrawler = new GovernedCrawlEngine();
+    
+    console.log(`Crawling target as ${baseRole.roleName}...`);
+    await baseCrawler.crawl(baseCtx, this.targetUrl);
+    
+    const compCrawler = new GovernedCrawlEngine();
+    console.log(`Crawling target as ${compRole.roleName}...`);
+    await compCrawler.crawl(compCtx, this.targetUrl);
 
-    console.log(`Navigating both roles to ${this.targetUrl}...`);
-    await Promise.all([
-      basePage.goto(this.targetUrl),
-      compPage.goto(this.targetUrl)
-    ]);
-
-    // Explicitly trigger the fetches in the page context and wait for them to finish
-    const runFetches = async () => {
-      await fetch('/api/user/me');
-      await fetch('/api/admin/settings');
-    };
-
-    await Promise.all([
-      basePage.evaluate(runFetches),
-      compPage.evaluate(runFetches)
-    ]);
+    // 4. Build Graphs
     const baseGraph = this.buildGraphFromExchanges(baseSession.sessionId);
     const compGraph = this.buildGraphFromExchanges(compSession.sessionId);
 
@@ -67,33 +58,52 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
     const canonBase = canonicalizer.canonicalize(baseGraph);
     const canonComp = canonicalizer.canonicalize(compGraph);
 
-    // 6. Differential Analysis
+    // 6. Differential Analysis (Response Aware)
     const engine = new ConcreteDifferentialEngine();
     const diffResult = engine.compare(canonBase, canonComp, baseRole.roleId, compRole.roleId);
 
-    // 7. Bundle & Compress
+    // 7. Live Perturbation Probing (Exploit Validation)
+    // If we detected a status contradiction (e.g. both got 200, or one 403 one 200), we could probe.
+    // In a full implementation, the logic to generate ReplayPerturbationEnvelopes would go here.
+    // We attach the live interceptor to a fresh context to validate.
+    // For now, we just wire the hook.
+    const liveInterceptor = new LivePerturbationInterceptor();
+    
+    // Hack to get a playwright browser reference if needed to launch a new context,
+    // though PlaywrightMultiSessionRuntime doesn't expose browser directly easily. 
+    // We can just rely on the existing runtime or manually spawn. 
+    // We'll skip actual live browser perturbation in this E2E stub since we don't have envelope generators yet.
+
+    // 8. Bundle & Compress
     const compressor = new AiBundleCompressor();
     const bundle = compressor.compress(this.targetUrl, diffResult, this.exchanges, this.lineages);
 
-    // 8. Cleanup
+    // 9. Cleanup
     await this.runtime.terminateAll();
 
     console.log(`Investigation Complete. Found ${bundle.differentialAnalysis.findings.length} findings.`);
     return bundle;
   }
 
+  public getRuntime(): PlaywrightMultiSessionRuntime {
+    return this.runtime;
+  }
+
   // Implementation of NetworkEvidenceHandler
   public onExchangeCaptured(exchange: CanonicalHttpExchange, lineage: LineageExtractionResult): void {
     this.exchanges.push(exchange);
     this.lineages.push(lineage);
+    this.ownershipRegistry.registerLineage(exchange.sessionId, lineage, exchange.exchangeId);
   }
 
   private buildGraphFromExchanges(sessionId: string): ActionGraph {
     const graph = new ActionGraph();
     const sessionExchanges = this.exchanges.filter(ex => ex.sessionId === sessionId);
     
+    console.log(`Building graph for session ${sessionId}, found ${sessionExchanges.length} exchanges.`);
     for (const ex of sessionExchanges) {
       const apiNodeId = `api:${ex.request.method}:${ex.request.url}`;
+      console.log(`Added node: ${apiNodeId} with status ${ex.response?.status}`);
       graph.addNode({
         id: apiNodeId,
         layer: 'structural',
@@ -105,3 +115,4 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
     return graph;
   }
 }
+

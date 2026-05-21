@@ -9,6 +9,7 @@ import {
 import { RuntimePolicyGateway } from '../governance/runtime-policy-gateway';
 import { ReplayExecutionIntent } from '../safety/replay-safety-classifier';
 import { TargetSafetyProfile } from '../../intelligence/perturbation/probe-safety';
+import { CredentialVault } from './credential-vault';
 
 export class PlaywrightMultiSessionRuntime implements MultiSessionRuntime {
   public orchestrationId: string = `orch_${Date.now()}`;
@@ -19,8 +20,15 @@ export class PlaywrightMultiSessionRuntime implements MultiSessionRuntime {
   private playwrightContexts = new Map<string, BrowserContext>();
   private policyGateway: RuntimePolicyGateway;
 
-  constructor(targetSafetyProfile: TargetSafetyProfile) {
+  constructor(
+    targetSafetyProfile: TargetSafetyProfile,
+    private credentialVault: CredentialVault = new CredentialVault()
+  ) {
     this.policyGateway = new RuntimePolicyGateway(targetSafetyProfile);
+  }
+
+  public getCredentialVault(): CredentialVault {
+    return this.credentialVault;
   }
 
   public async launchIsolatedSession(role: RuntimeRoleProfile, boundary: SessionIsolationBoundary): Promise<RuntimeSession> {
@@ -38,6 +46,17 @@ export class PlaywrightMultiSessionRuntime implements MultiSessionRuntime {
 
     // 2. Execution: Launch the incognito context
     const context = await this.browser.newContext();
+
+    // 3. Credential Injection
+    const creds = this.credentialVault.getCredentials(role.roleId);
+    if (creds) {
+      if (creds.cookies && creds.cookies.length > 0) {
+        await context.addCookies(creds.cookies);
+      }
+      if (creds.headers) {
+        await context.setExtraHTTPHeaders(creds.headers);
+      }
+    }
 
     // Store the Playwright context out-of-band to prevent it from leaking into Canonical Graph
     const sessionId = `session_${role.roleId}_${Date.now()}`;
@@ -112,3 +131,4 @@ export class PlaywrightMultiSessionRuntime implements MultiSessionRuntime {
     return ctx;
   }
 }
+

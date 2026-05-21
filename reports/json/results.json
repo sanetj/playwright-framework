@@ -133,11 +133,11 @@
         {
           "title": "InvestigationPipeline E2E",
           "file": "integration/investigation-pipeline.spec.ts",
-          "line": 7,
+          "line": 9,
           "column": 6,
           "specs": [
             {
-              "title": "should execute full differential pipeline and identify admin endpoint",
+              "title": "should execute full differential pipeline and identify admin endpoint contradiction",
               "ok": true,
               "tags": [],
               "tests": [
@@ -152,22 +152,79 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 328,
+                      "duration": 4415,
                       "errors": [],
                       "stdout": [
                         {
                           "text": "Starting Differential Investigation: User vs Admin\n"
                         },
                         {
-                          "text": "Navigating both roles to http://127.0.0.1:58907...\n"
+                          "text": "Crawling target as User...\n"
                         },
                         {
-                          "text": "Investigation Complete. Found 0 findings.\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:59935\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /api/user/me\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /api/admin/settings\n"
+                        },
+                        {
+                          "text": "[Crawler] Reached http://127.0.0.1:59935, waiting for fetches...\n"
+                        },
+                        {
+                          "text": "Crawling target as Admin...\n"
+                        },
+                        {
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:59935\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /api/user/me\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /api/admin/settings\n"
+                        },
+                        {
+                          "text": "[Crawler] Reached http://127.0.0.1:59935, waiting for fetches...\n"
+                        },
+                        {
+                          "text": "Building graph for session session_user_1_1779388053624, found 3 exchanges.\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59935/ with status 200\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59935/api/user/me with status 200\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59935/api/admin/settings with status 403\n"
+                        },
+                        {
+                          "text": "Building graph for session session_admin_1_1779388053636, found 3 exchanges.\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59935/ with status 200\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59935/api/user/me with status 200\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59935/api/admin/settings with status 200\n"
+                        },
+                        {
+                          "text": "Investigation Complete. Found 1 findings.\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-21T13:00:07.561Z",
+                      "startTime": "2026-05-21T18:27:33.510Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -175,13 +232,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "a0b86fe87cf3cb60ba08-0a686947ed6371924be8",
+              "id": "a0b86fe87cf3cb60ba08-d6b8e1bd7eeeca27a4ed",
               "file": "integration/investigation-pipeline.spec.ts",
-              "line": 69,
+              "line": 85,
               "column": 7
             },
             {
-              "title": "should execute full differential pipeline and identify admin endpoint",
+              "title": "should execute full differential pipeline and identify admin endpoint contradiction",
               "ok": true,
               "tags": [],
               "tests": [
@@ -196,22 +253,79 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 323,
+                      "duration": 4415,
                       "errors": [],
                       "stdout": [
                         {
                           "text": "Starting Differential Investigation: User vs Admin\n"
                         },
                         {
-                          "text": "Navigating both roles to http://127.0.0.1:58909...\n"
+                          "text": "Crawling target as User...\n"
                         },
                         {
-                          "text": "Investigation Complete. Found 0 findings.\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:59936\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /api/user/me\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /api/admin/settings\n"
+                        },
+                        {
+                          "text": "[Crawler] Reached http://127.0.0.1:59936, waiting for fetches...\n"
+                        },
+                        {
+                          "text": "Crawling target as Admin...\n"
+                        },
+                        {
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:59936\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /api/user/me\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /api/admin/settings\n"
+                        },
+                        {
+                          "text": "[Crawler] Reached http://127.0.0.1:59936, waiting for fetches...\n"
+                        },
+                        {
+                          "text": "Building graph for session session_user_1_1779388053625, found 3 exchanges.\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59936/ with status 200\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59936/api/user/me with status 200\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59936/api/admin/settings with status 403\n"
+                        },
+                        {
+                          "text": "Building graph for session session_admin_1_1779388053635, found 3 exchanges.\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59936/ with status 200\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59936/api/user/me with status 200\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59936/api/admin/settings with status 200\n"
+                        },
+                        {
+                          "text": "Investigation Complete. Found 1 findings.\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-21T13:00:07.565Z",
+                      "startTime": "2026-05-21T18:27:33.510Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -219,13 +333,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "a0b86fe87cf3cb60ba08-2a982cd1d54e9e00e574",
+              "id": "a0b86fe87cf3cb60ba08-122299de2287bd49802a",
               "file": "integration/investigation-pipeline.spec.ts",
-              "line": 69,
+              "line": 85,
               "column": 7
             },
             {
-              "title": "should execute full differential pipeline and identify admin endpoint",
+              "title": "should execute full differential pipeline and identify admin endpoint contradiction",
               "ok": true,
               "tags": [],
               "tests": [
@@ -240,22 +354,79 @@
                       "workerIndex": 2,
                       "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 400,
+                      "duration": 4415,
                       "errors": [],
                       "stdout": [
                         {
                           "text": "Starting Differential Investigation: User vs Admin\n"
                         },
                         {
-                          "text": "Navigating both roles to http://127.0.0.1:58908...\n"
+                          "text": "Crawling target as User...\n"
                         },
                         {
-                          "text": "Investigation Complete. Found 0 findings.\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:59937\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /api/user/me\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /api/admin/settings\n"
+                        },
+                        {
+                          "text": "[Crawler] Reached http://127.0.0.1:59937, waiting for fetches...\n"
+                        },
+                        {
+                          "text": "Crawling target as Admin...\n"
+                        },
+                        {
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:59937\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /api/user/me\n"
+                        },
+                        {
+                          "text": "[DummyServer] Received: GET /api/admin/settings\n"
+                        },
+                        {
+                          "text": "[Crawler] Reached http://127.0.0.1:59937, waiting for fetches...\n"
+                        },
+                        {
+                          "text": "Building graph for session session_user_1_1779388053624, found 3 exchanges.\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59937/ with status 200\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59937/api/user/me with status 200\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59937/api/admin/settings with status 403\n"
+                        },
+                        {
+                          "text": "Building graph for session session_admin_1_1779388053637, found 3 exchanges.\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59937/ with status 200\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59937/api/user/me with status 200\n"
+                        },
+                        {
+                          "text": "Added node: api:GET:http://127.0.0.1:59937/api/admin/settings with status 200\n"
+                        },
+                        {
+                          "text": "Investigation Complete. Found 1 findings.\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-21T13:00:07.562Z",
+                      "startTime": "2026-05-21T18:27:33.511Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -263,9 +434,9 @@
                   "status": "expected"
                 }
               ],
-              "id": "a0b86fe87cf3cb60ba08-5dc05be68847aa655a79",
+              "id": "a0b86fe87cf3cb60ba08-030afa2f7fbb4c537701",
               "file": "integration/investigation-pipeline.spec.ts",
-              "line": 69,
+              "line": 85,
               "column": 7
             }
           ]
@@ -275,8 +446,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-05-21T13:00:07.305Z",
-    "duration": 689.879,
+    "startTime": "2026-05-21T18:27:33.250Z",
+    "duration": 4710.276,
     "expected": 3,
     "skipped": 0,
     "unexpected": 0,
