@@ -1,0 +1,32 @@
+<testsuites id="" name="" tests="3" failures="0" skipped="0" errors="0" time="0.689879">
+<testsuite name="integration/investigation-pipeline.spec.ts" timestamp="2026-05-21T13:00:07.348Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.328" errors="0">
+<testcase name="InvestigationPipeline E2E › should execute full differential pipeline and identify admin endpoint" classname="integration/investigation-pipeline.spec.ts" time="0.328">
+<system-out>
+<![CDATA[Starting Differential Investigation: User vs Admin
+Navigating both roles to http://127.0.0.1:58907...
+Investigation Complete. Found 0 findings.
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="integration/investigation-pipeline.spec.ts" timestamp="2026-05-21T13:00:07.348Z" hostname="firefox" tests="1" failures="0" skipped="0" time="0.323" errors="0">
+<testcase name="InvestigationPipeline E2E › should execute full differential pipeline and identify admin endpoint" classname="integration/investigation-pipeline.spec.ts" time="0.323">
+<system-out>
+<![CDATA[Starting Differential Investigation: User vs Admin
+Navigating both roles to http://127.0.0.1:58909...
+Investigation Complete. Found 0 findings.
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="integration/investigation-pipeline.spec.ts" timestamp="2026-05-21T13:00:07.348Z" hostname="webkit" tests="1" failures="0" skipped="0" time="0.4" errors="0">
+<testcase name="InvestigationPipeline E2E › should execute full differential pipeline and identify admin endpoint" classname="integration/investigation-pipeline.spec.ts" time="0.4">
+<system-out>
+<![CDATA[Starting Differential Investigation: User vs Admin
+Navigating both roles to http://127.0.0.1:58908...
+Investigation Complete. Found 0 findings.
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>
