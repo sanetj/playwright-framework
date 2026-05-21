@@ -42,6 +42,43 @@ export interface GraphCentralityScore extends PrioritySignal {
   isChokepoint: boolean;
 }
 
+export interface EpistemicTension extends PrioritySignal {
+  type: 'EPISTEMIC_TENSION';
+  hypothesisSeverity: string;
+  contradictionSeverity: string;
+}
+
+export interface ContradictionDensity extends PrioritySignal {
+  type: 'CONTRADICTION_DENSITY';
+  activeContradictionsInProximity: number;
+}
+
+export interface ConfidenceInstability extends PrioritySignal {
+  type: 'CONFIDENCE_INSTABILITY';
+  recentFluctuationCount: number;
+  isNearingCollapseThreshold: boolean;
+}
+
+export interface TrustCollapseSeverity extends PrioritySignal {
+  type: 'TRUST_COLLAPSE_SEVERITY';
+  dependentHypothesisCount: number;
+  blastRadius: number;
+}
+
+export interface InvestigativeUrgency {
+  urgencyId: string;
+  basePriorityScore: number;
+  epistemicModifiers: number;
+  finalUrgencyScore: number;
+}
+
+export interface ResolutionPressure {
+  pressureId: string;
+  targetNodeId: string;
+  requiredEvidenceTypes: string[];
+  timeBeforeConfidenceDecayMs: number;
+}
+
 export interface InvestigationPriority {
   targetId: string; // The ID of the Hypothesis, FrontierCandidate, or Contradiction
   aggregateScore: number;
@@ -52,5 +89,10 @@ export interface InvestigationPriority {
     | UncertaintySignal
     | BoundaryCriticality
     | GraphCentralityScore
+    | EpistemicTension
+    | ContradictionDensity
+    | ConfidenceInstability
+    | TrustCollapseSeverity
   >;
 }
+
