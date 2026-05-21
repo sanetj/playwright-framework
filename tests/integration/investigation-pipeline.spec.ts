@@ -3,6 +3,8 @@ import { createServer, Server } from 'node:http';
 import { InvestigationPipeline } from '../../src/intelligence/orchestration/investigation-pipeline';
 import { TargetSafetyProfile } from '../../src/intelligence/perturbation/probe-safety';
 import { RuntimeRoleProfile } from '../../src/intelligence/runtime/multi-session-runtime';
+import { BountyReportSerializer } from '../../src/intelligence/artifacts/bounty-report-serializer';
+import * as fs from 'node:fs';
 
 test.describe('InvestigationPipeline E2E', () => {
   let server: Server;
@@ -11,7 +13,17 @@ test.describe('InvestigationPipeline E2E', () => {
   test.beforeAll(async () => {
     // Spin up a simple HTTP server to act as our target
     server = createServer((req, res) => {
-      // Very basic routing
+      console.log(`[DummyServer] Received: ${req.method} ${req.url}`);
+      // Add permissive CORS
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', 'Authorization');
+      
+      if (req.method === 'OPTIONS') {
+        res.writeHead(200);
+        res.end();
+        return;
+      }
+
       if (req.url === '/') {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(`
@@ -19,7 +31,7 @@ test.describe('InvestigationPipeline E2E', () => {
             <body>
               <h1>Target System</h1>
               <script>
-                // Simulate an SPA making API calls on load
+                // Fire immediately to ensure crawler picks it up
                 fetch('/api/user/me');
                 fetch('/api/admin/settings');
               </script>
@@ -60,38 +72,35 @@ test.describe('InvestigationPipeline E2E', () => {
         resolve();
       });
     });
+    
+    if (!fs.existsSync('artifacts/test-results')) {
+      fs.mkdirSync('artifacts/test-results', { recursive: true });
+    }
   });
 
   test.afterAll(() => {
     server.close();
   });
 
-  test('should execute full differential pipeline and identify admin endpoint', async () => {
-    // 1. Define safety profile
+  test('should execute full differential pipeline and identify admin endpoint contradiction', async () => {
     const safetyProfile: TargetSafetyProfile = {
       targetId: 'local_test',
       safeCategories: [{ categoryId: 'reads', allowedClasses: ['READ_ONLY'] }],
       requiresApprovalFor: ['STATE_MUTATION', 'HIGH_RISK']
     };
 
-    // 2. Define Roles
-    // In a real scenario, the pipeline/credentials injector would add these tokens, 
-    // but for our test, we'll just let the interceptor/page handle it or we assume 
-    // the page logic sets headers. Wait, our dummy page fetch() doesn't set headers.
-    // Let's modify the pipeline interceptor to inject the token for the admin role for the sake of the test, 
-    // or just let the test pass as is because we just want to see the differential in reachability (200 vs 403).
-    // Actually, ActionGraph uses `status` from response. If it's 403, is it reachable?
-    // In our GraphBuilder, we just add nodes for APIs. The differential engine compares Node IDs.
-    // So both will see `/api/admin/settings`, but we might need to differentiate based on status.
-    // For now, let's just ensure the pipeline runs without crashing to prove the wiring.
-
     const userRole: RuntimeRoleProfile = { roleId: 'user_1', roleName: 'User' };
     const adminRole: RuntimeRoleProfile = { roleId: 'admin_1', roleName: 'Admin' };
 
     const pipeline = new InvestigationPipeline(safetyProfile, serverUrl);
+    
+    // Setup credentials in the vault for the admin role
+    const vault = pipeline.getRuntime().getCredentialVault();
+    vault.storeCredentials({
+      roleId: 'admin_1',
+      headers: { 'Authorization': 'Bearer ADMIN_TOKEN' }
+    });
 
-    // This will launch 2 browsers, navigate them to the local server, 
-    // intercept the fetch calls, canonicalize, diff, and compress.
     const bundle = await pipeline.runDifferentialAnalysis(userRole, adminRole);
 
     expect(bundle).toBeDefined();
@@ -99,9 +108,15 @@ test.describe('InvestigationPipeline E2E', () => {
     expect(bundle.differentialAnalysis.baseRole).toBe('user_1');
     expect(bundle.differentialAnalysis.comparisonRole).toBe('admin_1');
     
-    // We expect the bundle to be structurally correct. The interceptor timing can vary in the test environment,
-    // so we will just assert the pipeline ran fully and returned a valid structure.
-    expect(bundle).toBeDefined();
-    expect(bundle.differentialAnalysis).toBeDefined();
+    // We expect the differential engine to have caught the 403 vs 200 contradiction 
+    // on the admin endpoint
+    expect(bundle.differentialAnalysis.findings.length).toBeGreaterThanOrEqual(1);
+    
+    const serializer = new BountyReportSerializer();
+    serializer.serializeToMarkdown(bundle, 'artifacts/test-results/investigation_bundle.md');
+    
+    expect(fs.existsSync('artifacts/test-results/investigation_bundle.md')).toBe(true);
   });
 });
+
+
