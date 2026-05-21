@@ -152,7 +152,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4415,
+                      "duration": 4620,
                       "errors": [],
                       "stdout": [
                         {
@@ -162,7 +162,7 @@
                           "text": "Crawling target as User...\n"
                         },
                         {
-                          "text": "[Crawler] Navigating to: http://127.0.0.1:59935\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:60242\n"
                         },
                         {
                           "text": "[DummyServer] Received: GET /\n"
@@ -174,13 +174,13 @@
                           "text": "[DummyServer] Received: GET /api/admin/settings\n"
                         },
                         {
-                          "text": "[Crawler] Reached http://127.0.0.1:59935, waiting for fetches...\n"
+                          "text": "[Crawler] Reached http://127.0.0.1:60242, waiting for fetches...\n"
                         },
                         {
                           "text": "Crawling target as Admin...\n"
                         },
                         {
-                          "text": "[Crawler] Navigating to: http://127.0.0.1:59935\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:60242\n"
                         },
                         {
                           "text": "[DummyServer] Received: GET /\n"
@@ -192,31 +192,31 @@
                           "text": "[DummyServer] Received: GET /api/admin/settings\n"
                         },
                         {
-                          "text": "[Crawler] Reached http://127.0.0.1:59935, waiting for fetches...\n"
+                          "text": "[Crawler] Reached http://127.0.0.1:60242, waiting for fetches...\n"
                         },
                         {
-                          "text": "Building graph for session session_user_1_1779388053624, found 3 exchanges.\n"
+                          "text": "Building graph for session session_user_1_1779390670630, found 3 exchanges.\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59935/ with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60242/ with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59935/api/user/me with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60242/api/user/me with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59935/api/admin/settings with status 403\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60242/api/admin/settings with status 403\n"
                         },
                         {
-                          "text": "Building graph for session session_admin_1_1779388053636, found 3 exchanges.\n"
+                          "text": "Building graph for session session_admin_1_1779390670642, found 3 exchanges.\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59935/ with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60242/ with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59935/api/user/me with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60242/api/user/me with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59935/api/admin/settings with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60242/api/admin/settings with status 200\n"
                         },
                         {
                           "text": "Investigation Complete. Found 1 findings.\n"
@@ -224,7 +224,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-21T18:27:33.510Z",
+                      "startTime": "2026-05-21T19:11:10.438Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -253,7 +253,7 @@
                       "workerIndex": 1,
                       "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 4415,
+                      "duration": 4631,
                       "errors": [],
                       "stdout": [
                         {
@@ -263,7 +263,7 @@
                           "text": "Crawling target as User...\n"
                         },
                         {
-                          "text": "[Crawler] Navigating to: http://127.0.0.1:59936\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:60240\n"
                         },
                         {
                           "text": "[DummyServer] Received: GET /\n"
@@ -275,13 +275,13 @@
                           "text": "[DummyServer] Received: GET /api/admin/settings\n"
                         },
                         {
-                          "text": "[Crawler] Reached http://127.0.0.1:59936, waiting for fetches...\n"
+                          "text": "[Crawler] Reached http://127.0.0.1:60240, waiting for fetches...\n"
                         },
                         {
                           "text": "Crawling target as Admin...\n"
                         },
                         {
-                          "text": "[Crawler] Navigating to: http://127.0.0.1:59936\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:60240\n"
                         },
                         {
                           "text": "[DummyServer] Received: GET /\n"
@@ -293,31 +293,31 @@
                           "text": "[DummyServer] Received: GET /api/admin/settings\n"
                         },
                         {
-                          "text": "[Crawler] Reached http://127.0.0.1:59936, waiting for fetches...\n"
+                          "text": "[Crawler] Reached http://127.0.0.1:60240, waiting for fetches...\n"
                         },
                         {
-                          "text": "Building graph for session session_user_1_1779388053625, found 3 exchanges.\n"
+                          "text": "Building graph for session session_user_1_1779390670629, found 3 exchanges.\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59936/ with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60240/ with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59936/api/user/me with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60240/api/user/me with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59936/api/admin/settings with status 403\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60240/api/admin/settings with status 403\n"
                         },
                         {
-                          "text": "Building graph for session session_admin_1_1779388053635, found 3 exchanges.\n"
+                          "text": "Building graph for session session_admin_1_1779390670642, found 3 exchanges.\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59936/ with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60240/ with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59936/api/user/me with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60240/api/user/me with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59936/api/admin/settings with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60240/api/admin/settings with status 200\n"
                         },
                         {
                           "text": "Investigation Complete. Found 1 findings.\n"
@@ -325,7 +325,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-21T18:27:33.510Z",
+                      "startTime": "2026-05-21T19:11:10.428Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -354,7 +354,7 @@
                       "workerIndex": 2,
                       "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 4415,
+                      "duration": 4628,
                       "errors": [],
                       "stdout": [
                         {
@@ -364,7 +364,7 @@
                           "text": "Crawling target as User...\n"
                         },
                         {
-                          "text": "[Crawler] Navigating to: http://127.0.0.1:59937\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:60241\n"
                         },
                         {
                           "text": "[DummyServer] Received: GET /\n"
@@ -376,13 +376,13 @@
                           "text": "[DummyServer] Received: GET /api/admin/settings\n"
                         },
                         {
-                          "text": "[Crawler] Reached http://127.0.0.1:59937, waiting for fetches...\n"
+                          "text": "[Crawler] Reached http://127.0.0.1:60241, waiting for fetches...\n"
                         },
                         {
                           "text": "Crawling target as Admin...\n"
                         },
                         {
-                          "text": "[Crawler] Navigating to: http://127.0.0.1:59937\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:60241\n"
                         },
                         {
                           "text": "[DummyServer] Received: GET /\n"
@@ -394,31 +394,31 @@
                           "text": "[DummyServer] Received: GET /api/admin/settings\n"
                         },
                         {
-                          "text": "[Crawler] Reached http://127.0.0.1:59937, waiting for fetches...\n"
+                          "text": "[Crawler] Reached http://127.0.0.1:60241, waiting for fetches...\n"
                         },
                         {
-                          "text": "Building graph for session session_user_1_1779388053624, found 3 exchanges.\n"
+                          "text": "Building graph for session session_user_1_1779390670631, found 3 exchanges.\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59937/ with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60241/ with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59937/api/user/me with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60241/api/user/me with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59937/api/admin/settings with status 403\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60241/api/admin/settings with status 403\n"
                         },
                         {
-                          "text": "Building graph for session session_admin_1_1779388053637, found 3 exchanges.\n"
+                          "text": "Building graph for session session_admin_1_1779390670643, found 3 exchanges.\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59937/ with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60241/ with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59937/api/user/me with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60241/api/user/me with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:59937/api/admin/settings with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:60241/api/admin/settings with status 200\n"
                         },
                         {
                           "text": "Investigation Complete. Found 1 findings.\n"
@@ -426,7 +426,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-21T18:27:33.511Z",
+                      "startTime": "2026-05-21T19:11:10.433Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -446,8 +446,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-05-21T18:27:33.250Z",
-    "duration": 4710.276,
+    "startTime": "2026-05-21T19:11:09.958Z",
+    "duration": 5170.491,
     "expected": 3,
     "skipped": 0,
     "unexpected": 0,

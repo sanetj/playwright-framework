@@ -1,20 +1,20 @@
 [
   {
-    "test": " > chromium > integration/investigation-pipeline.spec.ts > InvestigationPipeline E2E > should execute full differential pipeline and identify admin endpoint contradiction",
+    "test": " > firefox > integration/investigation-pipeline.spec.ts > InvestigationPipeline E2E > should execute full differential pipeline and identify admin endpoint contradiction",
     "retries": 0,
-    "duration": 4415,
+    "duration": 4631,
     "unstable": false
   },
   {
     "test": " > webkit > integration/investigation-pipeline.spec.ts > InvestigationPipeline E2E > should execute full differential pipeline and identify admin endpoint contradiction",
     "retries": 0,
-    "duration": 4415,
+    "duration": 4628,
     "unstable": false
   },
   {
-    "test": " > firefox > integration/investigation-pipeline.spec.ts > InvestigationPipeline E2E > should execute full differential pipeline and identify admin endpoint contradiction",
+    "test": " > chromium > integration/investigation-pipeline.spec.ts > InvestigationPipeline E2E > should execute full differential pipeline and identify admin endpoint contradiction",
     "retries": 0,
-    "duration": 4415,
+    "duration": 4620,
     "unstable": false
   }
 ]

@@ -1,86 +1,86 @@
-<testsuites id="" name="" tests="3" failures="0" skipped="0" errors="0" time="4.7102759999999995">
-<testsuite name="integration/investigation-pipeline.spec.ts" timestamp="2026-05-21T18:27:33.294Z" hostname="chromium" tests="1" failures="0" skipped="0" time="4.415" errors="0">
-<testcase name="InvestigationPipeline E2E › should execute full differential pipeline and identify admin endpoint contradiction" classname="integration/investigation-pipeline.spec.ts" time="4.415">
+<testsuites id="" name="" tests="3" failures="0" skipped="0" errors="0" time="5.170491">
+<testsuite name="integration/investigation-pipeline.spec.ts" timestamp="2026-05-21T19:11:10.046Z" hostname="chromium" tests="1" failures="0" skipped="0" time="4.62" errors="0">
+<testcase name="InvestigationPipeline E2E › should execute full differential pipeline and identify admin endpoint contradiction" classname="integration/investigation-pipeline.spec.ts" time="4.62">
 <system-out>
 <![CDATA[Starting Differential Investigation: User vs Admin
 Crawling target as User...
-[Crawler] Navigating to: http://127.0.0.1:59935
+[Crawler] Navigating to: http://127.0.0.1:60242
 [DummyServer] Received: GET /
 [DummyServer] Received: GET /api/user/me
 [DummyServer] Received: GET /api/admin/settings
-[Crawler] Reached http://127.0.0.1:59935, waiting for fetches...
+[Crawler] Reached http://127.0.0.1:60242, waiting for fetches...
 Crawling target as Admin...
-[Crawler] Navigating to: http://127.0.0.1:59935
+[Crawler] Navigating to: http://127.0.0.1:60242
 [DummyServer] Received: GET /
 [DummyServer] Received: GET /api/user/me
 [DummyServer] Received: GET /api/admin/settings
-[Crawler] Reached http://127.0.0.1:59935, waiting for fetches...
-Building graph for session session_user_1_1779388053624, found 3 exchanges.
-Added node: api:GET:http://127.0.0.1:59935/ with status 200
-Added node: api:GET:http://127.0.0.1:59935/api/user/me with status 200
-Added node: api:GET:http://127.0.0.1:59935/api/admin/settings with status 403
-Building graph for session session_admin_1_1779388053636, found 3 exchanges.
-Added node: api:GET:http://127.0.0.1:59935/ with status 200
-Added node: api:GET:http://127.0.0.1:59935/api/user/me with status 200
-Added node: api:GET:http://127.0.0.1:59935/api/admin/settings with status 200
+[Crawler] Reached http://127.0.0.1:60242, waiting for fetches...
+Building graph for session session_user_1_1779390670630, found 3 exchanges.
+Added node: api:GET:http://127.0.0.1:60242/ with status 200
+Added node: api:GET:http://127.0.0.1:60242/api/user/me with status 200
+Added node: api:GET:http://127.0.0.1:60242/api/admin/settings with status 403
+Building graph for session session_admin_1_1779390670642, found 3 exchanges.
+Added node: api:GET:http://127.0.0.1:60242/ with status 200
+Added node: api:GET:http://127.0.0.1:60242/api/user/me with status 200
+Added node: api:GET:http://127.0.0.1:60242/api/admin/settings with status 200
 Investigation Complete. Found 1 findings.
 ]]>
 </system-out>
 </testcase>
 </testsuite>
-<testsuite name="integration/investigation-pipeline.spec.ts" timestamp="2026-05-21T18:27:33.294Z" hostname="firefox" tests="1" failures="0" skipped="0" time="4.415" errors="0">
-<testcase name="InvestigationPipeline E2E › should execute full differential pipeline and identify admin endpoint contradiction" classname="integration/investigation-pipeline.spec.ts" time="4.415">
+<testsuite name="integration/investigation-pipeline.spec.ts" timestamp="2026-05-21T19:11:10.046Z" hostname="firefox" tests="1" failures="0" skipped="0" time="4.631" errors="0">
+<testcase name="InvestigationPipeline E2E › should execute full differential pipeline and identify admin endpoint contradiction" classname="integration/investigation-pipeline.spec.ts" time="4.631">
 <system-out>
 <![CDATA[Starting Differential Investigation: User vs Admin
 Crawling target as User...
-[Crawler] Navigating to: http://127.0.0.1:59936
+[Crawler] Navigating to: http://127.0.0.1:60240
 [DummyServer] Received: GET /
 [DummyServer] Received: GET /api/user/me
 [DummyServer] Received: GET /api/admin/settings
-[Crawler] Reached http://127.0.0.1:59936, waiting for fetches...
+[Crawler] Reached http://127.0.0.1:60240, waiting for fetches...
 Crawling target as Admin...
-[Crawler] Navigating to: http://127.0.0.1:59936
+[Crawler] Navigating to: http://127.0.0.1:60240
 [DummyServer] Received: GET /
 [DummyServer] Received: GET /api/user/me
 [DummyServer] Received: GET /api/admin/settings
-[Crawler] Reached http://127.0.0.1:59936, waiting for fetches...
-Building graph for session session_user_1_1779388053625, found 3 exchanges.
-Added node: api:GET:http://127.0.0.1:59936/ with status 200
-Added node: api:GET:http://127.0.0.1:59936/api/user/me with status 200
-Added node: api:GET:http://127.0.0.1:59936/api/admin/settings with status 403
-Building graph for session session_admin_1_1779388053635, found 3 exchanges.
-Added node: api:GET:http://127.0.0.1:59936/ with status 200
-Added node: api:GET:http://127.0.0.1:59936/api/user/me with status 200
-Added node: api:GET:http://127.0.0.1:59936/api/admin/settings with status 200
+[Crawler] Reached http://127.0.0.1:60240, waiting for fetches...
+Building graph for session session_user_1_1779390670629, found 3 exchanges.
+Added node: api:GET:http://127.0.0.1:60240/ with status 200
+Added node: api:GET:http://127.0.0.1:60240/api/user/me with status 200
+Added node: api:GET:http://127.0.0.1:60240/api/admin/settings with status 403
+Building graph for session session_admin_1_1779390670642, found 3 exchanges.
+Added node: api:GET:http://127.0.0.1:60240/ with status 200
+Added node: api:GET:http://127.0.0.1:60240/api/user/me with status 200
+Added node: api:GET:http://127.0.0.1:60240/api/admin/settings with status 200
 Investigation Complete. Found 1 findings.
 ]]>
 </system-out>
 </testcase>
 </testsuite>
-<testsuite name="integration/investigation-pipeline.spec.ts" timestamp="2026-05-21T18:27:33.294Z" hostname="webkit" tests="1" failures="0" skipped="0" time="4.415" errors="0">
-<testcase name="InvestigationPipeline E2E › should execute full differential pipeline and identify admin endpoint contradiction" classname="integration/investigation-pipeline.spec.ts" time="4.415">
+<testsuite name="integration/investigation-pipeline.spec.ts" timestamp="2026-05-21T19:11:10.046Z" hostname="webkit" tests="1" failures="0" skipped="0" time="4.628" errors="0">
+<testcase name="InvestigationPipeline E2E › should execute full differential pipeline and identify admin endpoint contradiction" classname="integration/investigation-pipeline.spec.ts" time="4.628">
 <system-out>
 <![CDATA[Starting Differential Investigation: User vs Admin
 Crawling target as User...
-[Crawler] Navigating to: http://127.0.0.1:59937
+[Crawler] Navigating to: http://127.0.0.1:60241
 [DummyServer] Received: GET /
 [DummyServer] Received: GET /api/user/me
 [DummyServer] Received: GET /api/admin/settings
-[Crawler] Reached http://127.0.0.1:59937, waiting for fetches...
+[Crawler] Reached http://127.0.0.1:60241, waiting for fetches...
 Crawling target as Admin...
-[Crawler] Navigating to: http://127.0.0.1:59937
+[Crawler] Navigating to: http://127.0.0.1:60241
 [DummyServer] Received: GET /
 [DummyServer] Received: GET /api/user/me
 [DummyServer] Received: GET /api/admin/settings
-[Crawler] Reached http://127.0.0.1:59937, waiting for fetches...
-Building graph for session session_user_1_1779388053624, found 3 exchanges.
-Added node: api:GET:http://127.0.0.1:59937/ with status 200
-Added node: api:GET:http://127.0.0.1:59937/api/user/me with status 200
-Added node: api:GET:http://127.0.0.1:59937/api/admin/settings with status 403
-Building graph for session session_admin_1_1779388053637, found 3 exchanges.
-Added node: api:GET:http://127.0.0.1:59937/ with status 200
-Added node: api:GET:http://127.0.0.1:59937/api/user/me with status 200
-Added node: api:GET:http://127.0.0.1:59937/api/admin/settings with status 200
+[Crawler] Reached http://127.0.0.1:60241, waiting for fetches...
+Building graph for session session_user_1_1779390670631, found 3 exchanges.
+Added node: api:GET:http://127.0.0.1:60241/ with status 200
+Added node: api:GET:http://127.0.0.1:60241/api/user/me with status 200
+Added node: api:GET:http://127.0.0.1:60241/api/admin/settings with status 403
+Building graph for session session_admin_1_1779390670643, found 3 exchanges.
+Added node: api:GET:http://127.0.0.1:60241/ with status 200
+Added node: api:GET:http://127.0.0.1:60241/api/user/me with status 200
+Added node: api:GET:http://127.0.0.1:60241/api/admin/settings with status 200
 Investigation Complete. Found 1 findings.
 ]]>
 </system-out>
