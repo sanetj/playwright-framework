@@ -13,7 +13,23 @@
     },
     "canonical-events": {
       "authority": "src/intelligence/events/normalized-event-bus.ts",
-      "message": "Use CanonicalRuntimeEvent for all telemetry payloads."
+      "message": "Use CanonicalRuntimeEvent for all telemetry payloads. No alternate event buses are permitted."
+    },
+    "canonical-graph": {
+      "authority": "src/intelligence/graph/action-graph.ts",
+      "message": "Use ActionGraph for all semantic runtime relationships. No alternate graph systems are permitted."
+    },
+    "canonical-state": {
+      "authority": "src/intelligence/state/role-session-manager.ts",
+      "message": "Use RoleSessionManager for all runtime identities. Duplicate session ownership is forbidden."
+    },
+    "canonical-lineage": {
+      "authority": "src/intelligence/ontology/entity-lineage.ts",
+      "message": "Use canonical lineage types for object propagation. Duplicate lineage tracking systems are forbidden."
+    },
+    "pure-ontology": {
+      "authority": "src/intelligence/ontology/*",
+      "message": "Keep ontology strictly limited to semantic primitives and contracts. No execution logic allowed."
     }
   }
 }
