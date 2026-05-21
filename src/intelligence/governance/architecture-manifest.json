@@ -114,6 +114,14 @@
     "sidecar-cannot-mutate-authorities": {
       "authority": "src/intelligence/governance/architecture-manifest.json",
       "message": "AI/sidecar cognition layers cannot mutate canonical runtime state or bypass execution policy authorities."
+    },
+    "no-uncontrolled-replay-mutation": {
+      "authority": "src/intelligence/perturbation/governed-perturbation.ts",
+      "message": "No uncontrolled replay mutation or autonomous fuzzing loops. All probes require policy envelopes."
+    },
+    "all-validation-requires-replay-refs": {
+      "authority": "src/intelligence/investigation/exploit-validation.ts",
+      "message": "All exploit validation claims must carry deterministic replay evidence. No heuristic-only exploit claims."
     }
   }
 }
