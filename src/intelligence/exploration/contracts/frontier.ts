@@ -32,3 +32,28 @@ export interface ExplorationFrontier {
   updateStatus(candidateId: string, status: FrontierCandidate['status']): void;
   getPendingCount(): number;
 }
+
+export type ExplorationTerminationReason = 'BUDGET_EXHAUSTED' | 'RISK_EXCEEDED' | 'OBJECTIVE_MET' | 'MANUAL_ABORT';
+export type ExplorationApprovalState = 'PENDING_POLICY_REVIEW' | 'APPROVED' | 'DENIED' | 'REQUIRES_HUMAN';
+
+export interface ExplorationBudget {
+  maxGraphDepth: number;
+  maxTransitions: number;
+  maxTimeMs: number;
+}
+
+export interface ExplorationRiskEnvelope {
+  allowedDomains: string[];
+  allowedMethods: string[];
+  maxRiskCategory: string;
+}
+
+export interface BoundedExplorationContract {
+  contractId: string;
+  objectiveDescription: string;
+  budget: ExplorationBudget;
+  riskEnvelope: ExplorationRiskEnvelope;
+  approvalState: ExplorationApprovalState;
+  terminationReason?: ExplorationTerminationReason;
+}
+

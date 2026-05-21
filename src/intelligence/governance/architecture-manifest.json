@@ -30,6 +30,14 @@
     "pure-ontology": {
       "authority": "src/intelligence/ontology/*",
       "message": "Keep ontology strictly limited to semantic primitives and contracts. No execution logic allowed."
+    },
+    "non-canonical-sidecars": {
+      "authority": "src/intelligence/cognition/sidecar-cognition.ts",
+      "message": "AI interpretations must remain non-canonical sidecar annotations. They are forbidden from mutating the deterministic ActionGraph."
+    },
+    "immutable-replay-telemetry": {
+      "authority": "src/intelligence/replay/cognition-replay.ts",
+      "message": "Replay telemetry is strictly immutable. No alternate replay systems are permitted."
     }
   }
 }
