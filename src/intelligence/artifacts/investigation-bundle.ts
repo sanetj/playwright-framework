@@ -53,6 +53,10 @@ export interface DifferentialRoleEvidence {
   roleDifferentials: ReplayBehaviorDifferential[];
 }
 
+import { ExploitValidation } from '../investigation/exploit-validation';
+import { AuthorizationContradiction } from '../investigation/auth-contradictions';
+import { ReportNarrative } from './report-mapping';
+
 export interface InvestigationBundle {
   bundleId: string;
   generatedAtTs: number;
@@ -65,4 +69,9 @@ export interface InvestigationBundle {
   replayTraces: ReplayTraceArtifact[];
   differentialEvidence?: DifferentialRoleEvidence;
   confidence: InvestigationConfidence;
+  
+  // Phase 8.1 additions
+  exploitValidation?: ExploitValidation;
+  authorizationContradictions?: AuthorizationContradiction[];
+  aiReadyReportNarrative?: ReportNarrative;
 }
