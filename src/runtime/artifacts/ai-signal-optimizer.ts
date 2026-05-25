@@ -7,7 +7,7 @@ export class AiSignalOptimizer {
    */
   public optimizeEvidence(exchange: CanonicalHttpExchange): any {
     return {
-      id: exchange.exchangeId,
+      id: exchange.exchangeId.id,
       req: {
         method: exchange.request.method,
         url: exchange.request.url,

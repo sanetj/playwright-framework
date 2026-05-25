@@ -1,6 +1,16 @@
 import { ActionGraph, GraphNode } from '../graph/action-graph';
 import { RoleDifferentialResult } from './role-differential';
 
+export interface DifferentialFinding {
+  findingId?: string;
+  type: 'IDOR_CANDIDATE' | 'PRIVILEGE_ESCALATION_CANDIDATE' | 'STATUS_CONTRADICTION' | 'TENANT_ESCAPE_CANDIDATE';
+  targetEntityId?: string;
+  targetRole: string;
+  baseStatus?: number;
+  comparisonStatus?: number;
+  description: string;
+}
+
 export interface DifferentialComparisonResult {
   baseRoleId: string;
   comparisonRoleId: string;
@@ -22,6 +32,8 @@ export interface DifferentialComparisonResult {
     baseNode: GraphNode;
     comparisonNode: GraphNode;
   }>;
+  
+  findings: DifferentialFinding[];
 }
 
 export class ConcreteDifferentialEngine {
@@ -68,13 +80,43 @@ export class ConcreteDifferentialEngine {
       }
     }
 
+    // Build generic findings array to satisfy newer pipeline requirements
+    const findings: DifferentialFinding[] = [];
+    
+    for (const node of exclusiveToComparison) {
+       findings.push({
+          findingId: `finding_${Date.now()}_${Math.random()}`,
+          type: 'PRIVILEGE_ESCALATION_CANDIDATE',
+          targetEntityId: node.id,
+          targetRole: comparisonRoleId,
+          description: `Endpoint reachable by ${comparisonRoleId} but not by ${baseRoleId}`
+       });
+    }
+    
+    for (const contra of statusContradictions) {
+       let type: 'STATUS_CONTRADICTION' | 'PRIVILEGE_ESCALATION_CANDIDATE' = 'STATUS_CONTRADICTION';
+       if (contra.baseStatus === 403 && contra.comparisonStatus === 200) {
+          type = 'PRIVILEGE_ESCALATION_CANDIDATE';
+       }
+       findings.push({
+          findingId: `finding_${Date.now()}_${Math.random()}`,
+          type,
+          targetEntityId: contra.nodeId,
+          targetRole: comparisonRoleId,
+          baseStatus: contra.baseStatus,
+          comparisonStatus: contra.comparisonStatus,
+          description: `Base role got status ${contra.baseStatus}, but comparison role got ${contra.comparisonStatus}`
+       });
+    }
+
     return {
       baseRoleId,
       comparisonRoleId,
       exclusiveToBase,
       exclusiveToComparison,
       sharedReachability,
-      statusContradictions
+      statusContradictions,
+      findings
     };
   }
 

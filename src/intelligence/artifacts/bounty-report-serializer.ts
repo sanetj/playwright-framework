@@ -35,7 +35,7 @@ export class BountyReportSerializer {
     md += `## Evidence Exchanges (${bundle.evidenceExchanges.length})\n\n`;
 
     for (const ex of bundle.evidenceExchanges) {
-      md += `### Exchange \`${ex.exchangeId}\` (Session: ${ex.sessionId || 'Unknown'})\n`;
+      md += `### Exchange \`${ex.exchangeId.id}\` (Session: ${ex.sessionId || 'Unknown'})\n`;
       md += `**Request:**\n`;
       md += '```http\n';
       md += `${ex.request.method} ${ex.request.url} HTTP/1.1\n`;

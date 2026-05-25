@@ -38,7 +38,7 @@ export class BundleRedactor {
     }
 
     return {
-      exchangeId: exchange.exchangeId,
+      exchangeId: exchange.exchangeId.id,
       timestamp: exchange.timestamp,
       durationMs: exchange.durationMs,
       request: redactedReq,

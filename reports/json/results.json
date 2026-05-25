@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 3
+      "actualWorkers": 4
     },
     "preserveOutput": "always",
     "projects": [
@@ -20,7 +20,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 3
+          "actualWorkers": 4
         },
         "id": "chromium",
         "name": "chromium",
@@ -36,7 +36,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 3
+          "actualWorkers": 4
         },
         "id": "firefox",
         "name": "firefox",
@@ -52,7 +52,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 3
+          "actualWorkers": 4
         },
         "id": "webkit",
         "name": "webkit",
@@ -68,7 +68,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 3
+          "actualWorkers": 4
         },
         "id": "api",
         "name": "api",
@@ -124,6 +124,125 @@
   },
   "suites": [
     {
+      "title": "integration/active-replay-validation.spec.ts",
+      "file": "integration/active-replay-validation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Tier 1: Active Replay Validation (Mock Server)",
+          "file": "integration/active-replay-validation.spec.ts",
+          "line": 7,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Pipeline should identify and actively validate BOLA/IDOR",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-25T08:49:16.934Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dca2a8c96cdff6b5538d-d7afae6ee02f03cfe95d",
+              "file": "integration/active-replay-validation.spec.ts",
+              "line": 50,
+              "column": 7
+            },
+            {
+              "title": "Pipeline should identify and actively validate BOLA/IDOR",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 1,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-25T08:49:16.936Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dca2a8c96cdff6b5538d-6b919d3f6be59b787f67",
+              "file": "integration/active-replay-validation.spec.ts",
+              "line": 50,
+              "column": 7
+            },
+            {
+              "title": "Pipeline should identify and actively validate BOLA/IDOR",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-25T08:49:17.255Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dca2a8c96cdff6b5538d-c314729c1c86edf8cbba",
+              "file": "integration/active-replay-validation.spec.ts",
+              "line": 50,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
       "title": "integration/investigation-pipeline.spec.ts",
       "file": "integration/investigation-pipeline.spec.ts",
       "column": 0,
@@ -149,10 +268,10 @@
                   "projectName": "chromium",
                   "results": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 4620,
+                      "duration": 4562,
                       "errors": [],
                       "stdout": [
                         {
@@ -162,7 +281,7 @@
                           "text": "Crawling target as User...\n"
                         },
                         {
-                          "text": "[Crawler] Navigating to: http://127.0.0.1:60242\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:62782\n"
                         },
                         {
                           "text": "[DummyServer] Received: GET /\n"
@@ -174,13 +293,13 @@
                           "text": "[DummyServer] Received: GET /api/admin/settings\n"
                         },
                         {
-                          "text": "[Crawler] Reached http://127.0.0.1:60242, waiting for fetches...\n"
+                          "text": "[Crawler] Reached http://127.0.0.1:62782, waiting for fetches...\n"
                         },
                         {
                           "text": "Crawling target as Admin...\n"
                         },
                         {
-                          "text": "[Crawler] Navigating to: http://127.0.0.1:60242\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:62782\n"
                         },
                         {
                           "text": "[DummyServer] Received: GET /\n"
@@ -192,31 +311,31 @@
                           "text": "[DummyServer] Received: GET /api/admin/settings\n"
                         },
                         {
-                          "text": "[Crawler] Reached http://127.0.0.1:60242, waiting for fetches...\n"
+                          "text": "[Crawler] Reached http://127.0.0.1:62782, waiting for fetches...\n"
                         },
                         {
-                          "text": "Building graph for session session_user_1_1779390670630, found 3 exchanges.\n"
+                          "text": "Building graph for session session_user_1_1779698957168, found 3 exchanges.\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60242/ with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62782/ with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60242/api/user/me with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62782/api/user/me with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60242/api/admin/settings with status 403\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62782/api/admin/settings with status 403\n"
                         },
                         {
-                          "text": "Building graph for session session_admin_1_1779390670642, found 3 exchanges.\n"
+                          "text": "Building graph for session session_admin_1_1779698957173, found 3 exchanges.\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60242/ with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62782/ with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60242/api/user/me with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62782/api/user/me with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60242/api/admin/settings with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62782/api/admin/settings with status 200\n"
                         },
                         {
                           "text": "Investigation Complete. Found 1 findings.\n"
@@ -224,7 +343,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-21T19:11:10.438Z",
+                      "startTime": "2026-05-25T08:49:16.938Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -250,10 +369,10 @@
                   "projectName": "firefox",
                   "results": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
+                      "workerIndex": 3,
+                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 4631,
+                      "duration": 4562,
                       "errors": [],
                       "stdout": [
                         {
@@ -263,7 +382,7 @@
                           "text": "Crawling target as User...\n"
                         },
                         {
-                          "text": "[Crawler] Navigating to: http://127.0.0.1:60240\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:62783\n"
                         },
                         {
                           "text": "[DummyServer] Received: GET /\n"
@@ -275,13 +394,13 @@
                           "text": "[DummyServer] Received: GET /api/admin/settings\n"
                         },
                         {
-                          "text": "[Crawler] Reached http://127.0.0.1:60240, waiting for fetches...\n"
+                          "text": "[Crawler] Reached http://127.0.0.1:62783, waiting for fetches...\n"
                         },
                         {
                           "text": "Crawling target as Admin...\n"
                         },
                         {
-                          "text": "[Crawler] Navigating to: http://127.0.0.1:60240\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:62783\n"
                         },
                         {
                           "text": "[DummyServer] Received: GET /\n"
@@ -293,31 +412,31 @@
                           "text": "[DummyServer] Received: GET /api/admin/settings\n"
                         },
                         {
-                          "text": "[Crawler] Reached http://127.0.0.1:60240, waiting for fetches...\n"
+                          "text": "[Crawler] Reached http://127.0.0.1:62783, waiting for fetches...\n"
                         },
                         {
-                          "text": "Building graph for session session_user_1_1779390670629, found 3 exchanges.\n"
+                          "text": "Building graph for session session_user_1_1779698957168, found 3 exchanges.\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60240/ with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62783/ with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60240/api/user/me with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62783/api/user/me with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60240/api/admin/settings with status 403\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62783/api/admin/settings with status 403\n"
                         },
                         {
-                          "text": "Building graph for session session_admin_1_1779390670642, found 3 exchanges.\n"
+                          "text": "Building graph for session session_admin_1_1779698957173, found 3 exchanges.\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60240/ with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62783/ with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60240/api/user/me with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62783/api/user/me with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60240/api/admin/settings with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62783/api/admin/settings with status 200\n"
                         },
                         {
                           "text": "Investigation Complete. Found 1 findings.\n"
@@ -325,7 +444,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-21T19:11:10.428Z",
+                      "startTime": "2026-05-25T08:49:16.938Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -351,10 +470,10 @@
                   "projectName": "webkit",
                   "results": [
                     {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
+                      "workerIndex": 5,
+                      "parallelIndex": 3,
                       "status": "passed",
-                      "duration": 4628,
+                      "duration": 4250,
                       "errors": [],
                       "stdout": [
                         {
@@ -364,7 +483,7 @@
                           "text": "Crawling target as User...\n"
                         },
                         {
-                          "text": "[Crawler] Navigating to: http://127.0.0.1:60241\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:62785\n"
                         },
                         {
                           "text": "[DummyServer] Received: GET /\n"
@@ -376,13 +495,13 @@
                           "text": "[DummyServer] Received: GET /api/admin/settings\n"
                         },
                         {
-                          "text": "[Crawler] Reached http://127.0.0.1:60241, waiting for fetches...\n"
+                          "text": "[Crawler] Reached http://127.0.0.1:62785, waiting for fetches...\n"
                         },
                         {
                           "text": "Crawling target as Admin...\n"
                         },
                         {
-                          "text": "[Crawler] Navigating to: http://127.0.0.1:60241\n"
+                          "text": "[Crawler] Navigating to: http://127.0.0.1:62785\n"
                         },
                         {
                           "text": "[DummyServer] Received: GET /\n"
@@ -394,31 +513,31 @@
                           "text": "[DummyServer] Received: GET /api/admin/settings\n"
                         },
                         {
-                          "text": "[Crawler] Reached http://127.0.0.1:60241, waiting for fetches...\n"
+                          "text": "[Crawler] Reached http://127.0.0.1:62785, waiting for fetches...\n"
                         },
                         {
-                          "text": "Building graph for session session_user_1_1779390670631, found 3 exchanges.\n"
+                          "text": "Building graph for session session_user_1_1779698957394, found 3 exchanges.\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60241/ with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62785/ with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60241/api/user/me with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62785/api/user/me with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60241/api/admin/settings with status 403\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62785/api/admin/settings with status 403\n"
                         },
                         {
-                          "text": "Building graph for session session_admin_1_1779390670643, found 3 exchanges.\n"
+                          "text": "Building graph for session session_admin_1_1779698957397, found 3 exchanges.\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60241/ with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62785/ with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60241/api/user/me with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62785/api/user/me with status 200\n"
                         },
                         {
-                          "text": "Added node: api:GET:http://127.0.0.1:60241/api/admin/settings with status 200\n"
+                          "text": "Added node: api:GET:http://127.0.0.1:62785/api/admin/settings with status 200\n"
                         },
                         {
                           "text": "Investigation Complete. Found 1 findings.\n"
@@ -426,7 +545,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-21T19:11:10.433Z",
+                      "startTime": "2026-05-25T08:49:17.256Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -442,14 +561,187 @@
           ]
         }
       ]
+    },
+    {
+      "title": "integration/juice-shop-replay-validation.spec.ts",
+      "file": "integration/juice-shop-replay-validation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Tier 2: Real Target Validation (OWASP Juice Shop)",
+          "file": "integration/juice-shop-replay-validation.spec.ts",
+          "line": 7,
+          "column": 15,
+          "specs": [
+            {
+              "title": "Pipeline should identify and validate IDOR against Juice Shop",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "location": {
+                        "file": "/Users/sanketjadhavar/Desktop/BrowserIntelAntiGravity/playwright-framework/tests/integration/juice-shop-replay-validation.spec.ts",
+                        "line": 7,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-25T08:49:16.678Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "location": {
+                            "file": "/Users/sanketjadhavar/Desktop/BrowserIntelAntiGravity/playwright-framework/tests/integration/juice-shop-replay-validation.spec.ts",
+                            "line": 7,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8f85082e6f6c436c50bb-0d9ff66a3ce70914f3f8",
+              "file": "integration/juice-shop-replay-validation.spec.ts",
+              "line": 10,
+              "column": 7
+            },
+            {
+              "title": "Pipeline should identify and validate IDOR against Juice Shop",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "location": {
+                        "file": "/Users/sanketjadhavar/Desktop/BrowserIntelAntiGravity/playwright-framework/tests/integration/juice-shop-replay-validation.spec.ts",
+                        "line": 7,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-25T08:49:16.958Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "location": {
+                            "file": "/Users/sanketjadhavar/Desktop/BrowserIntelAntiGravity/playwright-framework/tests/integration/juice-shop-replay-validation.spec.ts",
+                            "line": 7,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8f85082e6f6c436c50bb-84316b29ae490b4e5ac6",
+              "file": "integration/juice-shop-replay-validation.spec.ts",
+              "line": 10,
+              "column": 7
+            },
+            {
+              "title": "Pipeline should identify and validate IDOR against Juice Shop",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "location": {
+                        "file": "/Users/sanketjadhavar/Desktop/BrowserIntelAntiGravity/playwright-framework/tests/integration/juice-shop-replay-validation.spec.ts",
+                        "line": 7,
+                        "column": 15
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-05-25T08:49:17.325Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "location": {
+                            "file": "/Users/sanketjadhavar/Desktop/BrowserIntelAntiGravity/playwright-framework/tests/integration/juice-shop-replay-validation.spec.ts",
+                            "line": 7,
+                            "column": 15
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "8f85082e6f6c436c50bb-5f8299baba9a4c272a16",
+              "file": "integration/juice-shop-replay-validation.spec.ts",
+              "line": 10,
+              "column": 7
+            }
+          ]
+        }
+      ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-05-21T19:11:09.958Z",
-    "duration": 5170.491,
-    "expected": 3,
-    "skipped": 0,
+    "startTime": "2026-05-25T08:49:16.627Z",
+    "duration": 4956.162,
+    "expected": 6,
+    "skipped": 3,
     "unexpected": 0,
     "flaky": 0
   }

@@ -3,6 +3,8 @@ export interface HttpHeader {
   value: string;
 }
 
+import { RuntimeExchangeId } from './runtime-exchange-id';
+
 export interface CanonicalHttpRequest {
   method: string;
   url: string;
@@ -17,7 +19,7 @@ export interface CanonicalHttpResponse {
 }
 
 export interface CanonicalHttpExchange {
-  exchangeId: string;
+  exchangeId: RuntimeExchangeId;
   sessionId: string;
   timestamp: number;
   request: CanonicalHttpRequest;
@@ -30,17 +32,5 @@ export interface CanonicalHttpExchange {
 }
 
 export class CanonicalEvidenceFactory {
-  public static createExchangeId(url: string, method: string, timestamp: number): string {
-    // Generate a reasonably unique ID without heavy hashing logic if possible,
-    // though a SHA-1 could be used here to match NormalizedEventBus later.
-    return `exch_${timestamp}_${method}_${this.safePath(url)}`;
-  }
-
-  private static safePath(urlStr: string): string {
-    try {
-      return new URL(urlStr).pathname.replace(/\//g, '_');
-    } catch {
-      return 'unknown_path';
-    }
-  }
+  // Empty, keeping it around if needed for other factories.
 }

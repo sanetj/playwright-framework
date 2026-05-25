@@ -20,6 +20,12 @@ export interface InvestigationBundle {
       priority: FindingPriorityLevel;
       roiScore: number;
       description: string;
+      
+      // Exploit Validation Properties
+      isValidated?: boolean;
+      validationConfidence?: string;
+      proofs?: any[];
+      proofNarrative?: string;
     }[];
   };
   evidenceExchanges: any[];
@@ -56,7 +62,10 @@ export class AiBundleCompressor {
         severity: 'HIGH',
         priority,
         roiScore: roi,
-        description: `Endpoint reachable by ${diffResult.comparisonRoleId} but not by ${diffResult.baseRoleId}.`
+        description: `Endpoint reachable by ${diffResult.comparisonRoleId} but not by ${diffResult.baseRoleId}.`,
+        isValidated: (node as any).isValidated,
+        validationConfidence: (node as any).validationConfidence,
+        proofs: (node as any).proofs
       });
     }
 
@@ -82,7 +91,11 @@ export class AiBundleCompressor {
           severity: 'HIGH',
           priority,
           roiScore: roi,
-          description: `Base role got status ${contra.baseStatus}, but comparison role got ${contra.comparisonStatus}.`
+          description: `Base role got status ${contra.baseStatus}, but comparison role got ${contra.comparisonStatus}.`,
+          isValidated: (contra as any).isValidated,
+          validationConfidence: (contra as any).validationConfidence,
+          proofs: (contra as any).proofs,
+          proofNarrative: (contra as any).isValidated ? `Successfully validated ${type} via deterministic replay mutation.` : undefined
         });
       }
     }
