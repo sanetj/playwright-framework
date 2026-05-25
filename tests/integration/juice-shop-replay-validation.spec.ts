@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { InvestigationPipeline } from '../../src/intelligence/orchestration/investigation-pipeline';
+import { InvestigationRuntime } from '../../src/runtime/orchestration/investigation-runtime';
 import { TargetSafetyProfile } from '../../src/intelligence/perturbation/probe-safety';
 import { RuntimeRoleProfile } from '../../src/intelligence/runtime/multi-session-runtime';
 
@@ -15,7 +15,7 @@ test.describe.skip('Tier 2: Real Target Validation (OWASP Juice Shop)', () => {
       destructiveMethodsAllowed: false
     };
 
-    const pipeline = new InvestigationPipeline(safetyProfile, targetUrl);
+    const runtime = new InvestigationRuntime();
 
     const adminRole: RuntimeRoleProfile = {
       roleId: 'admin_role',
@@ -35,6 +35,7 @@ test.describe.skip('Tier 2: Real Target Validation (OWASP Juice Shop)', () => {
     // intercepting the tokens, and then running the investigation. 
     // This is a placeholder for the final implemented E2E suite.
     
-    expect(pipeline).toBeDefined();
+    expect(runtime).toBeDefined();
   });
 });
+
