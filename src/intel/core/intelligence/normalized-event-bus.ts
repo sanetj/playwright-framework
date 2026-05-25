@@ -22,7 +22,7 @@ export interface NormalizedEvent<T = Record<string, unknown>> {
   id: string;
   ts: number;
   type: NormalizedEventType;
-  source: 'playwright' | 'runtime' | 'network' | 'inference';
+  source: 'playwright' | 'runtime' | 'network' | 'evaluation';
   ctx: EventContext;
   data: T;
   causes: string[];

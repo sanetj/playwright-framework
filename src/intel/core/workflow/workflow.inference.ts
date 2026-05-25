@@ -1,6 +1,6 @@
 import { RouteNode, WorkflowStep } from '../../models/schema';
 
-export class WorkflowInferenceEngine {
+export class WorkflowDeterministicEvaluationEngine {
   public infer(routeNodes: RouteNode[], rawSteps: WorkflowStep[]): WorkflowStep[] {
     const authRoutes = routeNodes.filter((r) => /login|signin|auth|account/i.test(r.url)).map((r) => r.url);
     return rawSteps.map((step) => ({

@@ -1,5 +1,5 @@
-import { InvestigationState, createInitialState } from './investigation-state';
-import { RuntimeRoleProfile } from '../../runtime/multi-session-runtime'; // Ensure path aligns with the actual framework, typically in runtime
+import { InvestigationState, createInitialState, InvestigationStatus } from './investigation-state';
+import { RuntimeRoleProfile } from '../../intelligence/runtime/multi-session-runtime'; // Ensure path aligns with the actual framework, typically in runtime
 
 export interface TargetConfig {
   baseUrl: string;
@@ -51,5 +51,20 @@ export class InvestigationWorkspace {
       ...newState,
       lastUpdatedAt: Date.now()
     };
+  }
+
+  /**
+   * Enforces 1 Workspace = 1 Investigation.
+   * Explicitly disposes of the KnowledgeGraph reference to prevent global memory leak.
+   */
+  public dispose(graphRef: any) {
+    if (graphRef && typeof graphRef.dispose === 'function') {
+       graphRef.dispose();
+    }
+    // Nullify properties that hold context
+    this.roles = [];
+    this.workflowHints = [];
+    this.state.status = InvestigationStatus.DEAD;
+    console.log(`[InvestigationWorkspace] Workspace ${this.workspaceId} explicitly disposed.`);
   }
 }

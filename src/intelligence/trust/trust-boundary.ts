@@ -1,6 +1,6 @@
 /**
  * @canonical
- * Trust Boundary Inference Substrate
+ * Trust Boundary DeterministicEvaluation Substrate
  * Trust boundaries must emerge dynamically from entity lineage, role differentials, and entity propagation.
  */
 
@@ -32,7 +32,7 @@ export interface BoundaryViolationCandidate {
   boundaryId: string;
   violatingEventId: string;
   confidenceScore: number;
-  hypothesisDescription: string;
+  candidateDescription: string;
 }
 
 // Specialized Boundary Markers

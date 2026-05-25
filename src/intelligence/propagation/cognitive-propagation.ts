@@ -21,7 +21,7 @@ export interface PropagationPolicy {
   policyId: string;
   limits: EpistemicCascadeLimit;
   boundaries: PropagationBoundary;
-  allowCyclicInfluence: false; // Circular reasoning is strictly forbidden
+  allowCyclicInfluence: false; // Circular evaluation is strictly forbidden
 }
 
 export interface ConfidenceDecayCascade {

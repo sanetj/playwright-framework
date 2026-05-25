@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { WorkflowCanonicalizer } from '../../src/intelligence/workflows/workflow-canonicalizer';
-import { ActionGraph } from '../../src/intelligence/graph/action-graph';
+import { ActionGraph } from '../../src/graph/action-graph';
 
 test.describe('WorkflowCanonicalizer', () => {
   test('should mask UUIDs in node IDs and labels', () => {

@@ -23,7 +23,7 @@ export interface EpistemicInfluenceEdge {
 
 export interface DivergenceMarker {
   markerId: string;
-  aiPredictionContextId: string;
+  aiSignalContextId: string;
   deterministicReplayEventId: string;
   divergenceDescription: string;
   detectedAtTs: number;

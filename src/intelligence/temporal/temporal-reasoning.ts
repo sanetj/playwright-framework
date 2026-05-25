@@ -1,6 +1,6 @@
 /**
  * @canonical
- * Temporal Reasoning Engine Contracts
+ * Temporal Evaluation Engine Contracts
  * Facilitates causal temporal cognition to answer "WHY did the runtime become this?".
  */
 

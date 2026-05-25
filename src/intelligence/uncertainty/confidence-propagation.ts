@@ -1,7 +1,7 @@
 /**
  * @canonical
  * Uncertainty Propagation Contracts
- * Defines how confidence cascades and degrades across derived inferences to prevent hallucinated certainty.
+ * Defines how confidence cascades and degrades across derived evaluations to prevent hallucinated certainty.
  */
 
 export interface ConfidenceScore {

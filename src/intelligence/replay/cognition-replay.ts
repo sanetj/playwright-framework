@@ -1,7 +1,7 @@
 /**
  * @canonical
  * Cognition Replay Hooks
- * Preserves the ability to replay deterministic telemetry while dynamically regenerating AI inferences.
+ * Preserves the ability to replay deterministic telemetry while dynamically regenerating AI evaluations.
  */
 
 export interface ReplayOntologyVersion {

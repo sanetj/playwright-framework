@@ -20,7 +20,7 @@ export interface ActionGraphEdge {
 
 /**
  * @deprecated Legacy Subsystem
- * @see src/intelligence/graph/action-graph.ts for the canonical Semantic Graph.
+ * @see src/graph/action-graph.ts for the canonical Semantic Graph.
  * This class remains for backward compatibility and functions as an adapter.
  */
 export class ActionGraph {

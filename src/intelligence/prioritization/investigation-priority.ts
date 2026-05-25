@@ -14,8 +14,8 @@ export interface PriorityMetrics {
  */
 export class InvestigationPriority {
   
-  public calculateExpectedPayout(baseSeverity: number, acceptanceProbability: number): number {
-    return baseSeverity * acceptanceProbability;
+  public calculateExpectedPayout(baseSeverity: number, acceptanceConfidence: number): number {
+    return baseSeverity * acceptanceConfidence;
   }
 
   public getLogicFlawWeight(type: CandidateType): number {
@@ -31,12 +31,12 @@ export class InvestigationPriority {
   public calculatePriorityScore(
     candidateType: CandidateType,
     metrics: ConfidenceMetrics,
-    acceptanceProbability: number,
+    acceptanceConfidence: number,
     baseSeverity: number,
     noveltyScore: number = 1.0
   ): number {
     
-    const expectedPayoutValue = this.calculateExpectedPayout(baseSeverity, acceptanceProbability);
+    const expectedPayoutValue = this.calculateExpectedPayout(baseSeverity, acceptanceConfidence);
     const logicFlawWeight = this.getLogicFlawWeight(candidateType);
     const proofStrength = metrics.proofConfidence;
 
