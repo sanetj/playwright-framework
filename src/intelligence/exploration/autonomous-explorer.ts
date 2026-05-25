@@ -25,21 +25,11 @@ export class AutonomousExplorer {
   /**
    * Block exploration until the minimum viable lineage establishes threshold confidence.
    */
-  private checkMinimumConfidenceThreshold(graphConfidenceScore: number): boolean {
-    const MIN_THRESHOLD = 0.3; // Requires at least 30% confidence in the seed graph
-    return graphConfidenceScore >= MIN_THRESHOLD;
-  }
-
   public async runExploration(
     roles: string[], 
     graphConfidenceScore: number, 
     onAction: (role: string, actionType: string) => Promise<boolean> // Mock runner callback
   ): Promise<void> {
-    
-    if (!this.checkMinimumConfidenceThreshold(graphConfidenceScore)) {
-      console.log(`[AutonomousExplorer] Blocked: Seed graph confidence (${graphConfidenceScore}) is below threshold.`);
-      return;
-    }
 
     const level = this.determineExplorationLevel(graphConfidenceScore);
     console.log(`[AutonomousExplorer] Starting exploration at Level ${level}`);

@@ -19,19 +19,19 @@ export class CandidateGenerator {
     const routes = graph.getNodesByType('ROUTE');
 
     for (const route of routes) {
-      // Deterministic evaluation rule (RoleGraphRule_17)
+      // Deterministic evaluation rule (CrossRoleOwnershipMismatch)
       if (route.metadata && route.metadata.requiresAuth && !route.metadata.isPublic) {
         
         // Let's pretend we found a mismatch mathematically
         const candidateId = createHash('sha256')
-          .update(`CrossTenantAccess:${route.id}:RoleGraphRule_17`)
+          .update(`CrossTenantAccess:${route.id}:CrossRoleOwnershipMismatch`)
           .digest('hex');
 
         candidates.push({
           id: candidateId,
           type: 'CrossTenantAccess',
           state: CandidateState.DISCOVERED,
-          transformationRule: 'RoleGraphRule_17',
+          transformationRule: 'CrossRoleOwnershipMismatch',
           targetNodeId: route.id,
           attackerRoleId: 'user_b_role',
           victimRoleId: 'user_a_role',
