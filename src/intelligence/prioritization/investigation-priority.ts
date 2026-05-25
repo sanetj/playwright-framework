@@ -1,5 +1,5 @@
-import { ConfidenceMetrics } from '../validation/confidence-calculator';
-import { CandidateType } from '../candidates/candidate-lifecycle';
+import { ConfidenceMetrics } from '../../runtime/validation/confidence-calculator';
+import { CandidateType } from '../../models/candidate/candidate-lifecycle';
 
 export interface PriorityMetrics {
   expectedPayoutValue: number;

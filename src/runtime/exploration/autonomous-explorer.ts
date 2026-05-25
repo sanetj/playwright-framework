@@ -29,11 +29,9 @@ export class AutonomousExplorer {
   ): Promise<void> {
 
     const level = this.determineExplorationLevel(graphConfidenceScore);
-    console.log(`[AutonomousExplorer] Starting exploration at Level ${level}`);
 
     // Strictly Sequential execution to preserve pure canonical lineage determinism
     for (const roleId of roles) {
-      console.log(`[AutonomousExplorer] Sequentially exploring role: ${roleId}`);
       
       let depth = 0;
       let exploring = true;
@@ -41,7 +39,6 @@ export class AutonomousExplorer {
       while (exploring) {
         const exhaustCheck = this.budget.isExhausted(roleId);
         if (exhaustCheck.exhausted) {
-          console.log(`[AutonomousExplorer] Stopped for ${roleId}: ${exhaustCheck.reason}`);
           break;
         }
 

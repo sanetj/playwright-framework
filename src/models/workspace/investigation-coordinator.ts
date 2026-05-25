@@ -34,7 +34,6 @@ export class InvestigationCoordinator {
   public transitionState(newStatus: InvestigationStatus, checkpointData?: any) {
     this.workspace.updateState({ status: newStatus });
     
-    console.log(`[InvestigationCoordinator] State transition: -> ${newStatus}`);
 
     if (checkpointData) {
       this.persistCheckpoint(checkpointData);
@@ -62,7 +61,6 @@ export class InvestigationCoordinator {
     };
 
     fs.writeFileSync(checkpointFile, JSON.stringify(payload, null, 2), 'utf-8');
-    console.log(`[InvestigationCoordinator] Checkpoint persisted: ${checkpointFile}`);
   }
 
   // Dispatch methods (e.g. runExploration, runTesting) would simply invoke the corresponding

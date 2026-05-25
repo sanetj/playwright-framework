@@ -33,7 +33,6 @@ export class GraphPruner {
       graph.nodes.has(edge.sourceId) && graph.nodes.has(edge.targetId)
     );
 
-    console.log(`[GraphPruner] Pruned ${nodesToDelete.length} stale nodes for epoch ${currentEpoch}.`);
   }
 
   public protectHighValueNode(graph: KnowledgeGraph, nodeId: string) {

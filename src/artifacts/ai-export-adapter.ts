@@ -54,7 +54,6 @@ export class AiExportAdapter {
     const jsonFile = 'bundle-v1.json';
     fs.writeFileSync(path.join(bundlePath, jsonFile), JSON.stringify(bundleJson, null, 2), 'utf-8');
 
-    console.log(`[AiExportAdapter] Successfully packaged Evidence Bundle V1 for external AI analysis at: ${bundlePath}`);
     return bundlePath;
   }
 }
