@@ -101,7 +101,10 @@ export class ReplayCoordinator {
       const page = await context.newPage();
       
       // Wait for the specific response that matches our mutated request
-      const responsePromise = page.waitForResponse(res => res.url() === plan.targetUrl || res.url().includes(plan.targetUrl), { timeout: plan.timeoutMs });
+      const responsePromise = page.waitForResponse(
+        res => res.url() === plan.targetUrl || res.url().includes(plan.targetUrl),
+        { timeout: plan.timeoutMs }
+      );
       
       // Try to navigate directly, though in a real SPA it might require clicking.
       // For now, goto triggers the initial state.
@@ -110,8 +113,11 @@ export class ReplayCoordinator {
       try {
         const pwResponse = await responsePromise;
         const resHeaders = await pwResponse.allHeaders();
-        let bodyStr = undefined;
-        try { bodyStr = (await pwResponse.body()).toString('utf-8'); } catch {}
+        let bodyStr: string | undefined = undefined;
+        try {
+          const bodyBuf = await pwResponse.body();
+          bodyStr = bodyBuf.toString('utf-8');
+        } catch {}
 
         response = {
           status: pwResponse.status(),
