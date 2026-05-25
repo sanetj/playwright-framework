@@ -11,6 +11,8 @@ import { RuntimeRoleProfile } from '../runtime/multi-session-runtime';
 import { GovernedCrawlEngine } from '../../runtime/execution/governed-crawl-engine';
 import { EntityOwnershipRegistry } from '../state/entity-ownership-registry';
 import { LivePerturbationInterceptor } from '../../runtime/instrumentation/live-perturbation-interceptor';
+import { ReplayValidationPipeline } from '../../runtime/validation/replay-validation-pipeline';
+import { ValidatedFinding } from '../validation/exploit-validation-engine';
 
 export class InvestigationPipeline implements NetworkEvidenceHandler {
   private runtime: PlaywrightMultiSessionRuntime;
@@ -63,16 +65,27 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
     const diffResult = engine.compare(canonBase, canonComp, baseRole.roleId, compRole.roleId);
 
     // 7. Live Perturbation Probing (Exploit Validation)
-    // If we detected a status contradiction (e.g. both got 200, or one 403 one 200), we could probe.
-    // In a full implementation, the logic to generate ReplayPerturbationEnvelopes would go here.
-    // We attach the live interceptor to a fresh context to validate.
-    // For now, we just wire the hook.
-    const liveInterceptor = new LivePerturbationInterceptor();
+    const validationPipeline = new ReplayValidationPipeline();
+    const validatedFindings: ValidatedFinding[] = [];
+
+    for (const finding of diffResult.findings) {
+      // Find the base exchange that caused this finding
+      // For simplicity, we just pick the first base exchange with the same URL
+      const originalExchange = this.exchanges.find(e => e.sessionId === baseSession.sessionId && e.request.url.includes(finding.targetEntityId || ''));
+      
+      if (originalExchange) {
+         console.log(`Validating finding on ${finding.targetEntityId}...`);
+         const validated = await validationPipeline.validateFinding(finding, this.runtime, originalExchange);
+         if (validated) {
+            validatedFindings.push(validated);
+         }
+      }
+    }
     
-    // Hack to get a playwright browser reference if needed to launch a new context,
-    // though PlaywrightMultiSessionRuntime doesn't expose browser directly easily. 
-    // We can just rely on the existing runtime or manually spawn. 
-    // We'll skip actual live browser perturbation in this E2E stub since we don't have envelope generators yet.
+    // Replace findings with validated findings in the diff result
+    if (validatedFindings.length > 0) {
+       diffResult.findings = validatedFindings;
+    }
 
     // 8. Bundle & Compress
     const compressor = new AiBundleCompressor();
@@ -93,7 +106,7 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
   public onExchangeCaptured(exchange: CanonicalHttpExchange, lineage: LineageExtractionResult): void {
     this.exchanges.push(exchange);
     this.lineages.push(lineage);
-    this.ownershipRegistry.registerLineage(exchange.sessionId, lineage, exchange.exchangeId);
+    this.ownershipRegistry.registerLineage(exchange.sessionId, lineage, exchange.exchangeId.id);
   }
 
   private buildGraphFromExchanges(sessionId: string): ActionGraph {

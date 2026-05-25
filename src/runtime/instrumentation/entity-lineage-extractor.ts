@@ -41,7 +41,7 @@ export class EntityLineageExtractor {
     }
 
     return {
-      exchangeId: exchange.exchangeId,
+      exchangeId: exchange.exchangeId.id,
       entities: this.deduplicate(entities)
     };
   }

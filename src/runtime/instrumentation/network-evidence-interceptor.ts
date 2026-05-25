@@ -1,6 +1,7 @@
 import { BrowserContext, Route, Request, Response } from '@playwright/test';
 import { CanonicalHttpExchange, CanonicalEvidenceFactory, CanonicalHttpRequest, CanonicalHttpResponse } from '../evidence/canonical-http-evidence';
 import { EntityLineageExtractor, LineageExtractionResult } from './entity-lineage-extractor';
+import { RuntimeExchangeIdGenerator } from '../evidence/runtime-exchange-id';
 
 export interface NetworkEvidenceHandler {
   onExchangeCaptured(exchange: CanonicalHttpExchange, lineage: LineageExtractionResult): void;
@@ -8,8 +9,9 @@ export interface NetworkEvidenceHandler {
 
 export class NetworkEvidenceInterceptor {
   private lineageExtractor = new EntityLineageExtractor();
-  // Store a Promise for the canonical request so response handlers can await it
-  private pendingRequests = new Map<string, { requestPromise: Promise<CanonicalHttpRequest>, timestamp: number }>();
+  private exchangeIdGenerator = new RuntimeExchangeIdGenerator();
+  // Correlate using Request object identity, avoiding URL-based correlation failures
+  private pendingRequests = new Map<Request, { requestPromise: Promise<CanonicalHttpRequest>, timestamp: number }>();
 
   constructor(private handler: NetworkEvidenceHandler, private sessionId: string) {}
 
@@ -26,7 +28,6 @@ export class NetworkEvidenceInterceptor {
   private async captureRequest(request: Request): Promise<void> {
     if (!request.url().startsWith('http')) return;
     const timestamp = Date.now();
-    const key = `${request.method()}:${request.url()}`;
 
     // Create the promise immediately so response handler can await it if it arrives very quickly
     const requestPromise = (async () => {
@@ -47,29 +48,27 @@ export class NetworkEvidenceInterceptor {
       };
     })();
 
-    this.pendingRequests.set(key, { requestPromise, timestamp });
+    this.pendingRequests.set(request, { requestPromise, timestamp });
   }
 
   private async captureResponse(response: Response): Promise<void> {
     try {
       const request = response.request();
       if (!request.url().startsWith('http')) return;
-
-      const key = `${request.method()}:${request.url()}`;
       
       // The response might fire before the request handler even had a chance to run synchronously.
       // Wait up to 100ms for the request to appear in the map.
-      let pending = this.pendingRequests.get(key);
+      let pending = this.pendingRequests.get(request);
       if (!pending) {
         await new Promise(r => setTimeout(r, 50));
-        pending = this.pendingRequests.get(key);
+        pending = this.pendingRequests.get(request);
       }
       
       if (!pending) {
         return; 
       }
 
-      this.pendingRequests.delete(key);
+      this.pendingRequests.delete(request);
       const canonicalReq = await pending.requestPromise;
 
       const resHeaders = await response.allHeaders();
@@ -92,7 +91,18 @@ export class NetworkEvidenceInterceptor {
       };
 
       const durationMs = Date.now() - pending.timestamp;
-      const exchangeId = CanonicalEvidenceFactory.createExchangeId(canonicalReq.url, canonicalReq.method, pending.timestamp);
+      
+      // Extract frame ID if available
+      const frameId = request.frame()?.name() || undefined;
+      
+      // Generate RuntimeExchangeId
+      const exchangeId = this.exchangeIdGenerator.generate(
+        canonicalReq.method,
+        canonicalReq.url,
+        canonicalReq.bodyStr ? 'hash_of_body' : 'empty', // Ideally hash the body
+        'nav_' + this.sessionId, // placeholder for navigation ID
+        frameId
+      );
 
       const exchange: CanonicalHttpExchange = {
         exchangeId,
