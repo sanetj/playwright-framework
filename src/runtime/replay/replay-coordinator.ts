@@ -1,6 +1,7 @@
 import { CanonicalHttpExchange, CanonicalHttpRequest, CanonicalHttpResponse } from '../evidence/canonical-http-evidence';
 import { BrowserContext } from '@playwright/test';
 import { LivePerturbationInterceptor } from '../instrumentation/live-perturbation-interceptor';
+import { ReplayDeterminismChecker, DeterminismCheckResult } from './replay-determinism';
 
 export enum ReplayExecutionMode {
   HTTP_ONLY = 'HTTP_ONLY',
@@ -135,6 +136,24 @@ export class ReplayCoordinator {
     
     this.completeExecution(plan.executionId);
     return response;
+  }
+
+  public validateReplay(
+    originalExchange: CanonicalHttpExchange,
+    replayedResponse: CanonicalHttpResponse
+  ): DeterminismCheckResult {
+    const checker = new ReplayDeterminismChecker();
+    
+    const replayExchange: CanonicalHttpExchange = {
+      exchangeId: `replay_val_${originalExchange.exchangeId}`,
+      sessionId: originalExchange.sessionId,
+      timestamp: Date.now(),
+      request: originalExchange.request,
+      response: replayedResponse,
+      source: originalExchange.source
+    };
+
+    return checker.evaluateDeterminism(originalExchange, replayExchange);
   }
 
   public hasPendingExecutions(): boolean {
