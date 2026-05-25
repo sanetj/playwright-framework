@@ -87,7 +87,6 @@ export class InvestigationRuntime {
        const submissionFinding = this.fpEliminator.filter(finding, reproducibility, verification, mockExchanges);
        
        if (!submissionFinding.isSubmissionReady) {
-          console.log(`[Runtime] Dropped finding ${finding.targetEndpoint}: ${submissionFinding.eliminationReason}`);
           continue;
        }
 
@@ -122,7 +121,6 @@ export class InvestigationRuntime {
            
            successfulBundles.push(bundlePath);
        } else {
-           console.log(`[Runtime] Finding blocked by Readiness Gate: ${readiness.blockReason}`);
        }
     }
 

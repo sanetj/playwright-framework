@@ -1,6 +1,6 @@
 import { InvestigationState, createInitialState, InvestigationStatus } from './investigation-state';
 import { RuntimeRoleProfile } from '../../intelligence/runtime/multi-session-runtime'; // Ensure path aligns with the actual framework, typically in runtime
-
+import { KnowledgeGraph } from '../../graph/knowledge-graph';
 export interface TargetConfig {
   baseUrl: string;
   scopeRules: string[]; // e.g., ['/api/*', '!/api/logout']
@@ -23,6 +23,7 @@ export class InvestigationWorkspace {
   public roles: RuntimeRoleProfile[] = [];
   public workflowHints: string[] = [];
   public readonly environmentProfile: EnvironmentProfile;
+  public graph: KnowledgeGraph;
   
   public state: InvestigationState;
 
@@ -35,6 +36,7 @@ export class InvestigationWorkspace {
     this.target = target;
     this.environmentProfile = environmentProfile;
     this.state = createInitialState(workspaceId);
+    this.graph = new KnowledgeGraph(workspaceId);
   }
 
   public addRole(role: RuntimeRoleProfile) {
@@ -57,14 +59,12 @@ export class InvestigationWorkspace {
    * Enforces 1 Workspace = 1 Investigation.
    * Explicitly disposes of the KnowledgeGraph reference to prevent global memory leak.
    */
-  public dispose(graphRef: any) {
-    if (graphRef && typeof graphRef.dispose === 'function') {
-       graphRef.dispose();
-    }
+  public dispose() {
     // Nullify properties that hold context
     this.roles = [];
     this.workflowHints = [];
     this.state.status = InvestigationStatus.DEAD;
-    console.log(`[InvestigationWorkspace] Workspace ${this.workspaceId} explicitly disposed.`);
+    // Destroy graph reference
+    this.graph = undefined as any;
   }
 }

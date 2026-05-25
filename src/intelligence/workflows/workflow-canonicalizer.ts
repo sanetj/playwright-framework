@@ -1,4 +1,4 @@
-import { ActionGraph, GraphNode, GraphEdge } from '../graph/action-graph';
+import { ActionGraph, GraphNode, GraphEdge } from '../../graph/action-graph';
 
 export class WorkflowCanonicalizer {
   private readonly idMaskRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\b\d+\b/gi;

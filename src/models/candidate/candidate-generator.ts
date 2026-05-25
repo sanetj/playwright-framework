@@ -1,10 +1,10 @@
-import { KnowledgeGraph } from '../graph/knowledge-graph';
+import { KnowledgeGraph } from '../../graph/knowledge-graph';
 import { InvestigationCandidate, CandidateState, CandidateType } from './candidate-lifecycle';
 import { createHash } from 'crypto';
 
 /**
  * Transforms deterministic graph signals into typed InvestigationCandidates.
- * Strict mathematical heuristics. Zero probabilistic evaluationing.
+ * Strict mathematical heuristics. Zero probabilistic guessing.
  */
 export class CandidateGenerator {
   

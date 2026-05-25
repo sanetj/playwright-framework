@@ -37,7 +37,6 @@ export class ReplayValidationPipeline {
     // 2. Risk Classification
     const risk = this.riskClassifier.classify(plan, originalExchange.request.method);
     if (!this.riskClassifier.isExecutionAllowed(risk)) {
-      console.log(`[ValidationPipeline] Blocked HIGH risk mutation plan: ${plan.planId}`);
       return null;
     }
 

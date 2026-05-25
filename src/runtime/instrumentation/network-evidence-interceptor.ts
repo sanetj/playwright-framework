@@ -117,7 +117,6 @@ export class NetworkEvidenceInterceptor {
       const lineage = this.lineageExtractor.extract(exchange);
       this.handler.onExchangeCaptured(exchange, lineage);
     } catch (e) {
-      console.log(`[${this.sessionId}] FATAL ERROR in captureResponse: ${e}`);
     }
   }
 }

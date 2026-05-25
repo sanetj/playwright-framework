@@ -14,7 +14,7 @@ export interface CausalCognitionNode {
   epistemicState: EpistemicState;
 }
 
-export interface DeterministicEvaluationDependency {
+export interface DependencyRelation {
   dependencyId: string;
   dependentNodeId: string;
   supportingNodeId: string;
@@ -27,7 +27,7 @@ export interface CausalInfluenceChain {
   terminalNodeId: string;
 }
 
-export interface CausalEvaluationPath {
+export interface CausalAnalysisPath {
   pathId: string;
   targetNodeId: string;
   supportingChains: CausalInfluenceChain[];

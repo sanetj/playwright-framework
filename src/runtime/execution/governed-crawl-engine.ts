@@ -26,14 +26,11 @@ export class GovernedCrawlEngine {
     if (this.discoveredUrls.has(url)) return;
 
     this.discoveredUrls.add(url);
-    console.log(`[Crawler] Navigating to: ${url}`);
 
     try {
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: this.config.navigationTimeoutMs });
-      console.log(`[Crawler] Reached ${url}, waiting for fetches...`);
       await page.waitForTimeout(2000); 
     } catch (e) {
-      console.log(`[Crawler] Failed to navigate to ${url}: ${e}`);
       return;
     }
 
