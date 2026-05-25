@@ -15,8 +15,10 @@ export interface EvidenceBundleV1 {
 }
 
 /**
- * AI Isolation Layer.
+ * AI Isolation Layer (Pure Assembler).
  * Packages deterministic artifacts for external AI consumption.
+ * STRICT DOCTRINE: Adapters assemble. Adapters never interpret.
+ * No transformations, no summarization, no prioritization, no intelligence behavior.
  * Zero LLM APIs are invoked within the runtime boundary.
  */
 export class AiExportAdapter {

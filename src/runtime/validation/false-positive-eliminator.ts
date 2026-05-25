@@ -1,4 +1,4 @@
-import { ValidatedFinding } from '../../intelligence/validation/exploit-validation-engine';
+import { ValidatedFinding } from '../../runtime/validation/exploit-validation-engine';
 import { ReproducibilityResult } from '../reproducibility/reproducibility-engine';
 import { TriagerVerificationResult } from '../verification/triager-verification';
 import { CanonicalHttpExchange } from '../evidence/canonical-http-evidence';

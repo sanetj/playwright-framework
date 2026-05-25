@@ -4,20 +4,20 @@
  * Separates probabilistic AI interpretations from the deterministic runtime graph.
  */
 
-export interface InferenceConfidence {
+export interface DeterministicEvaluationConfidence {
   score: number;
   engineId: string;
   evidenceEventIds: string[];
 }
 
-export interface ProbabilisticInference {
+export interface ProbabilisticDeterministicEvaluation {
   id: string;
   inferredAtTs: number;
-  hypothesis: SemanticHypothesis;
-  confidence: InferenceConfidence;
+  candidate: SemanticInvestigationCandidate;
+  confidence: DeterministicEvaluationConfidence;
 }
 
-export interface SemanticHypothesis {
+export interface SemanticInvestigationCandidate {
   targetNodeId?: string;
   targetEdgeId?: string;
   description: string;
@@ -28,12 +28,12 @@ export interface SemanticHypothesis {
 export interface SidecarAnnotation {
   annotationId: string;
   targetCanonicalId: string; // The ID of the deterministic event or graph node this annotates
-  inference: ProbabilisticInference;
+  evaluation: ProbabilisticDeterministicEvaluation;
 }
 
 export interface CognitionSidecar {
   engineId: string;
   version: string;
-  annotateEvent(eventId: string, hypothesis: SemanticHypothesis, confidenceScore: number): SidecarAnnotation;
-  annotateNode(nodeId: string, hypothesis: SemanticHypothesis, confidenceScore: number): SidecarAnnotation;
+  annotateEvent(eventId: string, candidate: SemanticInvestigationCandidate, confidenceScore: number): SidecarAnnotation;
+  annotateNode(nodeId: string, candidate: SemanticInvestigationCandidate, confidenceScore: number): SidecarAnnotation;
 }

@@ -1,4 +1,4 @@
-import { ValidatedFinding } from '../../intelligence/validation/exploit-validation-engine';
+import { ValidatedFinding } from '../../runtime/validation/exploit-validation-engine';
 import { ExploitProof } from '../evidence/exploit-proof-capture';
 import { StateDependencyResult } from '../replay/state-dependency-detector';
 import { SemanticSuccessEvaluator, SemanticSuccessResult } from '../validation/semantic-success-evaluator';

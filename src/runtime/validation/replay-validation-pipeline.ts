@@ -5,9 +5,9 @@ import { ContextualPerturbationEngine } from '../replay/contextual-perturbation'
 import { LivePerturbationInterceptor } from '../instrumentation/live-perturbation-interceptor';
 import { ReplayBranchContext } from '../replay/replay-branch';
 import { MutationRiskClassifier, MutationRiskLevel } from '../governance/mutation-risk-classifier';
-import { ProofSemanticValidator } from '../../intelligence/validation/proof-semantic-validator';
+import { ProofSemanticValidator } from '../../runtime/validation/proof-semantic-validator';
 import { ExploitProof, ProofClassification } from '../evidence/exploit-proof-capture';
-import { ExploitValidationEngine, ValidatedFinding } from '../../intelligence/validation/exploit-validation-engine';
+import { ExploitValidationEngine, ValidatedFinding } from '../../runtime/validation/exploit-validation-engine';
 import { PlaywrightMultiSessionRuntime } from '../execution/playwright-multi-session';
 import { CanonicalHttpExchange } from '../evidence/canonical-http-evidence';
 import { ReplayPerturbationEnvelope } from '../../intelligence/perturbation/governed-perturbation';

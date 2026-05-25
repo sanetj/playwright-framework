@@ -4,7 +4,7 @@
  * Trust must be contextual, temporal, probabilistic, inheritable, and revocable.
  */
 
-import { TemporalWindow } from '../temporal/temporal-reasoning';
+import { TemporalWindow } from '../temporal/temporal-evaluation';
 
 export interface TrustScope {
   scopeId: string;

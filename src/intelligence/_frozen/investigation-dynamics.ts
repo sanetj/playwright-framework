@@ -19,21 +19,21 @@ export interface MissingCausalLink {
 
 export interface InvestigativePressure {
   pressureScore: number;
-  drivingHypothesisId: string;
+  drivingInvestigationCandidateId: string;
   missingLinks: MissingCausalLink[];
   calculatedAtTs: number;
 }
 
-export interface HypothesisCorroboration {
+export interface InvestigationCandidateCorroboration {
   corroborationId: string;
-  hypothesisId: string;
+  candidateId: string;
   corroboratingEventId: string;
   confidenceDelta: number;
 }
 
-export interface HypothesisEscalation {
+export interface InvestigationCandidateEscalation {
   escalationId: string;
-  hypothesisId: string;
+  candidateId: string;
   escalationTrigger: 'PRESSURE_THRESHOLD_MET' | 'CRITICAL_CONTRADICTION' | 'HUMAN_OVERRIDE';
   escalatedAtTs: number;
 }
@@ -47,7 +47,7 @@ export interface InvestigationDeadlock {
 
 export interface InvestigationLifecycle {
   investigationId: string;
-  targetHypothesisId: string;
+  targetInvestigationCandidateId: string;
   startedAtTs: number;
   status: 'ACTIVE' | 'DEADLOCKED' | 'RESOLVED_PROVEN' | 'RESOLVED_FALSIFIED';
   accumulatedPressure: InvestigativePressure[];

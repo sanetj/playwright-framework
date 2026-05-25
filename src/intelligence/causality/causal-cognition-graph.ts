@@ -10,11 +10,11 @@ import { EpistemicInfluenceEdge } from '../epistemics/epistemic-influence';
 export interface CausalCognitionNode {
   nodeId: string;
   nodeType: 'HYPOTHESIS' | 'CONTRADICTION' | 'TRUST_ASSERTION';
-  referenceId: string; // ID of the specific hypothesis/contradiction/trust object
+  referenceId: string; // ID of the specific candidate/contradiction/trust object
   epistemicState: EpistemicState;
 }
 
-export interface InferenceDependency {
+export interface DeterministicEvaluationDependency {
   dependencyId: string;
   dependentNodeId: string;
   supportingNodeId: string;
@@ -27,7 +27,7 @@ export interface CausalInfluenceChain {
   terminalNodeId: string;
 }
 
-export interface CausalReasoningPath {
+export interface CausalEvaluationPath {
   pathId: string;
   targetNodeId: string;
   supportingChains: CausalInfluenceChain[];
@@ -47,9 +47,9 @@ export interface TrustDecayPropagation {
   decayFactorApplied: number;
 }
 
-export interface HypothesisEvolutionTrace {
+export interface InvestigationCandidateEvolutionTrace {
   traceId: string;
-  hypothesisNodeId: string;
+  candidateNodeId: string;
   stateTransitions: Array<{ fromState: EpistemicState; toState: EpistemicState; ts: number }>;
   corroboratingEvidenceAdded: string[];
 }

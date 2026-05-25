@@ -1,4 +1,4 @@
-import { ProofSemanticValidator } from '../../intelligence/validation/proof-semantic-validator';
+import { ProofSemanticValidator } from '../../runtime/validation/proof-semantic-validator';
 
 export interface SemanticSuccessResult {
   successful: boolean;

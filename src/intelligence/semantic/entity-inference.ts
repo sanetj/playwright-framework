@@ -7,7 +7,7 @@ export interface EntityRelationship {
   risk: 'low' | 'medium' | 'high';
 }
 
-export class EntityInference {
+export class EntityDeterministicEvaluation {
   public infer(endpoints: SemanticEndpoint[]): EntityRelationship[] {
     const map = new Map<string, EntityRelationship>();
     for (const ep of endpoints) {
