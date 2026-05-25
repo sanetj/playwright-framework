@@ -33,7 +33,7 @@ export class FalsePositiveSuppressor {
 
   private isCacheOrTransient(exchange: CanonicalHttpExchange): boolean {
     // 304 Not Modified is inherently transient state
-    if (exchange.response.status === 304) return true;
+    if (exchange.response?.status === 304) return true;
     return false;
   }
 

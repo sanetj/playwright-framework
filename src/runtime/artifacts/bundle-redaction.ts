@@ -21,20 +21,24 @@ export class BundleRedactor {
         : exchange.request.bodyStr;
     }
 
-    const redactedRes: any = {
-      status: exchange.response.status
-    };
+    let redactedRes: any = undefined;
 
-    if (config.includeHeaders) {
-      redactedRes.headers = exchange.response.headers;
-    }
+    if (exchange.response) {
+      redactedRes = {
+        status: exchange.response.status
+      };
 
-    if (config.includeFullResponseBody && exchange.response.bodyStr) {
-      redactedRes.bodyStr = exchange.response.bodyStr.length > config.truncateBodiesOverBytes 
-        ? `${exchange.response.bodyStr.substring(0, config.truncateBodiesOverBytes)}... [REDACTED]`
-        : exchange.response.bodyStr;
-    } else if (!config.includeFullResponseBody) {
-      redactedRes.bodyStr = '[OMITTED BY PROFILE]';
+      if (config.includeHeaders) {
+        redactedRes.headers = exchange.response.headers;
+      }
+
+      if (config.includeFullResponseBody && exchange.response.bodyStr) {
+        redactedRes.bodyStr = exchange.response.bodyStr.length > config.truncateBodiesOverBytes 
+          ? `${exchange.response.bodyStr.substring(0, config.truncateBodiesOverBytes)}... [REDACTED]`
+          : exchange.response.bodyStr;
+      } else if (!config.includeFullResponseBody) {
+        redactedRes.bodyStr = '[OMITTED BY PROFILE]';
+      }
     }
 
     return {

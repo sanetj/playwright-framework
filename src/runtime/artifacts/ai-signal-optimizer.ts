@@ -15,10 +15,10 @@ export class AiSignalOptimizer {
         headers: this.filterHeaders(exchange.request.headers),
         body: this.truncateBody(exchange.request.bodyStr)
       },
-      res: {
+      res: exchange.response ? {
         status: exchange.response.status,
         body: this.truncateBody(exchange.response.bodyStr)
-      }
+      } : undefined
     };
   }
 
