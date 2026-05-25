@@ -1,4 +1,11 @@
-import { CanonicalHttpExchange, CanonicalHttpRequest } from '../evidence/canonical-http-evidence';
+import { CanonicalHttpExchange, CanonicalHttpRequest, CanonicalHttpResponse } from '../evidence/canonical-http-evidence';
+import { BrowserContext } from '@playwright/test';
+import { LivePerturbationInterceptor } from '../instrumentation/live-perturbation-interceptor';
+
+export enum ReplayExecutionMode {
+  HTTP_ONLY = 'HTTP_ONLY',
+  BROWSER_CONTEXT = 'BROWSER_CONTEXT'
+}
 
 export interface ReplayMetadata {
   executionId: string;
@@ -55,6 +62,79 @@ export class ReplayCoordinator {
 
   public completeExecution(executionId: string): void {
     this.pendingExecutions.delete(executionId);
+  }
+
+  public async executeReplay(
+    plan: DeterministicRequestPlan,
+    interceptor: LivePerturbationInterceptor,
+    context: BrowserContext,
+    mode: ReplayExecutionMode = ReplayExecutionMode.HTTP_ONLY
+  ): Promise<CanonicalHttpResponse> {
+    
+    // Ensure interceptor is active on this context
+    await interceptor.attach(context);
+
+    let response: CanonicalHttpResponse;
+
+    if (mode === ReplayExecutionMode.HTTP_ONLY) {
+      const apiReq = await context.request.fetch(plan.targetUrl, {
+        method: plan.method,
+        headers: plan.headers,
+        data: plan.bodyStr,
+        timeout: plan.timeoutMs
+      });
+      
+      const resHeaders = apiReq.headers();
+      const status = apiReq.status();
+      const body = await apiReq.body();
+      
+      response = {
+        status,
+        headers: Object.entries(resHeaders).map(([name, value]) => ({ name, value })),
+        bodyStr: body.toString('utf-8')
+      };
+    } else {
+      // BROWSER_CONTEXT mode: open a page to trigger the workflow
+      const page = await context.newPage();
+      
+      // Wait for the specific response that matches our mutated request
+      const responsePromise = page.waitForResponse(
+        res => res.url() === plan.targetUrl || res.url().includes(plan.targetUrl),
+        { timeout: plan.timeoutMs }
+      );
+      
+      // Try to navigate directly, though in a real SPA it might require clicking.
+      // For now, goto triggers the initial state.
+      await page.goto(plan.targetUrl, { waitUntil: 'networkidle', timeout: plan.timeoutMs }).catch(() => {});
+      
+      try {
+        const pwResponse = await responsePromise;
+        const resHeaders = await pwResponse.allHeaders();
+        let bodyStr: string | undefined = undefined;
+        try {
+          const bodyBuf = await pwResponse.body();
+          bodyStr = bodyBuf.toString('utf-8');
+        } catch {}
+
+        response = {
+          status: pwResponse.status(),
+          headers: Object.entries(resHeaders).map(([name, value]) => ({ name, value })),
+          bodyStr
+        };
+      } catch (e) {
+        // Fallback if the request was never observed
+        response = {
+          status: 0,
+          headers: [],
+          bodyStr: `Replay execution failed or timed out: ${e}`
+        };
+      }
+      
+      await page.close();
+    }
+    
+    this.completeExecution(plan.executionId);
+    return response;
   }
 
   public hasPendingExecutions(): boolean {
