@@ -2,6 +2,7 @@ import { CanonicalHttpExchange, CanonicalHttpRequest, CanonicalHttpResponse } fr
 import { BrowserContext } from '@playwright/test';
 import { LivePerturbationInterceptor } from '../instrumentation/live-perturbation-interceptor';
 import * as crypto from 'crypto';
+import { ReplayDeterminismChecker, DeterminismCheckResult, ReplayProof } from './replay-determinism';
 
 export enum ReplayExecutionMode {
   HTTP_ONLY = 'HTTP_ONLY',
@@ -138,6 +139,46 @@ export class ReplayCoordinator {
     
     this.completeExecution(plan.executionId);
     return response;
+  }
+
+  public validateReplay(
+    originalExchange: CanonicalHttpExchange,
+    replayedResponse: CanonicalHttpResponse
+  ): DeterminismCheckResult {
+    const checker = new ReplayDeterminismChecker();
+    
+    const replayExchange: CanonicalHttpExchange = {
+      exchangeId: {
+        id: `replay_val_${originalExchange.exchangeId.id}`,
+        requestFingerprint: originalExchange.exchangeId.requestFingerprint,
+        navigationId: originalExchange.exchangeId.navigationId,
+        sequenceNumber: originalExchange.exchangeId.sequenceNumber
+      },
+      sessionId: originalExchange.sessionId,
+      timestamp: Date.now(),
+      request: originalExchange.request,
+      response: replayedResponse,
+      source: originalExchange.source
+    };
+
+    const validationResult = checker.evaluateDeterminism(originalExchange, replayExchange);
+
+    const proof: ReplayProof = {
+      exchangeId: originalExchange.exchangeId.id,
+      requestMetadata: {
+        method: originalExchange.request.method,
+        url: originalExchange.request.url
+      },
+      responseMetadata: {
+        status: replayedResponse.status
+      },
+      evidenceSnippet: replayedResponse.bodyStr ? replayedResponse.bodyStr.substring(0, 500) : undefined
+    };
+
+    return {
+      ...validationResult,
+      proof
+    };
   }
 
   public hasPendingExecutions(): boolean {
