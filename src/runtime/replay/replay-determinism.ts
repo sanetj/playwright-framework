@@ -1,8 +1,24 @@
 import { CanonicalHttpExchange, CanonicalHttpResponse } from '../evidence/canonical-http-evidence';
 
+export interface ReplayProof {
+  exchangeId: string;
+  requestMetadata: {
+    method: string;
+    url: string;
+    headers: Record<string, string>;
+    bodyStr?: string;
+  };
+  responseMetadata: {
+    status: number;
+    headers: { name: string; value: string }[];
+  };
+  evidenceSnippet?: string;
+}
+
 export interface DeterminismCheckResult {
   isDeterministic: boolean;
   varianceReasons: string[];
+  proof?: ReplayProof;
 }
 
 /**
