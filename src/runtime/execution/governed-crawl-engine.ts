@@ -36,7 +36,9 @@ export class GovernedCrawlEngine {
 
     const origin = new URL(url).origin;
     const links = await page.$$eval('a[href]', (anchors) => 
-      anchors.map(a => a.href)
+      anchors
+        .map(a => (a as HTMLAnchorElement).href)
+        .filter(Boolean)
     );
 
     const sameOriginLinks = links.filter(href => href.startsWith(origin));

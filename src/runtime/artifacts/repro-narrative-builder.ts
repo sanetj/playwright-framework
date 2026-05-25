@@ -19,12 +19,12 @@ export class ReproNarrativeBuilder {
 
     narrative += `\n3. Observe the final restricted action as the victim:\n`;
     const targetEx = baseExchanges[baseExchanges.length - 1];
-    narrative += `   - \`${targetEx.request.method} ${targetEx.request.url}\` (Returns ${targetEx.response.status})\n`;
+    narrative += `   - \`${targetEx.request.method} ${targetEx.request.url}\` (Returns ${targetEx.response?.status ?? 'unknown'})\n`;
 
     narrative += `\n4. Authenticate as the attacker (Comparison Role).\n`;
     narrative += `5. Replay the exact restricted request using the attacker's authorization headers:\n`;
     narrative += `   - \`${compExchange.request.method} ${compExchange.request.url}\`\n`;
-    narrative += `6. Observe the successful exploitation (Returns ${compExchange.response.status}).\n`;
+    narrative += `6. Observe the successful exploitation (Returns ${compExchange.response?.status ?? 'unknown'}).\n`;
 
     return narrative;
   }

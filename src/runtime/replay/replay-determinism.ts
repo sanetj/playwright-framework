@@ -14,6 +14,16 @@ export class ReplayDeterminismChecker {
   public evaluateDeterminism(baseExchange: CanonicalHttpExchange, replayExchange: CanonicalHttpExchange): DeterminismCheckResult {
     const reasons: string[] = [];
     
+    if (!baseExchange.response && !replayExchange.response) {
+      return { isDeterministic: true, varianceReasons: [] };
+    }
+    if (!baseExchange.response || !replayExchange.response) {
+      return {
+        isDeterministic: false,
+        varianceReasons: ['One of the exchanges is missing a response']
+      };
+    }
+    
     // 1. Status Code Determinism
     if (baseExchange.response.status !== replayExchange.response.status) {
       reasons.push(`Status code variance: ${baseExchange.response.status} vs ${replayExchange.response.status}`);

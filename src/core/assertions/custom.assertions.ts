@@ -10,6 +10,10 @@ export class CustomAssertions {
   }
 
   public static expectDeepPartial<T extends object>(actual: T, expectedPartial: Partial<T>): void {
-    expect(actual).toMatchObject(expectedPartial);
+    (expect(actual) as unknown as {
+      toEqual(value: unknown): void;
+    }).toEqual(
+      expect.objectContaining(expectedPartial)
+    );
   }
 }
