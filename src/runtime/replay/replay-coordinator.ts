@@ -159,13 +159,10 @@ export class ReplayCoordinator {
       exchangeId: originalExchange.exchangeId,
       requestMetadata: {
         method: originalExchange.request.method,
-        url: originalExchange.request.url,
-        headers: this.reconstructHeaders(originalExchange.request.headers),
-        bodyStr: originalExchange.request.bodyStr
+        url: originalExchange.request.url
       },
       responseMetadata: {
-        status: replayedResponse.status,
-        headers: replayedResponse.headers
+        status: replayedResponse.status
       },
       evidenceSnippet: replayedResponse.bodyStr ? replayedResponse.bodyStr.substring(0, 500) : undefined
     };
