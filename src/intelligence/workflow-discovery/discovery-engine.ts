@@ -2,11 +2,13 @@ import { ActionGraph } from '../../graph/action-graph';
 import { WorkflowEntity, WorkflowTransition, WorkflowBoundary } from '../workflow-models/workflow-entities';
 import { WorkflowEntityCategory, WorkflowTransitionType, WorkflowBoundaryType } from '../workflow-models/workflow-classification';
 import { AUTH_PATTERNS, ROLE_PATTERNS, TENANT_PATTERNS, PAYMENT_PATTERNS, RESOURCE_PATTERNS } from './workflow-patterns';
+import { WorkflowRiskSignals } from '../workflow-models/workflow-risk-signals';
 
 export interface WorkflowDiscoveryResult {
   entities: WorkflowEntity[];
   transitions: WorkflowTransition[];
   boundaries: WorkflowBoundary[];
+  riskSignals: WorkflowRiskSignals;
 }
 
 export class WorkflowDiscoveryEngine {
@@ -84,15 +86,30 @@ export class WorkflowDiscoveryEngine {
     return boundaries;
   }
 
+  public extractRiskSignals(
+    entities: WorkflowEntity[],
+    boundaries: WorkflowBoundary[]
+  ): WorkflowRiskSignals {
+    return {
+      crossesBoundary: boundaries.length > 0,
+      containsAdminEntity: entities.some(e => e.category === WorkflowEntityCategory.ADMIN),
+      containsTenantBoundary: boundaries.some(b => b.boundaryType === WorkflowBoundaryType.TENANT),
+      containsAuthEntity: entities.some(e => e.category === WorkflowEntityCategory.AUTH),
+      containsExternalEntity: entities.some(e => e.category === WorkflowEntityCategory.EXTERNAL)
+    };
+  }
+
   public discover(graph: ActionGraph): WorkflowDiscoveryResult {
     const entities = this.extractEntities(graph);
     const transitions = this.extractTransitions(graph);
     const boundaries = this.extractBoundaries(entities);
+    const riskSignals = this.extractRiskSignals(entities, boundaries);
 
     return {
       entities,
       transitions,
-      boundaries
+      boundaries,
+      riskSignals
     };
   }
 }
