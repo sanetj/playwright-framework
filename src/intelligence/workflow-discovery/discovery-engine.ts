@@ -1,5 +1,7 @@
 import { ActionGraph } from '../../graph/action-graph';
 import { WorkflowEntity, WorkflowTransition, WorkflowBoundary } from '../workflow-models/workflow-entities';
+import { WorkflowEntityCategory } from '../workflow-models/workflow-classification';
+import { AUTH_PATTERNS, ROLE_PATTERNS, TENANT_PATTERNS, PAYMENT_PATTERNS, RESOURCE_PATTERNS } from './workflow-patterns';
 
 export interface WorkflowDiscoveryResult {
   entities: WorkflowEntity[];
@@ -8,9 +10,43 @@ export interface WorkflowDiscoveryResult {
 }
 
 export class WorkflowDiscoveryEngine {
+  public classifyNodeCategory(label: string): WorkflowEntityCategory {
+    const lowerLabel = label.toLowerCase();
+    if (AUTH_PATTERNS.some(p => lowerLabel.includes(p.toLowerCase()))) {
+      return WorkflowEntityCategory.AUTH;
+    }
+    if (ROLE_PATTERNS.some(p => lowerLabel.includes(p.toLowerCase()))) {
+      return WorkflowEntityCategory.ADMIN;
+    }
+    if (TENANT_PATTERNS.some(p => lowerLabel.includes(p.toLowerCase()))) {
+      return WorkflowEntityCategory.TENANT;
+    }
+    if (PAYMENT_PATTERNS.some(p => lowerLabel.includes(p.toLowerCase()))) {
+      return WorkflowEntityCategory.PAYMENT;
+    }
+    if (RESOURCE_PATTERNS.some(p => lowerLabel.includes(p.toLowerCase()))) {
+      return WorkflowEntityCategory.RESOURCE;
+    }
+    return WorkflowEntityCategory.RESOURCE;
+  }
+
+  public extractEntities(graph: ActionGraph): WorkflowEntity[] {
+    const { nodes } = graph.toJSON();
+    return nodes.map(node => {
+      const category = this.classifyNodeCategory(node.label || node.id);
+      return {
+        id: `wf_ent_${node.id}`,
+        name: node.label || node.id,
+        category,
+        sourceNodeIds: [node.id]
+      };
+    });
+  }
+
   public discover(graph: ActionGraph): WorkflowDiscoveryResult {
+    const entities = this.extractEntities(graph);
     return {
-      entities: [],
+      entities,
       transitions: [],
       boundaries: []
     };
