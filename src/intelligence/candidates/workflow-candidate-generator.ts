@@ -12,19 +12,23 @@ export class WorkflowCandidateGenerator {
   }
 
   public generateFromWorkflowEntities(
-    entities: WorkflowEntity[]
+    entities: WorkflowEntity[],
+    riskSignals?: WorkflowRiskSignals
   ): InvestigationCandidate[] {
-    return entities.map(entity => ({
-      id: this.generateCandidateId(entity),
-      type: 'WorkflowGap',
-      state: CandidateState.DISCOVERED,
-      transformationRule: 'WorkflowDiscoveryRule',
-      targetNodeId: entity.id,
-      attackerRoleId: 'unknown',
-      victimRoleId: 'unknown',
-      createdAt: 1716666666000,
-      evidenceLinks: entity.sourceNodeIds
-    }));
+    return entities.map(entity => {
+      const ruleEvidence = riskSignals?.triggeredRuleIds?.map(id => `workflow-rule:${id}`) ?? [];
+      return {
+        id: this.generateCandidateId(entity),
+        type: 'WorkflowGap',
+        state: CandidateState.DISCOVERED,
+        transformationRule: 'WorkflowDiscoveryRule',
+        targetNodeId: entity.id,
+        attackerRoleId: 'unknown',
+        victimRoleId: 'unknown',
+        createdAt: 1716666666000,
+        evidenceLinks: [...entity.sourceNodeIds, ...ruleEvidence]
+      };
+    });
   }
 
   private generateCandidateId(
