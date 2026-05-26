@@ -43,9 +43,15 @@ export class FalsePositiveEliminator {
     // 3. Cache Artifact False Positive Check
     // If the proof's mutated response exactly matches a known unauthenticated or base role cached response,
     // it's likely hitting a cache layer, not successfully bypassing authorization.
-    const proofResponseText = finding.evidence.proof.mutatedResponse.text || '';
+    const proof = finding.proofs[0];
+    if (!proof) {
+      submissionFinding.eliminationReason = 'Validated finding contains no exploit proof';
+      return submissionFinding;
+    }
+
+    const proofResponseText = proof.mutatedResponse.bodyStr || '';
     if (proofResponseText) {
-      const isCached = cachedExchanges.some(ex => ex.response?.text === proofResponseText);
+      const isCached = cachedExchanges.some(ex => ex.response?.bodyStr === proofResponseText);
       if (isCached && finding.type !== 'STATUS_CONTRADICTION') {
          // It might just be returning the cached version of what the base role saw
          // We'd need more advanced logic here, but for now:
@@ -56,9 +62,9 @@ export class FalsePositiveEliminator {
 
     // 4. Empty Body False Positive Check
     // A 200 OK with no body and no semantic proof is highly suspicious (often a soft fail by the server)
-    const isStatus200 = finding.evidence.proof.statusDelta.after === 200;
+    const isStatus200 = proof.statusDelta.after === 200;
     const isBodyEmpty = !proofResponseText || proofResponseText.trim().length === 0;
-    if (isStatus200 && isBodyEmpty && finding.evidence.proof.confidence < 0.8) {
+    if (isStatus200 && isBodyEmpty && proof.confidence === 'LOW') {
       submissionFinding.eliminationReason = '200 OK received but response body is empty and semantic confidence is low';
       return submissionFinding;
     }

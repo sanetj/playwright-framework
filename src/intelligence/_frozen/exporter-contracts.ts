@@ -4,7 +4,7 @@
  * Exports deterministic investigation bundles into multiple AI-optimized formats.
  */
 
-import { InvestigationBundle } from '../investigation-bundle';
+import { InvestigationBundle } from '../artifacts/investigation-bundle';
 
 export type ExportFormat = 'JSON' | 'MARKDOWN' | 'HACKERONE_MD' | 'BUGCROWD_MD' | 'AI_CONTEXT_DUMP' | 'COMPRESSED_EVIDENCE';
 

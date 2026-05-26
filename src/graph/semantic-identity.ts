@@ -41,7 +41,7 @@ export class SemanticIdentityManager {
   }
 
   public getRawId(semanticId: string): string | undefined {
-    return this.semanticToRaw.set(semanticId, ''); // Implementation note: we keep the map for reverse lookups
+    return this.semanticToRaw.get(semanticId);
   }
 
   public resetMappingsForResume() {

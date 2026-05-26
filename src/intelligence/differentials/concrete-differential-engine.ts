@@ -1,4 +1,4 @@
-import { ActionGraph, GraphNode } from '../graph/action-graph';
+import { ActionGraph, GraphNode } from '../../graph/action-graph';
 import { RoleDifferentialResult } from './role-differential';
 
 export interface DifferentialFinding {
@@ -51,7 +51,7 @@ export class ConcreteDifferentialEngine {
     const statusContradictions = [];
 
     // Find nodes in base
-    for (const [id, baseNode] of baseNodes) {
+    for (const [id, baseNode] of Array.from(baseNodes.entries())) {
       if (compNodes.has(id)) {
         const compNode = compNodes.get(id)!;
         const baseStatus = (baseNode.attrs.status as number) || 0;
@@ -74,7 +74,7 @@ export class ConcreteDifferentialEngine {
     }
 
     // Find nodes exclusively in comparison
-    for (const [id, node] of compNodes) {
+    for (const [id, node] of Array.from(compNodes.entries())) {
       if (!baseNodes.has(id)) {
         exclusiveToComparison.push(node);
       }

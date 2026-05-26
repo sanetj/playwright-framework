@@ -9,33 +9,28 @@ test.describe.skip('Tier 2: Real Target Validation (OWASP Juice Shop)', () => {
 
   test('Pipeline should identify and validate IDOR against Juice Shop', async () => {
     const safetyProfile: TargetSafetyProfile = {
-      allowedDomains: ['localhost'],
-      rateLimitDelayMs: 100,
-      maxConcurrentContexts: 2,
-      destructiveMethodsAllowed: false
+      targetId: 'juice_shop_safety',
+      safeCategories: [{ categoryId: 'reads', allowedClasses: ['READ_ONLY'] }],
+      requiresApprovalFor: ['STATE_MUTATION', 'HIGH_RISK']
     };
 
-    const runtime = new InvestigationRuntime();
+    expect(InvestigationRuntime).toBeDefined();
 
     const adminRole: RuntimeRoleProfile = {
       roleId: 'admin_role',
-      roleName: 'Admin',
-      authHeaders: {}, // Need logic to acquire token
-      expectedPrivilegeLevel: 10
+      roleName: 'Admin'
     };
 
     const userRole: RuntimeRoleProfile = {
       roleId: 'user_role',
-      roleName: 'Regular User',
-      authHeaders: {}, // Need logic to acquire token
-      expectedPrivilegeLevel: 1
+      roleName: 'Regular User'
     };
 
     // Note: A full Juice Shop integration test requires seeding the app, logging in,
     // intercepting the tokens, and then running the investigation. 
     // This is a placeholder for the final implemented E2E suite.
     
-    expect(runtime).toBeDefined();
+
   });
 });
 

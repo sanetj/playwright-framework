@@ -11,6 +11,7 @@ import { ExploitValidationEngine, ValidatedFinding } from '../../runtime/validat
 import { PlaywrightMultiSessionRuntime } from '../execution/playwright-multi-session';
 import { CanonicalHttpExchange } from '../evidence/canonical-http-evidence';
 import { ReplayPerturbationEnvelope } from '../../intelligence/perturbation/governed-perturbation';
+import { RuntimeSession } from '../../intelligence/runtime/multi-session-runtime';
 
 export class ReplayValidationPipeline {
   private planGen = new MutationPlanGenerator();
@@ -47,65 +48,79 @@ export class ReplayValidationPipeline {
     const originalPage = originalCtx.pages()[0]; // assume one page
     
     const snapshot = await this.branchContext.captureSnapshot(originalExchange.sessionId, originalPage);
-    const newCtx = await runtime.getBrowser().newContext();
-    const newPage = await newCtx.newPage();
-    const fork = await this.branchContext.forkSession(snapshot, newCtx, newPage);
+    const originalSession = runtime.activeSessions.get(originalExchange.sessionId);
+    if (!originalSession) return null;
 
-    // 4. Setup Interceptor and Coordinator
-    const interceptor = new LivePerturbationInterceptor();
-    // In a full implementation, we map ReplayMutationPlan -> ReplayPerturbationEnvelope here.
-    // For now, we'll construct a dummy envelope to satisfy the interceptor if needed.
-    const envelope: ReplayPerturbationEnvelope = {
-       idMutations: [], authMutations: [], tenantMutations: []
-    };
-    interceptor.setEnvelope(envelope);
+    let newSession: RuntimeSession | undefined;
 
-    const targetIdorValue = plan.mutations.find(m => m.injectedValue)?.injectedValue || '';
+    try {
+      newSession = await runtime.launchIsolatedSession(originalSession.roleProfile, originalSession.isolationBoundary);
+      const newCtx = runtime.getPlaywrightContext(newSession.sessionId);
+      const newPage = await newCtx.newPage();
+      const fork = await this.branchContext.forkSession(snapshot, newCtx, newPage);
 
-    // We apply contextual mutation to get a deterministic plan
-    const mutatedCanonicalReq = this.perturbationEngine.applyMutation(originalExchange.request, plan);
-    const replayPlanReq = this.coordinator.planReplay({
-       ...originalExchange,
-       request: mutatedCanonicalReq
-    }, plan.planId);
+      // 4. Setup Interceptor and Coordinator
+      const interceptor = new LivePerturbationInterceptor();
+      // In a full implementation, we map ReplayMutationPlan -> ReplayPerturbationEnvelope here.
+      // For now, we'll construct a dummy envelope to satisfy the interceptor if needed.
+      const envelope: ReplayPerturbationEnvelope = {
+         envelopeId: 'val_dummy_env',
+         intentDescription: 'validation dummy envelope',
+         idMutations: [],
+         authMutations: [],
+         tenantMutations: [],
+         sequencePerturbations: []
+      };
+      interceptor.setEnvelope(envelope);
 
-    if (!replayPlanReq) return null;
+      const targetIdorValue = plan.mutations.find(m => m.injectedValue)?.injectedValue || '';
 
-    // 5. Execute Replay
-    const mutatedResponse = await this.coordinator.executeReplay(
-      replayPlanReq,
-      interceptor,
-      fork.browserContext,
-      ReplayExecutionMode.HTTP_ONLY // Can use BROWSER_CONTEXT as needed
-    );
+      // We apply contextual mutation to get a deterministic plan
+      const mutatedCanonicalReq = this.perturbationEngine.applyMutation(originalExchange.request, plan);
+      const replayPlanReq = this.coordinator.planReplay({
+         ...originalExchange,
+         request: mutatedCanonicalReq
+      }, plan.planId);
 
-    // 6. Capture Proof and Semantically Validate
-    const semanticResult = this.semanticValidator.validate(originalExchange.response, mutatedResponse, targetIdorValue);
+      if (!replayPlanReq) return null;
 
-    const proof: ExploitProof = {
-      proofId: `proof_${Date.now()}`,
-      lineage: {
-        findingId: finding.findingId || 'unknown',
-        replayId: replayPlanReq.executionId,
-        sourceExchangeIds: [originalExchange.exchangeId],
-        mutationIds: [plan.planId],
-        sessionLineage: [snapshot.sessionId, fork.forkId],
-        roleLineage: [finding.targetRole],
-        proofArtifacts: []
-      },
-      originalExchange,
-      mutatedResponse,
-      statusDelta: { before: originalExchange.response?.status || 0, after: mutatedResponse.status },
-      confidence: semanticResult.confidence,
-      classification: 'IDOR' // Simplify for now
-    };
+      // 5. Execute Replay
+      const mutatedResponse = await this.coordinator.executeReplay(
+        replayPlanReq,
+        interceptor,
+        fork.browserContext,
+        ReplayExecutionMode.HTTP_ONLY // Can use BROWSER_CONTEXT as needed
+      );
 
-    // 7. Validation Engine
-    const validated = this.validationEngine.validate(finding, proof);
-    
-    // Cleanup fork
-    await newCtx.close();
+      // 6. Capture Proof and Semantically Validate
+      const semanticResult = this.semanticValidator.validate(originalExchange.response, mutatedResponse, targetIdorValue);
 
-    return validated;
+      const proof: ExploitProof = {
+        proofId: `proof_${Date.now()}`,
+        lineage: {
+          findingId: finding.findingId || 'unknown',
+          replayId: replayPlanReq.executionId,
+          sourceExchangeIds: [originalExchange.exchangeId],
+          mutationIds: [plan.planId],
+          sessionLineage: [snapshot.sessionId, fork.forkId],
+          roleLineage: [finding.targetRole],
+          proofArtifacts: []
+        },
+        originalExchange,
+        mutatedResponse,
+        statusDelta: { before: originalExchange.response?.status || 0, after: mutatedResponse.status },
+        confidence: semanticResult.confidence,
+        classification: 'IDOR' // Simplify for now
+      };
+
+      // 7. Validation Engine
+      const validated = this.validationEngine.validate(finding, proof);
+      
+      return validated;
+    } finally {
+      if (newSession) {
+        await runtime.terminateSession(newSession.sessionId);
+      }
+    }
   }
 }

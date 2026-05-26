@@ -13,6 +13,14 @@ export class ReplayRecipeGenerator {
    * to instantly reproduce the exploit.
    */
   public generate(finding: SubmissionFinding, minimalRecipe: MinimalReplayRecipe): ReplayRecipeInstructions {
+    const proof = finding.proofs[0];
+    if (!proof) {
+      return {
+        humanReadableSteps: ['No exploit proof available.'],
+        curlCommand: 'No curl command available.'
+      };
+    }
+
     const steps: string[] = [];
     
     // 1. Generate human readable steps
@@ -25,11 +33,11 @@ export class ReplayRecipeGenerator {
       stepNumber++;
     }
 
-    const mutatedExchange = finding.evidence.proof.originalExchange;
+    const mutatedExchange = proof.originalExchange;
     steps.push(`${stepNumber}. Intercept: ${mutatedExchange.request.method} ${mutatedExchange.request.url}`);
     steps.push(`   Replace with payload injecting target ID/Role: ${finding.targetEntityId}`);
     steps.push(`   Expected Status: ${finding.baseStatus || 403}`);
-    steps.push(`   Observed Status: ${finding.evidence.proof.statusDelta.after}`);
+    steps.push(`   Observed Status: ${proof.statusDelta.after}`);
 
     // 2. Generate the curl command for the mutated request
     const curlCommand = this.buildCurlCommand(mutatedExchange);
@@ -44,15 +52,15 @@ export class ReplayRecipeGenerator {
     const req = exchange.request;
     let curl = `curl -X ${req.method} "${req.url}"`;
     
-    for (const [key, value] of Object.entries(req.headers)) {
-      if (typeof value === 'string') {
-        curl += ` -H "${key}: ${value.replace(/"/g, '\\"')}"`;
+    if (req.headers) {
+      for (const header of req.headers) {
+        curl += ` -H "${header.name}: ${header.value.replace(/"/g, '\\"')}"`;
       }
     }
     
-    if (req.postData) {
+    if (req.bodyStr) {
       // Very naive escaping for bash
-      const escapedData = req.postData.replace(/'/g, "'\\''");
+      const escapedData = req.bodyStr.replace(/'/g, "'\\''");
       curl += ` -d '${escapedData}'`;
     }
     

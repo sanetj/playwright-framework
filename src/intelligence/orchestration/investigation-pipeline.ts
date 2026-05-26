@@ -3,7 +3,7 @@ import { TargetSafetyProfile } from '../perturbation/probe-safety';
 import { NetworkEvidenceInterceptor, NetworkEvidenceHandler } from '../../runtime/instrumentation/network-evidence-interceptor';
 import { CanonicalHttpExchange } from '../../runtime/evidence/canonical-http-evidence';
 import { LineageExtractionResult } from '../../runtime/instrumentation/entity-lineage-extractor';
-import { ActionGraph, GraphNode } from '../graph/action-graph';
+import { ActionGraph, GraphNode } from '../../graph/action-graph';
 import { WorkflowCanonicalizer } from '../workflows/workflow-canonicalizer';
 import { ConcreteDifferentialEngine, DifferentialComparisonResult } from '../differentials/concrete-differential-engine';
 import { AiBundleCompressor, InvestigationBundle } from '../artifacts/ai-bundle-compressor';
@@ -12,7 +12,7 @@ import { GovernedCrawlEngine } from '../../runtime/execution/governed-crawl-engi
 import { EntityOwnershipRegistry } from '../state/entity-ownership-registry';
 import { LivePerturbationInterceptor } from '../../runtime/instrumentation/live-perturbation-interceptor';
 import { ReplayValidationPipeline } from '../../runtime/validation/replay-validation-pipeline';
-import { ValidatedFinding } from '../validation/exploit-validation-engine';
+import { ValidatedFinding } from '../../runtime/validation/exploit-validation-engine';
 
 export class InvestigationPipeline implements NetworkEvidenceHandler {
   private runtime: PlaywrightMultiSessionRuntime;

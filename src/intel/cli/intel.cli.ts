@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import path from 'node:path';
+import * as path from 'node:path';
 import { IntelligentCrawler } from '../core/crawler/intelligent.crawler';
-import { WorkflowDerivationEngine } from '../core/workflow/workflow.evaluation';
+import { WorkflowDerivationEngine } from '../core/workflow/workflow.inference';
 import { SecurityContextGenerator } from '../core/security/security.context.generator';
 import { RiskScorer } from '../core/scoring/risk.scorer';
 import { AIExporter } from '../core/export/ai.exporter';

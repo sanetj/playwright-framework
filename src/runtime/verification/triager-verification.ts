@@ -1,6 +1,7 @@
 import { MinimalReplayRecipe } from '../replay/replay-minimizer';
 import { PlaywrightMultiSessionRuntime } from '../execution/playwright-multi-session';
 import { SemanticSuccessEvaluator } from '../validation/semantic-success-evaluator';
+import { RuntimeSession } from '../../intelligence/runtime/multi-session-runtime';
 
 export interface TriagerVerificationResult {
   reproducible: boolean;
@@ -26,10 +27,22 @@ export class TriagerVerificationMode {
     let stepsExecuted = 0;
 
     // 1. Create a completely clean browser context (No cache, no existing cookies)
-    const newCtx = await runtime.getBrowser().newContext();
-    const page = await newCtx.newPage();
+    const anonymousRole = { roleId: 'anonymous_triager', roleName: 'Anonymous Triager' };
+    const boundary = {
+      boundaryId: 'triager_boundary',
+      enforceClearCookies: true,
+      enforceClearLocalStorage: true,
+      enforceClearSessionStorage: true,
+      incognitoContext: true
+    };
+
+    let newSession: RuntimeSession | undefined;
 
     try {
+      newSession = await runtime.launchIsolatedSession(anonymousRole, boundary);
+      const newCtx = runtime.getPlaywrightContext(newSession.sessionId);
+      const page = await newCtx.newPage();
+
       // 2. Execute the minimal recipe sequentially to build state
       for (const step of recipe.minimalExchanges) {
         // In a full implementation, we'd fire these as raw HTTP requests using playwright's APIRequestContext
@@ -44,8 +57,6 @@ export class TriagerVerificationMode {
       // const result = this.semanticEvaluator.evaluate(..., finalResponse, targetEntity);
       
       const isReproducible = true; // Placeholder for actual execution outcome
-
-      await newCtx.close();
       
       return {
         reproducible: isReproducible,
@@ -53,13 +64,16 @@ export class TriagerVerificationMode {
         stepsExecuted
       };
     } catch (error: any) {
-      await newCtx.close();
       return {
         reproducible: false,
         executionTimeMs: Date.now() - startTime,
         stepsExecuted,
         failedStep: `Step ${stepsExecuted + 1}: ${error.message}`
       };
+    } finally {
+      if (newSession) {
+        await runtime.terminateSession(newSession.sessionId);
+      }
     }
   }
 }

@@ -94,7 +94,7 @@ export class PlaywrightMultiSessionRuntime implements MultiSessionRuntime {
   }
 
   public async terminateAll(): Promise<void> {
-    for (const sessionId of this.activeSessions.keys()) {
+    for (const sessionId of Array.from(this.activeSessions.keys())) {
       await this.terminateSession(sessionId);
     }
     if (this.browser) {

@@ -4,8 +4,8 @@
  * Generate optimized AI-uploadable context for LLMs to draft polished bug bounty reports.
  */
 
-import { OptimizedAiContext } from './ai-context-optimization';
-import { ReportNarrative } from './report-mapping';
+import { OptimizedAiContext } from '../artifacts/ai-context-optimization';
+import { ReportNarrative } from '../artifacts/report-mapping';
 
 export interface AiReportPromptTemplate {
   templateId: string;

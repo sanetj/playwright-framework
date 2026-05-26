@@ -1,5 +1,6 @@
 import { ValidatedFinding } from '../../runtime/validation/exploit-validation-engine';
 import { ExploitProof } from '../evidence/exploit-proof-capture';
+import { RuntimeSession } from '../../intelligence/runtime/multi-session-runtime';
 import { StateDependencyResult } from '../replay/state-dependency-detector';
 import { SemanticSuccessEvaluator, SemanticSuccessResult } from '../validation/semantic-success-evaluator';
 import { CanonicalHttpExchange } from '../evidence/canonical-http-evidence';
@@ -42,9 +43,9 @@ export class ReproducibilityEngine {
     attempts: number = 5
   ): Promise<ReproducibilityResult> {
     const mode = dependency.stateDependent ? ReproducibilityMode.FULL_REPLAY : ReproducibilityMode.MUTATION_ONLY;
-    
+
     let successful = 0;
-    
+
     // Attempt N times
     for (let i = 0; i < attempts; i++) {
       let isSuccess = false;
@@ -86,28 +87,41 @@ export class ReproducibilityEngine {
     
     // Fork context for deterministic replay
     const snapshot = await this.branchContext.captureSnapshot(originalExchange.sessionId, originalPage);
-    const newCtx = await runtime.getBrowser().newContext();
-    const newPage = await newCtx.newPage();
-    const fork = await this.branchContext.forkSession(snapshot, newCtx, newPage);
+    const originalSession = runtime.activeSessions.get(originalExchange.sessionId);
+    if (!originalSession) return false;
 
-    // Get mutation plan
-    const plans = this.planGen.generatePlans(originalExchange.request);
-    if (plans.length === 0) return false;
-    const plan = plans[0];
-
-    // Setup interceptor
-    const interceptor = new LivePerturbationInterceptor();
-    interceptor.setEnvelope({ idMutations: [], authMutations: [], tenantMutations: [] }); // dummy envelope
-
-    const mutatedCanonicalReq = this.perturbationEngine.applyMutation(originalExchange.request, plan);
-    const replayPlanReq = this.coordinator.planReplay({
-       ...originalExchange,
-       request: mutatedCanonicalReq
-    }, plan.planId);
-
-    if (!replayPlanReq) return false;
+    let newSession: RuntimeSession | undefined;
 
     try {
+      newSession = await runtime.launchIsolatedSession(originalSession.roleProfile, originalSession.isolationBoundary);
+      const newCtx = runtime.getPlaywrightContext(newSession.sessionId);
+      const newPage = await newCtx.newPage();
+      const fork = await this.branchContext.forkSession(snapshot, newCtx, newPage);
+
+      // Get mutation plan
+      const plans = this.planGen.generatePlans(originalExchange.request);
+      if (plans.length === 0) return false;
+      const plan = plans[0];
+
+      // Setup interceptor
+      const interceptor = new LivePerturbationInterceptor();
+      interceptor.setEnvelope({
+        envelopeId: 'repro_dummy_env',
+        intentDescription: 'reproducibility dummy envelope',
+        idMutations: [],
+        authMutations: [],
+        tenantMutations: [],
+        sequencePerturbations: []
+      });
+
+      const mutatedCanonicalReq = this.perturbationEngine.applyMutation(originalExchange.request, plan);
+      const replayPlanReq = this.coordinator.planReplay({
+         ...originalExchange,
+         request: mutatedCanonicalReq
+      }, plan.planId);
+
+      if (!replayPlanReq) return false;
+
       const mutatedResponse = await this.coordinator.executeReplay(
         replayPlanReq,
         interceptor,
@@ -118,17 +132,19 @@ export class ReproducibilityEngine {
       // Semantically evaluate success
       const evalResult = this.semanticEvaluator.evaluate(originalExchange.response, mutatedResponse, targetEntity);
       
-      await newCtx.close();
       return evalResult.successful;
     } catch (e) {
-      await newCtx.close();
       return false;
+    } finally {
+      if (newSession) {
+        await runtime.terminateSession(newSession.sessionId);
+      }
     }
   }
 
   private async runFullReplay(
-    finding: ValidatedFinding, 
-    proof: ExploitProof, 
+    finding: ValidatedFinding,
+    proof: ExploitProof,
     runtime: PlaywrightMultiSessionRuntime,
     targetEntity: string
   ): Promise<boolean> {

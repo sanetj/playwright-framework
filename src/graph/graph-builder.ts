@@ -1,4 +1,4 @@
-import { NormalizedEvent } from '../events/normalized-event';
+import { NormalizedEvent } from '../intelligence/events/normalized-event';
 import { ActionGraph } from './action-graph';
 
 export class GraphBuilder {

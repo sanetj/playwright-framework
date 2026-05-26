@@ -1,4 +1,4 @@
-import { CanonicalHttpExchange } from './canonical-http-evidence';
+import { CanonicalHttpExchange, HttpHeader } from './canonical-http-evidence';
 
 export interface InternalEvidenceBundle {
   exchanges: CanonicalHttpExchange[];
@@ -36,26 +36,25 @@ export class EvidenceRedactor {
     }
 
     // 2. Scrub specific known tokens from bodies
-    if (clone.request.postData && sensitiveTokens.length > 0) {
-      clone.request.postData = this.scrubText(clone.request.postData, sensitiveTokens);
+    if (clone.request.bodyStr && sensitiveTokens.length > 0) {
+      clone.request.bodyStr = this.scrubText(clone.request.bodyStr, sensitiveTokens);
     }
-    if (clone.response?.text && sensitiveTokens.length > 0) {
-      clone.response.text = this.scrubText(clone.response.text, sensitiveTokens);
+    if (clone.response?.bodyStr && sensitiveTokens.length > 0) {
+      clone.response.bodyStr = this.scrubText(clone.response.bodyStr, sensitiveTokens);
     }
 
     return clone;
   }
 
-  private scrubHeaders(headers: Record<string, string>) {
-    const keys = Object.keys(headers);
-    for (const key of keys) {
-      const lower = key.toLowerCase();
+  private scrubHeaders(headers: HttpHeader[]) {
+    for (const header of headers) {
+      const lower = header.name.toLowerCase();
       if (lower === 'authorization') {
-        headers[key] = 'Bearer [REDACTED]';
+        header.value = 'Bearer [REDACTED]';
       } else if (lower === 'cookie') {
-        headers[key] = '[REDACTED]';
+        header.value = '[REDACTED]';
       } else if (lower === 'set-cookie') {
-        headers[key] = '[REDACTED]';
+        header.value = '[REDACTED]';
       }
     }
   }

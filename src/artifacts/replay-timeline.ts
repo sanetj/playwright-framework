@@ -11,6 +11,11 @@ export class ReplayTimelineGenerator {
    * Translates lineage into a T+X style narrative for fast human comprehension.
    */
   public generate(finding: SubmissionFinding, minimalRecipe: MinimalReplayRecipe): ReplayTimelineEvent[] {
+    const proof = finding.proofs[0];
+    if (!proof) {
+      return [];
+    }
+
     const timeline: ReplayTimelineEvent[] = [];
     
     // T+0
@@ -33,7 +38,7 @@ export class ReplayTimelineGenerator {
     // Mutation
     timeline.push({
       timeOffset: `T+${currentT}`,
-      description: `Target API intercepted: ${finding.evidence.proof.originalExchange.request.method} ${finding.evidence.proof.originalExchange.request.url}`
+      description: `Target API intercepted: ${proof.originalExchange.request.method} ${proof.originalExchange.request.url}`
     });
     currentT++;
 
@@ -45,7 +50,7 @@ export class ReplayTimelineGenerator {
 
     timeline.push({
       timeOffset: `T+${currentT}`,
-      description: `Mutated Response Received (Status: ${finding.evidence.proof.statusDelta.after})`
+      description: `Mutated Response Received (Status: ${proof.statusDelta.after})`
     });
     currentT++;
 

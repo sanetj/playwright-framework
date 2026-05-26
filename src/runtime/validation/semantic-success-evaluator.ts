@@ -34,16 +34,16 @@ export class SemanticSuccessEvaluator {
     // into the replay response body.
     const semanticResult = this.semanticValidator.validate(originalResponse, replayResponse, targetEntity);
 
-    if (semanticResult.leakedEntities.length > 0) {
+    if (semanticResult.isValidated && semanticResult.confidence === 'HIGH') {
       return { successful: true, confidence: 0.95 };
     }
 
-    if (semanticResult.hasSemanticChange && isStatusEscalation) {
+    if (semanticResult.isValidated && isStatusEscalation) {
       // It's a 200 OK and the body is structurally different, meaning we likely bypassed auth
       return { successful: true, confidence: 0.85 };
     }
 
-    if (semanticResult.hasSemanticChange) {
+    if (semanticResult.isValidated) {
       // Body changed, but no clear entity leak and no status escalation.
       // Might be successful, but low confidence.
       return { successful: true, confidence: 0.6 };

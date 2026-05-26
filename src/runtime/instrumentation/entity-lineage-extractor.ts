@@ -48,20 +48,20 @@ export class EntityLineageExtractor {
 
   private extractFromUrl(url: string, results: ExtractedEntity[]): void {
     // Check UUIDs in URL
-    const uuids = [...url.matchAll(this.uuidRegex)];
+    const uuids = Array.from(url.matchAll(this.uuidRegex));
     for (const match of uuids) {
       results.push({ entityType: 'UUID', value: match[0], source: 'URL' });
     }
 
     // Check specific path patterns
-    const pathIds = [...url.matchAll(this.pathIdRegex)];
+    const pathIds = Array.from(url.matchAll(this.pathIdRegex));
     for (const match of pathIds) {
       results.push({ entityType: 'PathID', key: match[1], value: match[2], source: 'URL' });
     }
   }
 
   private extractFromBody(bodyStr: string, results: ExtractedEntity[]): void {
-    const uuids = [...bodyStr.matchAll(this.uuidRegex)];
+    const uuids = Array.from(bodyStr.matchAll(this.uuidRegex));
     for (const match of uuids) {
       results.push({ entityType: 'UUID', value: match[0], source: 'BODY' });
     }

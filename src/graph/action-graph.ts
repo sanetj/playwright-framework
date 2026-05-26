@@ -30,5 +30,5 @@ export class ActionGraph {
     while (cur) { path.push(cur); cur = prev.get(cur) ?? null; }
     return path.reverse();
   }
-  toJSON(): { nodes: GraphNode[]; edges: GraphEdge[] } { return { nodes: [...this.nodes.values()], edges: [...this.adjacency.values()].flat() }; }
+  toJSON(): { nodes: GraphNode[]; edges: GraphEdge[] } { return { nodes: Array.from(this.nodes.values()), edges: Array.from(this.adjacency.values()).flat() }; }
 }

@@ -4,7 +4,7 @@
  * Preserves investigative meaning and causal chains while heavily reducing telemetry entropy.
  */
 
-import { ExplainabilityAnchor } from './causal-compression';
+import { ExplainabilityAnchor } from '../compression/causal-compression';
 
 export interface CompressionInvariant {
   invariantId: string;

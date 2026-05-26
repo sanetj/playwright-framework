@@ -24,11 +24,24 @@ export class SubmissionReadinessGate {
     verification: TriagerVerificationResult,
     narrative: string
   ): SubmissionReadiness {
+    const proof = finding.proofs[0];
+    if (!proof) {
+      return {
+        ready: false,
+        replayStable: false,
+        evidenceComplete: false,
+        reproducible: false,
+        proofExists: false,
+        narrativeExists: false,
+        riskAccepted: false,
+        blockReason: 'Validated finding contains no exploit proof.'
+      };
+    }
     
     const replayStable = finding.reproducibilityScore >= 0.8;
     const evidenceComplete = recipe.minimalExchanges.length > 0;
     const reproducible = verification.reproducible;
-    const proofExists = finding.evidence.proof.mutatedResponse !== undefined;
+    const proofExists = finding.proofs.length > 0;
     const narrativeExists = narrative.length > 100; // Basic heuristic
     const riskAccepted = true; // Assuming risk was handled by RiskClassifier earlier
 

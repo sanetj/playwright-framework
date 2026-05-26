@@ -49,26 +49,21 @@ test.describe('Tier 1: Active Replay Validation (Mock Server)', () => {
 
   test('Pipeline should identify and actively validate BOLA/IDOR', async () => {
     const safetyProfile: TargetSafetyProfile = {
-      allowedDomains: ['localhost'],
-      rateLimitDelayMs: 0,
-      maxConcurrentContexts: 2,
-      destructiveMethodsAllowed: false
+      targetId: 'localhost_safety',
+      safeCategories: [{ categoryId: 'reads', allowedClasses: ['READ_ONLY'] }],
+      requiresApprovalFor: ['STATE_MUTATION', 'HIGH_RISK']
     };
 
     const pipeline = new InvestigationPipeline(safetyProfile, targetUrl);
 
     const baseRole: RuntimeRoleProfile = {
       roleId: 'role_a',
-      roleName: 'User A',
-      authHeaders: { 'Authorization': 'Bearer UserA' },
-      expectedPrivilegeLevel: 1
+      roleName: 'User A'
     };
 
     const compRole: RuntimeRoleProfile = {
       roleId: 'role_b',
-      roleName: 'User B',
-      authHeaders: { 'Authorization': 'Bearer UserB' },
-      expectedPrivilegeLevel: 1
+      roleName: 'User B'
     };
 
     // The E2E pipeline logic would run here.

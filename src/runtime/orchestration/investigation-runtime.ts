@@ -1,4 +1,4 @@
-import { InvestigationPipeline } from '../../intelligence/orchestration/investigation-pipeline';
+
 import { DeterministicIdGenerator } from '../replay/replay-seed';
 import { StateDependencyDetector } from '../replay/state-dependency-detector';
 import { ReproducibilityEngine } from '../reproducibility/reproducibility-engine';
@@ -17,14 +17,13 @@ import { EnvironmentFingerprintCapture } from '../environment/environment-finger
 import { PlaywrightMultiSessionRuntime } from '../execution/playwright-multi-session';
 
 /**
- * PURE ORCHESTRATOR
- * This class coordinates the execution of Phase 9.3 productization components.
- * It contains NO business logic. It delegates all decisions to the specialized engines.
+ * @deprecated
+ * Quarantined orphaned orchestration layer.
+ * No runtime ownership.
+ * Preserved for historical recovery only.
  */
 export class InvestigationRuntime {
   
-  // Intelligence components (Phase 8 & 9.1)
-  private discoveryPipeline = new InvestigationPipeline(); 
   
   // Phase 9.3 Operational Productization Components
   private dependencyDetector = new StateDependencyDetector();
@@ -44,15 +43,22 @@ export class InvestigationRuntime {
 
   public async runFullInvestigation(domain: string, runtime: PlaywrightMultiSessionRuntime, outputDir: string): Promise<string[]> {
     // 1. Run Intelligence Discovery (Phase 9.1 & 9.2) to get ValidatedFindings
-    const rawBundle = await this.discoveryPipeline.runFullInvestigation(domain, runtime);
+    // QUARANTINED: orphaned InvestigationPipeline invocation (no ownership chain)
+    // const rawBundle = ...
+    throw new Error(
+      'InvestigationRuntime is quarantined: orphaned orchestration path'
+    );
     
+    /*
+    QUARANTINED DEAD PATH
+
     if (!rawBundle.differentialAnalysis || !rawBundle.differentialAnalysis.findings) {
         return [];
     }
     
     // Convert generic findings to ValidatedFinding type based on intelligence bundle
     // For orchestration purposes, we assume we have an array of these.
-    const findings: any[] = rawBundle.differentialAnalysis.findings.filter(f => f.isValidated && f.proofs?.length);
+    const findings: any[] = rawBundle.differentialAnalysis.findings.filter((f: any) => f.isValidated && f.proofs?.length);
     
     const successfulBundles: string[] = [];
 
@@ -125,5 +131,6 @@ export class InvestigationRuntime {
     }
 
     return successfulBundles;
+    */
   }
 }
