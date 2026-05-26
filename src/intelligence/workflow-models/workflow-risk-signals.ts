@@ -4,4 +4,5 @@ export interface WorkflowRiskSignals {
   containsTenantBoundary: boolean;
   containsAuthEntity: boolean;
   containsExternalEntity: boolean;
+  triggeredRuleIds?: string[];
 }

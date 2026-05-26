@@ -20,7 +20,8 @@ export class WorkflowRiskAnalysis {
       containsAdminEntity: entities.some(e => e.category === WorkflowEntityCategory.ADMIN),
       containsTenantBoundary: boundaries.some(b => b.boundaryType === WorkflowBoundaryType.TENANT),
       containsAuthEntity: entities.some(e => e.category === WorkflowEntityCategory.AUTH),
-      containsExternalEntity: entities.some(e => e.category === WorkflowEntityCategory.EXTERNAL)
+      containsExternalEntity: entities.some(e => e.category === WorkflowEntityCategory.EXTERNAL),
+      triggeredRuleIds
     };
   }
 }
