@@ -1,6 +1,6 @@
 import { ActionGraph } from '../../graph/action-graph';
 import { WorkflowEntity, WorkflowTransition, WorkflowBoundary } from '../workflow-models/workflow-entities';
-import { WorkflowEntityCategory } from '../workflow-models/workflow-classification';
+import { WorkflowEntityCategory, WorkflowTransitionType } from '../workflow-models/workflow-classification';
 import { AUTH_PATTERNS, ROLE_PATTERNS, TENANT_PATTERNS, PAYMENT_PATTERNS, RESOURCE_PATTERNS } from './workflow-patterns';
 
 export interface WorkflowDiscoveryResult {
@@ -48,17 +48,25 @@ export class WorkflowDiscoveryEngine {
     return edges.map(edge => ({
       fromEntityId: `wf_ent_${edge.from}`,
       toEntityId: `wf_ent_${edge.to}`,
-      transitionType: 'NAVIGATION'
+      transitionType: WorkflowTransitionType.NAVIGATION
     }));
+  }
+
+  public extractBoundaries(
+    graph: ActionGraph
+  ): WorkflowBoundary[] {
+    return [];
   }
 
   public discover(graph: ActionGraph): WorkflowDiscoveryResult {
     const entities = this.extractEntities(graph);
     const transitions = this.extractTransitions(graph);
+    const boundaries = this.extractBoundaries(graph);
+
     return {
       entities,
       transitions,
-      boundaries: []
+      boundaries
     };
   }
 }
