@@ -11,6 +11,10 @@ export class WorkflowRiskAnalysis {
   ): WorkflowRiskSignals {
     const { entities, boundaries } = discoveryResult;
 
+    const triggeredRuleIds = this.rules
+      .filter(rule => rule.evaluate(discoveryResult))
+      .map(rule => rule.id);
+
     return {
       crossesBoundary: boundaries.length > 0,
       containsAdminEntity: entities.some(e => e.category === WorkflowEntityCategory.ADMIN),
