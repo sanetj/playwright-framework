@@ -1,10 +1,12 @@
 import { InvestigationCandidate, CandidateState } from '../../models/candidate/candidate-lifecycle';
 import { WorkflowDiscoveryResult } from '../workflow-discovery/discovery-engine';
 import { WorkflowEntity, WorkflowBoundary } from '../workflow-models/workflow-entities';
+import { WorkflowRiskSignals } from '../workflow-models/workflow-risk-signals';
 
 export class WorkflowCandidateGenerator {
   public generate(
-    workflowResult: WorkflowDiscoveryResult
+    workflowResult: WorkflowDiscoveryResult,
+    riskSignals?: WorkflowRiskSignals
   ): InvestigationCandidate[] {
     return [];
   }
