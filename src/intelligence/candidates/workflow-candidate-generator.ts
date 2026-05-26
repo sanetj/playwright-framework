@@ -17,6 +17,9 @@ export class WorkflowCandidateGenerator {
   ): InvestigationCandidate[] {
     return entities.map(entity => {
       const ruleEvidence = riskSignals?.triggeredRuleIds?.map(id => `workflow-rule:${id}`) ?? [];
+      const severity = (riskSignals as any)?.severity;
+      const severityEvidence = severity ? [`workflow-severity:${severity}`] : [];
+
       return {
         id: this.generateCandidateId(entity),
         type: 'WorkflowGap',
@@ -26,7 +29,7 @@ export class WorkflowCandidateGenerator {
         attackerRoleId: 'unknown',
         victimRoleId: 'unknown',
         createdAt: 1716666666000,
-        evidenceLinks: [...entity.sourceNodeIds, ...ruleEvidence]
+        evidenceLinks: [...entity.sourceNodeIds, ...ruleEvidence, ...severityEvidence]
       };
     });
   }
