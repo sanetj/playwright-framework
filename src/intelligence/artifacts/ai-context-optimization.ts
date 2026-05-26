@@ -1,7 +1,7 @@
 /**
  * @canonical
  * AI Context Optimization Contracts
- * Compresses telemetry into high-signal AI-readable context, maximizing evaluation quality.
+ * Compresses telemetry into high-signal AI-readable context, maximizing reasoning quality.
  */
 
 export interface NoiseReductionFilter {
