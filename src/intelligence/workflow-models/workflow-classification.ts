@@ -12,6 +12,7 @@ export enum WorkflowEntityCategory {
   PAYMENT = 'PAYMENT',
   WORKFLOW = 'WORKFLOW',
   EXTERNAL = 'EXTERNAL',
+  UNKNOWN = 'UNKNOWN',
 }
 
 export enum WorkflowTransitionType {

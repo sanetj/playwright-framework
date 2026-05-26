@@ -27,7 +27,7 @@ export class WorkflowDiscoveryEngine {
     if (RESOURCE_PATTERNS.some(p => lowerLabel.includes(p.toLowerCase()))) {
       return WorkflowEntityCategory.RESOURCE;
     }
-    return WorkflowEntityCategory.RESOURCE;
+    return WorkflowEntityCategory.UNKNOWN;
   }
 
   public extractEntities(graph: ActionGraph): WorkflowEntity[] {
