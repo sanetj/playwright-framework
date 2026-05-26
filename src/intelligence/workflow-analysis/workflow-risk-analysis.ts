@@ -1,8 +1,11 @@
 import { WorkflowDiscoveryResult } from '../workflow-discovery/discovery-engine';
 import { WorkflowRiskSignals } from '../workflow-models/workflow-risk-signals';
 import { WorkflowEntityCategory, WorkflowBoundaryType } from '../workflow-models/workflow-classification';
+import { WORKFLOW_RISK_RULES } from './rules/workflow-risk-rules';
 
 export class WorkflowRiskAnalysis {
+  private readonly rules = WORKFLOW_RISK_RULES;
+
   public analyze(
     discoveryResult: WorkflowDiscoveryResult
   ): WorkflowRiskSignals {
