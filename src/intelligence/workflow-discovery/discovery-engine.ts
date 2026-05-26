@@ -1,6 +1,6 @@
 import { ActionGraph } from '../../graph/action-graph';
 import { WorkflowEntity, WorkflowTransition, WorkflowBoundary } from '../workflow-models/workflow-entities';
-import { WorkflowEntityCategory, WorkflowTransitionType } from '../workflow-models/workflow-classification';
+import { WorkflowEntityCategory, WorkflowTransitionType, WorkflowBoundaryType } from '../workflow-models/workflow-classification';
 import { AUTH_PATTERNS, ROLE_PATTERNS, TENANT_PATTERNS, PAYMENT_PATTERNS, RESOURCE_PATTERNS } from './workflow-patterns';
 
 export interface WorkflowDiscoveryResult {
@@ -55,7 +55,34 @@ export class WorkflowDiscoveryEngine {
   public extractBoundaries(
     graph: ActionGraph
   ): WorkflowBoundary[] {
-    return [];
+    const entities = this.extractEntities(graph);
+    const boundaries: WorkflowBoundary[] = [];
+
+    const roleEntityIds = entities
+      .filter(e => e.category === WorkflowEntityCategory.ADMIN || e.category === WorkflowEntityCategory.AUTH)
+      .map(e => e.id);
+
+    if (roleEntityIds.length > 0) {
+      boundaries.push({
+        id: 'wf_bnd_role',
+        boundaryType: WorkflowBoundaryType.ROLE,
+        entityIds: roleEntityIds
+      });
+    }
+
+    const tenantEntityIds = entities
+      .filter(e => e.category === WorkflowEntityCategory.TENANT)
+      .map(e => e.id);
+
+    if (tenantEntityIds.length > 0) {
+      boundaries.push({
+        id: 'wf_bnd_tenant',
+        boundaryType: WorkflowBoundaryType.TENANT,
+        entityIds: tenantEntityIds
+      });
+    }
+
+    return boundaries;
   }
 
   public discover(graph: ActionGraph): WorkflowDiscoveryResult {
