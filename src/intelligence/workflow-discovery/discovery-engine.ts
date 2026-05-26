@@ -53,9 +53,8 @@ export class WorkflowDiscoveryEngine {
   }
 
   public extractBoundaries(
-    graph: ActionGraph
+    entities: WorkflowEntity[]
   ): WorkflowBoundary[] {
-    const entities = this.extractEntities(graph);
     const boundaries: WorkflowBoundary[] = [];
 
     const roleEntityIds = entities
@@ -88,7 +87,7 @@ export class WorkflowDiscoveryEngine {
   public discover(graph: ActionGraph): WorkflowDiscoveryResult {
     const entities = this.extractEntities(graph);
     const transitions = this.extractTransitions(graph);
-    const boundaries = this.extractBoundaries(graph);
+    const boundaries = this.extractBoundaries(entities);
 
     return {
       entities,
