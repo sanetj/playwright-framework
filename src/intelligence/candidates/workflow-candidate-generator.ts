@@ -21,7 +21,7 @@ export class WorkflowCandidateGenerator {
       attackerRoleId: 'unknown',
       victimRoleId: 'unknown',
       createdAt: 1716666666000,
-      evidenceLinks: []
+      evidenceLinks: entity.sourceNodeIds
     }));
   }
 
