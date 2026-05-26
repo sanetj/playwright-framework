@@ -43,11 +43,21 @@ export class WorkflowDiscoveryEngine {
     });
   }
 
+  public extractTransitions(graph: ActionGraph): WorkflowTransition[] {
+    const { edges } = graph.toJSON();
+    return edges.map(edge => ({
+      fromEntityId: `wf_ent_${edge.from}`,
+      toEntityId: `wf_ent_${edge.to}`,
+      transitionType: 'NAVIGATION'
+    }));
+  }
+
   public discover(graph: ActionGraph): WorkflowDiscoveryResult {
     const entities = this.extractEntities(graph);
+    const transitions = this.extractTransitions(graph);
     return {
       entities,
-      transitions: [],
+      transitions,
       boundaries: []
     };
   }
