@@ -11,6 +11,10 @@ export interface InferredWorkflow {
   mermaid: string;
 }
 
+/**
+ * @deprecated Legacy event-based workflow inference engine. 
+ * Use the canonical ActionGraph-backed WorkflowAnalysisPipeline in src/intelligence/workflow-analysis/ instead.
+ */
 export class WorkflowEngine {
   infer(events: NormalizedEvent[]): InferredWorkflow[] {
     const chunks = this.chunkByCausality(events);

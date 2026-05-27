@@ -2,6 +2,10 @@ import { InferredWorkflow } from './workflow-engine';
 
 export interface ReplayStep { type: string; route: string; payloadHint: string; }
 
+/**
+ * @deprecated Legacy event-based workflow replay analyzer.
+ * Replay coordination is now handled by the canonical ReplayCoordinator in src/runtime/replay/.
+ */
 export class WorkflowReplay {
   public toReplayChain(workflow: InferredWorkflow): ReplayStep[] {
     return workflow.chain.map((step) => {
