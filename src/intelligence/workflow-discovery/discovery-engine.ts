@@ -90,12 +90,47 @@ export class WorkflowDiscoveryEngine {
     entities: WorkflowEntity[],
     boundaries: WorkflowBoundary[]
   ): WorkflowRiskSignals {
+    const crossesBoundary = boundaries.length > 0;
+    const containsAdminEntity = entities.some(e => e.category === WorkflowEntityCategory.ADMIN);
+    const containsTenantBoundary = boundaries.some(b => b.boundaryType === WorkflowBoundaryType.TENANT);
+    const containsAuthEntity = entities.some(e => e.category === WorkflowEntityCategory.AUTH);
+    const containsExternalEntity = entities.some(e => e.category === WorkflowEntityCategory.EXTERNAL);
+
+    const exploitSignals: Required<WorkflowRiskSignals>['exploitSignals'] = [];
+
+    // Rule 1: CROSS_ROLE_TRANSITION - when admin and auth categories are co-located or traversed
+    if (containsAdminEntity && containsAuthEntity) {
+      exploitSignals.push({
+        type: 'CROSS_ROLE_TRANSITION',
+        evidenceLinks: entities
+          .filter(e => e.category === WorkflowEntityCategory.ADMIN || e.category === WorkflowEntityCategory.AUTH)
+          .map(e => `entity:${e.id}`)
+      });
+    }
+
+    // Rule 2: TRUST_BOUNDARY_CROSSING - when any structural boundary is Crossed
+    if (crossesBoundary) {
+      exploitSignals.push({
+        type: 'TRUST_BOUNDARY_CROSSING',
+        evidenceLinks: boundaries.map(b => `boundary:${b.id}`)
+      });
+    }
+
+    // Rule 3: SUSPICIOUS_MULTI_BOUNDARY_FLOW - when both Tenant and Role boundaries are present
+    if (containsTenantBoundary && boundaries.some(b => b.boundaryType === WorkflowBoundaryType.ROLE)) {
+      exploitSignals.push({
+        type: 'SUSPICIOUS_MULTI_BOUNDARY_FLOW',
+        evidenceLinks: boundaries.map(b => `boundary:${b.id}`)
+      });
+    }
+
     return {
-      crossesBoundary: boundaries.length > 0,
-      containsAdminEntity: entities.some(e => e.category === WorkflowEntityCategory.ADMIN),
-      containsTenantBoundary: boundaries.some(b => b.boundaryType === WorkflowBoundaryType.TENANT),
-      containsAuthEntity: entities.some(e => e.category === WorkflowEntityCategory.AUTH),
-      containsExternalEntity: entities.some(e => e.category === WorkflowEntityCategory.EXTERNAL)
+      crossesBoundary,
+      containsAdminEntity,
+      containsTenantBoundary,
+      containsAuthEntity,
+      containsExternalEntity,
+      exploitSignals
     };
   }
 

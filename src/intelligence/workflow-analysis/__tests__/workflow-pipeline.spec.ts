@@ -64,6 +64,26 @@ test.describe('WorkflowAnalysisPipeline Golden Fixture Verification', () => {
       }
     ]);
 
+    expect(result.analysis.riskSignals).toEqual([
+      {
+        crossesBoundary: true,
+        containsAdminEntity: true,
+        containsTenantBoundary: false,
+        containsAuthEntity: true,
+        containsExternalEntity: false,
+        exploitSignals: [
+          {
+            type: 'CROSS_ROLE_TRANSITION',
+            evidenceLinks: ['entity:wf_ent_node_login', 'entity:wf_ent_node_roles']
+          },
+          {
+            type: 'TRUST_BOUNDARY_CROSSING',
+            evidenceLinks: ['boundary:wf_bnd_role']
+          }
+        ]
+      }
+    ]);
+
     expect(result.analysis.evidence).toHaveLength(1);
     const evidence = result.analysis.evidence[0];
     expect(evidence.pathId).toBe(path.id);
