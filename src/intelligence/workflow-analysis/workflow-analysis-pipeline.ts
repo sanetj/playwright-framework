@@ -124,11 +124,41 @@ export class WorkflowAnalysisPipeline {
       }
     }
 
+    // Build deterministic structural anomaly signals
+    const anomalySignals: Required<WorkflowRiskSignal>['anomalySignals'] = [];
+
+    // Rule 1: STRUCTURAL_WORKFLOW_BYPASS - direct jump from PAYMENT/RESOURCE to ADMIN
+    for (const path of paths) {
+      for (let i = 0; i < path.entityIds.length - 1; i++) {
+        const curr = discoveryResult.entities.find(e => e.id === path.entityIds[i]);
+        const next = discoveryResult.entities.find(e => e.id === path.entityIds[i+1]);
+        if (curr && next && (curr.category === 'PAYMENT' || curr.category === 'RESOURCE') && next.category === 'ADMIN') {
+          anomalySignals.push({
+            type: 'STRUCTURAL_WORKFLOW_BYPASS',
+            evidenceLinks: [`path:${path.id}`, `entity:${curr.id}`, `entity:${next.id}`]
+          });
+        }
+      }
+    }
+
+    // Rule 2: UNIQUE_TRUST_COLLAPSE - Role boundary encompassing Auth node without environment segregation
+    const roleBoundary = discoveryResult.boundaries.find(b => b.id === 'wf_bnd_role');
+    if (roleBoundary && roleBoundary.entityIds.some(eId => {
+      const ent = discoveryResult.entities.find(e => e.id === eId);
+      return ent?.category === 'AUTH';
+    })) {
+      anomalySignals.push({
+        type: 'UNIQUE_TRUST_COLLAPSE',
+        evidenceLinks: [`boundary:${roleBoundary.id}`]
+      });
+    }
+
     const riskSignals: WorkflowRiskSignal[] = [
       {
         ...discoveryResult.riskSignals,
         topologySignals,
-        comparativeSignals
+        comparativeSignals,
+        anomalySignals
       }
     ];
 

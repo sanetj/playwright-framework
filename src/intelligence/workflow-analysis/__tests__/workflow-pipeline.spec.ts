@@ -109,6 +109,22 @@ test.describe('WorkflowAnalysisPipeline Golden Fixture Verification', () => {
               'entity:wf_ent_node_roles'
             ]
           }
+        ],
+        anomalySignals: [
+          {
+            type: 'STRUCTURAL_WORKFLOW_BYPASS',
+            evidenceLinks: [
+              'path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles',
+              'entity:wf_ent_node_checkout',
+              'entity:wf_ent_node_roles'
+            ]
+          },
+          {
+            type: 'UNIQUE_TRUST_COLLAPSE',
+            evidenceLinks: [
+              'boundary:wf_bnd_role'
+            ]
+          }
         ]
       }
     ]);

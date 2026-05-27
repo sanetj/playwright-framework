@@ -19,5 +19,9 @@ export interface WorkflowRiskSignals {
     type: 'ROLE_PATH_ASYMMETRY' | 'CROSS_ROLE_ACCESS_VARIANCE' | 'TRUST_BOUNDARY_INCONSISTENCY' | 'UNEXPECTED_PRIVILEGED_REACHABILITY';
     evidenceLinks: string[];
   }>;
+  anomalySignals?: Array<{
+    type: 'RARE_BOUNDARY_TRANSITION' | 'UNCOMMON_PRIVILEGE_PATH' | 'UNIQUE_TRUST_COLLAPSE' | 'STRUCTURAL_WORKFLOW_BYPASS';
+    evidenceLinks: string[];
+  }>;
 }
 
