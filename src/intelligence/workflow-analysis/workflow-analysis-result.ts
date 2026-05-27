@@ -21,6 +21,13 @@ export interface InvestigationViews {
   byPrivilegeTransition: Record<string, string[]>;
 }
 
+export interface ReplayTraceSummary {
+  orderedReplayTrace: string[];
+  orderedBoundarySequence: string[];
+  orderedRoleTransitionSequence: string[];
+  orderedWorkflowTransitionSequence: string[];
+}
+
 export interface WorkflowAnalysisResult {
   paths: WorkflowPath[];
   entities: WorkflowEntity[];
@@ -29,6 +36,7 @@ export interface WorkflowAnalysisResult {
   evidence: WorkflowEvidence[];
   exploitEvidencePackage?: ExploitEvidencePackage;
   investigationViews?: InvestigationViews;
+  replayTraceSummaries?: ReplayTraceSummary[];
 }
 
 /**
@@ -53,7 +61,8 @@ export class WorkflowAnalysisBuilder {
     riskSignals: WorkflowRiskSignal[],
     evidence: WorkflowEvidence[],
     exploitEvidencePackage?: ExploitEvidencePackage,
-    investigationViews?: InvestigationViews
+    investigationViews?: InvestigationViews,
+    replayTraceSummaries?: ReplayTraceSummary[]
   ): WorkflowAnalysisResult {
     return {
       paths: [...paths],
@@ -62,7 +71,8 @@ export class WorkflowAnalysisBuilder {
       riskSignals: [...riskSignals],
       evidence: [...evidence],
       exploitEvidencePackage,
-      investigationViews
+      investigationViews,
+      replayTraceSummaries
     };
   }
 }

@@ -177,6 +177,31 @@ test.describe('WorkflowAnalysisPipeline Golden Fixture Verification', () => {
       }
     });
 
+    expect(result.analysis.replayTraceSummaries).toEqual([
+      {
+        orderedReplayTrace: [
+          '/api/auth/login',
+          '/api/products',
+          '/api/checkout',
+          '/api/roles'
+        ],
+        orderedBoundarySequence: [
+          'wf_bnd_role'
+        ],
+        orderedRoleTransitionSequence: [
+          'AUTH',
+          'RESOURCE',
+          'PAYMENT',
+          'ADMIN'
+        ],
+        orderedWorkflowTransitionSequence: [
+          '/api/auth/login -> /api/products',
+          '/api/products -> /api/checkout',
+          '/api/checkout -> /api/roles'
+        ]
+      }
+    ]);
+
     expect(result.analysis.evidence).toHaveLength(1);
     const evidence = result.analysis.evidence[0];
     expect(evidence.pathId).toBe(path.id);

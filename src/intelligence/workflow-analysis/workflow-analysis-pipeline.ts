@@ -2,7 +2,7 @@ import { ActionGraph } from '../../graph/action-graph';
 import { WorkflowDiscoveryEngine } from '../workflow-discovery/discovery-engine';
 import { WorkflowEvaluator, WorkflowEvaluationResult } from './workflow-evaluator';
 import { WorkflowAnalysisSummarizer, WorkflowAnalysisSummary } from './workflow-analysis-summary';
-import { WorkflowAnalysisResult, WorkflowAnalysisBuilder, ExploitEvidencePackage, InvestigationViews } from './workflow-analysis-result';
+import { WorkflowAnalysisResult, WorkflowAnalysisBuilder, ExploitEvidencePackage, InvestigationViews, ReplayTraceSummary } from './workflow-analysis-result';
 import { WorkflowPathExtractor } from './workflow-path-extractor';
 import { WorkflowEvidenceBuilder } from './workflow-evidence';
 import { WorkflowRiskSignals as WorkflowRiskSignal } from '../workflow-models/workflow-risk-signals';
@@ -264,6 +264,45 @@ export class WorkflowAnalysisPipeline {
       byPrivilegeTransition
     };
 
+    // Build deterministic replay trace summaries
+    const replayTraceSummaries: ReplayTraceSummary[] = [];
+
+    for (const path of paths) {
+      const orderedReplayTrace: string[] = [];
+      const orderedBoundarySequence: string[] = [];
+      const orderedRoleTransitionSequence: string[] = [];
+      const orderedWorkflowTransitionSequence: string[] = [];
+
+      for (let i = 0; i < path.entityIds.length; i++) {
+        const entId = path.entityIds[i];
+        const entity = discoveryResult.entities.find(e => e.id === entId);
+        if (entity) {
+          orderedReplayTrace.push(entity.name);
+          orderedRoleTransitionSequence.push(entity.category);
+        }
+
+        const boundary = discoveryResult.boundaries.find(b => b.entityIds.includes(entId));
+        if (boundary && !orderedBoundarySequence.includes(boundary.id)) {
+          orderedBoundarySequence.push(boundary.id);
+        }
+
+        if (i < path.entityIds.length - 1) {
+          const nextEntId = path.entityIds[i + 1];
+          const nextEntity = discoveryResult.entities.find(e => e.id === nextEntId);
+          if (entity && nextEntity) {
+            orderedWorkflowTransitionSequence.push(`${entity.name} -> ${nextEntity.name}`);
+          }
+        }
+      }
+
+      replayTraceSummaries.push({
+        orderedReplayTrace,
+        orderedBoundarySequence,
+        orderedRoleTransitionSequence,
+        orderedWorkflowTransitionSequence
+      });
+    }
+
     // Synthesize the final, immutable analysis outcome package
     const analysis = this.analysisBuilder.build(
       paths,
@@ -272,7 +311,8 @@ export class WorkflowAnalysisPipeline {
       riskSignals,
       evidence,
       exploitEvidencePackage,
-      investigationViews
+      investigationViews,
+      replayTraceSummaries
     );
 
     const evaluation = this.evaluator.evaluate(analysis);
