@@ -21,7 +21,10 @@ export class WorkflowAnalysisPipeline {
   constructor(
     private readonly discoveryEngine: WorkflowDiscoveryEngine,
     private readonly evaluator: WorkflowEvaluator,
-    private readonly summarizer: WorkflowAnalysisSummarizer
+    private readonly summarizer: WorkflowAnalysisSummarizer,
+    private readonly pathExtractor: WorkflowPathExtractor,
+    private readonly evidenceBuilder: WorkflowEvidenceBuilder,
+    private readonly analysisBuilder: WorkflowAnalysisBuilder
   ) {}
 
   /**
@@ -34,8 +37,7 @@ export class WorkflowAnalysisPipeline {
     const discoveryResult = this.discoveryEngine.discover(graph);
 
     // Extract paths deterministically
-    const pathExtractor = new WorkflowPathExtractor();
-    const paths = pathExtractor.extractPaths(
+    const paths = this.pathExtractor.extractPaths(
       discoveryResult.entities,
       discoveryResult.transitions
     );
@@ -43,7 +45,6 @@ export class WorkflowAnalysisPipeline {
     const riskSignals: WorkflowRiskSignal[] = [discoveryResult.riskSignals];
 
     // Build evidence structures preserving sequence order
-    const evidenceBuilder = new WorkflowEvidenceBuilder();
     const evidence = paths.map(path => {
       const boundaryIds = discoveryResult.boundaries
         .filter(b => b.entityIds.some(eId => path.entityIds.includes(eId)))
@@ -55,7 +56,7 @@ export class WorkflowAnalysisPipeline {
         .filter(e => path.entityIds.includes(e.id))
         .flatMap(e => e.sourceNodeIds);
 
-      return evidenceBuilder.build(
+      return this.evidenceBuilder.build(
         path.id,
         path.entityIds,
         boundaryIds,
@@ -65,8 +66,7 @@ export class WorkflowAnalysisPipeline {
     });
 
     // Synthesize the final, immutable analysis outcome package
-    const analysisBuilder = new WorkflowAnalysisBuilder();
-    const analysis = analysisBuilder.build(
+    const analysis = this.analysisBuilder.build(
       paths,
       discoveryResult.entities,
       discoveryResult.boundaries,
