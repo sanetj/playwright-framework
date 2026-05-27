@@ -80,6 +80,18 @@ test.describe('WorkflowAnalysisPipeline Golden Fixture Verification', () => {
             type: 'TRUST_BOUNDARY_CROSSING',
             evidenceLinks: ['boundary:wf_bnd_role']
           }
+        ],
+        topologySignals: [
+          {
+            type: 'PRIVILEGE_AMPLIFICATION_PATH',
+            pathId: 'path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles',
+            evidenceLinks: ['entity:wf_ent_node_login', 'entity:wf_ent_node_roles']
+          },
+          {
+            type: 'ROLE_CHAIN_ESCALATION',
+            pathId: 'path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles',
+            evidenceLinks: ['entity:wf_ent_node_checkout', 'entity:wf_ent_node_roles']
+          }
         ]
       }
     ]);

@@ -42,7 +42,62 @@ export class WorkflowAnalysisPipeline {
       discoveryResult.transitions
     );
 
-    const riskSignals: WorkflowRiskSignal[] = [discoveryResult.riskSignals];
+    // Build deterministic topology annotations
+    const topologySignals: Required<WorkflowRiskSignal>['topologySignals'] = [];
+
+    for (const path of paths) {
+      if (path.entityIds.length < 2) continue;
+
+      const firstEntityId = path.entityIds[0];
+      const lastEntityId = path.entityIds[path.entityIds.length - 1];
+
+      const firstEntity = discoveryResult.entities.find(e => e.id === firstEntityId);
+      const lastEntity = discoveryResult.entities.find(e => e.id === lastEntityId);
+
+      if (firstEntity && lastEntity) {
+        // 1. PRIVILEGE_AMPLIFICATION_PATH: Non-privileged start, Admin end
+        if (firstEntity.category !== 'ADMIN' && lastEntity.category === 'ADMIN') {
+          topologySignals.push({
+            type: 'PRIVILEGE_AMPLIFICATION_PATH',
+            pathId: path.id,
+            evidenceLinks: [`entity:${firstEntity.id}`, `entity:${lastEntity.id}`]
+          });
+        }
+      }
+
+      // 2. MULTI_BOUNDARY_ESCALATION: Touches more than one boundary
+      const touchedBoundaries = discoveryResult.boundaries.filter(b =>
+        b.entityIds.some(eId => path.entityIds.includes(eId))
+      );
+      if (touchedBoundaries.length > 1) {
+        topologySignals.push({
+          type: 'MULTI_BOUNDARY_ESCALATION',
+          pathId: path.id,
+          evidenceLinks: touchedBoundaries.map(b => `boundary:${b.id}`)
+        });
+      }
+
+      // 3. ROLE_CHAIN_ESCALATION: Direct transition into Admin node
+      for (let i = 0; i < path.entityIds.length - 1; i++) {
+        const current = discoveryResult.entities.find(e => e.id === path.entityIds[i]);
+        const next = discoveryResult.entities.find(e => e.id === path.entityIds[i + 1]);
+
+        if (current && next && current.category !== 'ADMIN' && next.category === 'ADMIN') {
+          topologySignals.push({
+            type: 'ROLE_CHAIN_ESCALATION',
+            pathId: path.id,
+            evidenceLinks: [`entity:${current.id}`, `entity:${next.id}`]
+          });
+        }
+      }
+    }
+
+    const riskSignals: WorkflowRiskSignal[] = [
+      {
+        ...discoveryResult.riskSignals,
+        topologySignals
+      }
+    ];
 
     // Build evidence structures preserving sequence order
     const evidence = paths.map(path => {
