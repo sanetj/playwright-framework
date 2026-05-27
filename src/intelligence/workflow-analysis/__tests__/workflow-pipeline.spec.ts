@@ -153,6 +153,30 @@ test.describe('WorkflowAnalysisPipeline Golden Fixture Verification', () => {
       ]
     });
 
+    expect(result.analysis.investigationViews).toEqual({
+      byTrustBoundary: {
+        wf_bnd_role: ['wf_ent_node_login', 'wf_ent_node_roles']
+      },
+      byAffectedEntity: {
+        wf_ent_node_login: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
+        wf_ent_node_products: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
+        wf_ent_node_checkout: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
+        wf_ent_node_roles: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles']
+      },
+      byAsymmetryType: {
+        UNEXPECTED_PRIVILEGED_REACHABILITY: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
+        TRUST_BOUNDARY_INCONSISTENCY: ['boundary:wf_bnd_role']
+      },
+      byTopologyAnomaly: {
+        STRUCTURAL_WORKFLOW_BYPASS: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
+        UNIQUE_TRUST_COLLAPSE: ['boundary:wf_bnd_role']
+      },
+      byPrivilegeTransition: {
+        PRIVILEGE_AMPLIFICATION_PATH: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
+        ROLE_CHAIN_ESCALATION: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles']
+      }
+    });
+
     expect(result.analysis.evidence).toHaveLength(1);
     const evidence = result.analysis.evidence[0];
     expect(evidence.pathId).toBe(path.id);

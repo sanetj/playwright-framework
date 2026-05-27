@@ -13,6 +13,14 @@ export interface ExploitEvidencePackage {
   replayLinkedIdentifiers: string[];
 }
 
+export interface InvestigationViews {
+  byTrustBoundary: Record<string, string[]>;
+  byAffectedEntity: Record<string, string[]>;
+  byAsymmetryType: Record<string, string[]>;
+  byTopologyAnomaly: Record<string, string[]>;
+  byPrivilegeTransition: Record<string, string[]>;
+}
+
 export interface WorkflowAnalysisResult {
   paths: WorkflowPath[];
   entities: WorkflowEntity[];
@@ -20,6 +28,7 @@ export interface WorkflowAnalysisResult {
   riskSignals: WorkflowRiskSignal[];
   evidence: WorkflowEvidence[];
   exploitEvidencePackage?: ExploitEvidencePackage;
+  investigationViews?: InvestigationViews;
 }
 
 /**
@@ -43,7 +52,8 @@ export class WorkflowAnalysisBuilder {
     boundaries: WorkflowBoundary[],
     riskSignals: WorkflowRiskSignal[],
     evidence: WorkflowEvidence[],
-    exploitEvidencePackage?: ExploitEvidencePackage
+    exploitEvidencePackage?: ExploitEvidencePackage,
+    investigationViews?: InvestigationViews
   ): WorkflowAnalysisResult {
     return {
       paths: [...paths],
@@ -51,7 +61,8 @@ export class WorkflowAnalysisBuilder {
       boundaries: [...boundaries],
       riskSignals: [...riskSignals],
       evidence: [...evidence],
-      exploitEvidencePackage
+      exploitEvidencePackage,
+      investigationViews
     };
   }
 }

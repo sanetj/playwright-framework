@@ -2,7 +2,7 @@ import { ActionGraph } from '../../graph/action-graph';
 import { WorkflowDiscoveryEngine } from '../workflow-discovery/discovery-engine';
 import { WorkflowEvaluator, WorkflowEvaluationResult } from './workflow-evaluator';
 import { WorkflowAnalysisSummarizer, WorkflowAnalysisSummary } from './workflow-analysis-summary';
-import { WorkflowAnalysisResult, WorkflowAnalysisBuilder, ExploitEvidencePackage } from './workflow-analysis-result';
+import { WorkflowAnalysisResult, WorkflowAnalysisBuilder, ExploitEvidencePackage, InvestigationViews } from './workflow-analysis-result';
 import { WorkflowPathExtractor } from './workflow-path-extractor';
 import { WorkflowEvidenceBuilder } from './workflow-evidence';
 import { WorkflowRiskSignals as WorkflowRiskSignal } from '../workflow-models/workflow-risk-signals';
@@ -215,6 +215,55 @@ export class WorkflowAnalysisPipeline {
       replayLinkedIdentifiers
     };
 
+    // Build deterministic investigation organization views
+    const byTrustBoundary: Record<string, string[]> = {};
+    for (const boundary of discoveryResult.boundaries) {
+      byTrustBoundary[boundary.id] = [...boundary.entityIds].sort();
+    }
+
+    const byAffectedEntity: Record<string, string[]> = {};
+    for (const entity of discoveryResult.entities) {
+      byAffectedEntity[entity.id] = paths
+        .filter(p => p.entityIds.includes(entity.id))
+        .map(p => `path:${p.id}`)
+        .sort();
+    }
+
+    const byAsymmetryType: Record<string, string[]> = {};
+    for (const signal of comparativeSignals) {
+      if (!byAsymmetryType[signal.type]) {
+        byAsymmetryType[signal.type] = [];
+      }
+      byAsymmetryType[signal.type].push(...signal.evidenceLinks.filter(l => l.startsWith('boundary:') || l.startsWith('path:')));
+      byAsymmetryType[signal.type] = Array.from(new Set(byAsymmetryType[signal.type])).sort();
+    }
+
+    const byTopologyAnomaly: Record<string, string[]> = {};
+    for (const signal of anomalySignals) {
+      if (!byTopologyAnomaly[signal.type]) {
+        byTopologyAnomaly[signal.type] = [];
+      }
+      byTopologyAnomaly[signal.type].push(...signal.evidenceLinks.filter(l => l.startsWith('boundary:') || l.startsWith('path:')));
+      byTopologyAnomaly[signal.type] = Array.from(new Set(byTopologyAnomaly[signal.type])).sort();
+    }
+
+    const byPrivilegeTransition: Record<string, string[]> = {};
+    for (const signal of topologySignals) {
+      if (!byPrivilegeTransition[signal.type]) {
+        byPrivilegeTransition[signal.type] = [];
+      }
+      byPrivilegeTransition[signal.type].push(`path:${signal.pathId}`);
+      byPrivilegeTransition[signal.type] = Array.from(new Set(byPrivilegeTransition[signal.type])).sort();
+    }
+
+    const investigationViews: InvestigationViews = {
+      byTrustBoundary,
+      byAffectedEntity,
+      byAsymmetryType,
+      byTopologyAnomaly,
+      byPrivilegeTransition
+    };
+
     // Synthesize the final, immutable analysis outcome package
     const analysis = this.analysisBuilder.build(
       paths,
@@ -222,7 +271,8 @@ export class WorkflowAnalysisPipeline {
       discoveryResult.boundaries,
       riskSignals,
       evidence,
-      exploitEvidencePackage
+      exploitEvidencePackage,
+      investigationViews
     );
 
     const evaluation = this.evaluator.evaluate(analysis);
