@@ -2,10 +2,20 @@ import { ActionGraph } from '../../graph/action-graph';
 import { WorkflowDiscoveryEngine } from '../workflow-discovery/discovery-engine';
 import { WorkflowEvaluator, WorkflowEvaluationResult } from './workflow-evaluator';
 import { WorkflowAnalysisSummarizer, WorkflowAnalysisSummary } from './workflow-analysis-summary';
-import { WorkflowAnalysisResult, WorkflowAnalysisBuilder, ExploitEvidencePackage, InvestigationViews, ReplayTraceSummary } from './workflow-analysis-result';
 import { WorkflowPathExtractor } from './workflow-path-extractor';
 import { WorkflowEvidenceBuilder } from './workflow-evidence';
 import { WorkflowRiskSignals as WorkflowRiskSignal } from '../workflow-models/workflow-risk-signals';
+import {
+  WorkflowAnalysisResult,
+  WorkflowAnalysisBuilder,
+  ExploitEvidencePackage,
+  InvestigationViews,
+  ReplayTraceSummary,
+  EnrichedWorkflowEntity,
+  EnrichedWorkflowBoundary,
+  EnrichedInvestigationViewItem,
+  EnrichedInvestigationViews
+} from './workflow-analysis-result';
 
 export interface WorkflowPipelineResult {
   analysis: WorkflowAnalysisResult;
@@ -183,6 +193,17 @@ export class WorkflowAnalysisPipeline {
       );
     });
 
+    // Enrich entities and boundaries with human-readable aliases
+    const enrichedEntities = discoveryResult.entities.map(e => ({
+      ...e,
+      alias: getEntityAlias(e.name, e.category)
+    }));
+
+    const enrichedBoundaries = discoveryResult.boundaries.map(b => ({
+      ...b,
+      alias: getBoundaryAlias(b.id, b.boundaryType)
+    }));
+
     // Build deterministic exploit evidence packages
     const topologySummary = `Topology Summary: Identified ${topologySignals.length} path topology patterns. Patterns: ${topologySignals.map(s => s.type).join(', ')}.`;
     const anomalySummary = `Anomaly Summary: Identified ${anomalySignals.length} structural anomaly patterns. Patterns: ${anomalySignals.map(s => s.type).join(', ')}.`;
@@ -205,7 +226,12 @@ export class WorkflowAnalysisPipeline {
       ...discoveryResult.boundaries.map(b => b.id)
     ])).sort();
 
+    const packageId = `pkg_${paths.map(p => p.id).join('_')}`;
+    const pathIds = paths.map(p => p.id);
+
     const exploitEvidencePackage: ExploitEvidencePackage = {
+      packageId,
+      pathIds,
       topologySummary,
       anomalySummary,
       asymmetrySummary,
@@ -256,14 +282,6 @@ export class WorkflowAnalysisPipeline {
       byPrivilegeTransition[signal.type] = Array.from(new Set(byPrivilegeTransition[signal.type])).sort();
     }
 
-    const investigationViews: InvestigationViews = {
-      byTrustBoundary,
-      byAffectedEntity,
-      byAsymmetryType,
-      byTopologyAnomaly,
-      byPrivilegeTransition
-    };
-
     // Build deterministic replay trace summaries
     const replayTraceSummaries: ReplayTraceSummary[] = [];
 
@@ -295,19 +313,174 @@ export class WorkflowAnalysisPipeline {
         }
       }
 
+      // Alias of the trace journey
+      const pathEntities = path.entityIds.map(entId => {
+        const ent = discoveryResult.entities.find(e => e.id === entId);
+        return ent ? getEntityAlias(ent.name, ent.category).split(' [')[0] : entId;
+      });
+      const alias = `${pathEntities.join(' -> ')} Flow`;
+
+      const firstEnt = discoveryResult.entities.find(e => e.id === path.entityIds[0]);
+      const lastEnt = discoveryResult.entities.find(e => e.id === path.entityIds[path.entityIds.length - 1]);
+
+      const sourcePrivilegeContext = firstEnt ? getPrivilegeContextSummary(firstEnt.category) : 'Generic application entrypoint';
+      const targetPrivilegeContext = lastEnt ? getPrivilegeContextSummary(lastEnt.category) : 'Generic application endpoint';
+
       replayTraceSummaries.push({
+        pathId: path.id,
+        alias,
         orderedReplayTrace,
         orderedBoundarySequence,
         orderedRoleTransitionSequence,
-        orderedWorkflowTransitionSequence
+        orderedWorkflowTransitionSequence,
+        sourcePrivilegeContext,
+        targetPrivilegeContext
       });
     }
+
+    // Build enriched views containing direct references, aliases, and trace summaries
+    const enrichedByTrustBoundary: Record<string, EnrichedInvestigationViewItem[]> = {};
+    for (const boundary of discoveryResult.boundaries) {
+      enrichedByTrustBoundary[boundary.id] = boundary.entityIds.map(entId => {
+        const entity = discoveryResult.entities.find(e => e.id === entId);
+        const entityName = entity ? entity.name : entId;
+        const entityCat = entity ? entity.category : 'UNKNOWN';
+        const entityAlias = getEntityAlias(entityName, entityCat);
+        return {
+          referenceId: entId,
+          alias: entityAlias
+        };
+      });
+    }
+
+    const enrichedByAffectedEntity: Record<string, EnrichedInvestigationViewItem[]> = {};
+    for (const entity of discoveryResult.entities) {
+      const pathsForEntity = paths.filter(p => p.entityIds.includes(entity.id));
+      enrichedByAffectedEntity[entity.id] = pathsForEntity.map(p => {
+        const trace = replayTraceSummaries.find(t => t.pathId === p.id);
+        return {
+          referenceId: p.id,
+          alias: trace ? trace.alias : p.id,
+          replayTrace: trace,
+          evidencePackageId: exploitEvidencePackage.packageId,
+          topologySummary: exploitEvidencePackage.topologySummary
+        };
+      });
+    }
+
+    const enrichedByAsymmetryType: Record<string, EnrichedInvestigationViewItem[]> = {};
+    for (const signal of comparativeSignals) {
+      if (!enrichedByAsymmetryType[signal.type]) {
+        enrichedByAsymmetryType[signal.type] = [];
+      }
+      const links = signal.evidenceLinks.filter(l => l.startsWith('boundary:') || l.startsWith('path:'));
+      for (const link of links) {
+        const [kind, id] = link.split(':');
+        if (kind === 'path') {
+          const trace = replayTraceSummaries.find(t => t.pathId === id);
+          enrichedByAsymmetryType[signal.type].push({
+            referenceId: id,
+            alias: trace ? trace.alias : id,
+            replayTrace: trace,
+            evidencePackageId: exploitEvidencePackage.packageId,
+            topologySummary: exploitEvidencePackage.topologySummary
+          });
+        } else if (kind === 'boundary') {
+          const boundary = discoveryResult.boundaries.find(b => b.id === id);
+          const boundaryAlias = boundary ? getBoundaryAlias(boundary.id, boundary.boundaryType) : id;
+          enrichedByAsymmetryType[signal.type].push({
+            referenceId: id,
+            alias: boundaryAlias,
+            evidencePackageId: exploitEvidencePackage.packageId,
+            topologySummary: exploitEvidencePackage.topologySummary
+          });
+        }
+      }
+      const seen = new Set<string>();
+      enrichedByAsymmetryType[signal.type] = enrichedByAsymmetryType[signal.type].filter(item => {
+        if (seen.has(item.referenceId)) return false;
+        seen.add(item.referenceId);
+        return true;
+      }).sort((a, b) => a.referenceId.localeCompare(b.referenceId));
+    }
+
+    const enrichedByTopologyAnomaly: Record<string, EnrichedInvestigationViewItem[]> = {};
+    for (const signal of anomalySignals) {
+      if (!enrichedByTopologyAnomaly[signal.type]) {
+        enrichedByTopologyAnomaly[signal.type] = [];
+      }
+      const links = signal.evidenceLinks.filter(l => l.startsWith('boundary:') || l.startsWith('path:'));
+      for (const link of links) {
+        const [kind, id] = link.split(':');
+        if (kind === 'path') {
+          const trace = replayTraceSummaries.find(t => t.pathId === id);
+          enrichedByTopologyAnomaly[signal.type].push({
+            referenceId: id,
+            alias: trace ? trace.alias : id,
+            replayTrace: trace,
+            evidencePackageId: exploitEvidencePackage.packageId,
+            topologySummary: exploitEvidencePackage.topologySummary
+          });
+        } else if (kind === 'boundary') {
+          const boundary = discoveryResult.boundaries.find(b => b.id === id);
+          const boundaryAlias = boundary ? getBoundaryAlias(boundary.id, boundary.boundaryType) : id;
+          enrichedByTopologyAnomaly[signal.type].push({
+            referenceId: id,
+            alias: boundaryAlias,
+            evidencePackageId: exploitEvidencePackage.packageId,
+            topologySummary: exploitEvidencePackage.topologySummary
+          });
+        }
+      }
+      const seen = new Set<string>();
+      enrichedByTopologyAnomaly[signal.type] = enrichedByTopologyAnomaly[signal.type].filter(item => {
+        if (seen.has(item.referenceId)) return false;
+        seen.add(item.referenceId);
+        return true;
+      }).sort((a, b) => a.referenceId.localeCompare(b.referenceId));
+    }
+
+    const enrichedByPrivilegeTransition: Record<string, EnrichedInvestigationViewItem[]> = {};
+    for (const signal of topologySignals) {
+      if (!enrichedByPrivilegeTransition[signal.type]) {
+        enrichedByPrivilegeTransition[signal.type] = [];
+      }
+      const trace = replayTraceSummaries.find(t => t.pathId === signal.pathId);
+      enrichedByPrivilegeTransition[signal.type].push({
+        referenceId: signal.pathId,
+        alias: trace ? trace.alias : signal.pathId,
+        replayTrace: trace,
+        evidencePackageId: exploitEvidencePackage.packageId,
+        topologySummary: exploitEvidencePackage.topologySummary
+      });
+      const seen = new Set<string>();
+      enrichedByPrivilegeTransition[signal.type] = enrichedByPrivilegeTransition[signal.type].filter(item => {
+        if (seen.has(item.referenceId)) return false;
+        seen.add(item.referenceId);
+        return true;
+      }).sort((a, b) => a.referenceId.localeCompare(b.referenceId));
+    }
+
+    const investigationViews: InvestigationViews = {
+      byTrustBoundary,
+      byAffectedEntity,
+      byAsymmetryType,
+      byTopologyAnomaly,
+      byPrivilegeTransition,
+      enrichedViews: {
+        byTrustBoundary: enrichedByTrustBoundary,
+        byAffectedEntity: enrichedByAffectedEntity,
+        byAsymmetryType: enrichedByAsymmetryType,
+        byTopologyAnomaly: enrichedByTopologyAnomaly,
+        byPrivilegeTransition: enrichedByPrivilegeTransition
+      }
+    };
 
     // Synthesize the final, immutable analysis outcome package
     const analysis = this.analysisBuilder.build(
       paths,
-      discoveryResult.entities,
-      discoveryResult.boundaries,
+      enrichedEntities,
+      enrichedBoundaries,
       riskSignals,
       evidence,
       exploitEvidencePackage,
@@ -323,5 +496,39 @@ export class WorkflowAnalysisPipeline {
       evaluation,
       summary
     };
+  }
+}
+
+function getEntityAlias(name: string, category: string): string {
+  const cleanRoute = name.replace('/api/', '').split('/').map(word => {
+    if (!word) return '';
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }).filter(Boolean).join(' ');
+
+  return `${cleanRoute || 'Root'} [${category}]`;
+}
+
+function getBoundaryAlias(id: string, type: string): string {
+  const cleanId = id.split('_').map(word => {
+    if (!word) return '';
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }).filter(Boolean).join(' ');
+  return `${cleanId} (${type})`;
+}
+
+function getPrivilegeContextSummary(category: string): string {
+  switch (category) {
+    case 'AUTH':
+      return 'Identity Gateway & Authentication Verification Layer';
+    case 'ADMIN':
+      return 'Administrative Privilege & Resource Management Layer';
+    case 'TENANT':
+      return 'Multi-Tenant Isolation & Account Boundary Layer';
+    case 'PAYMENT':
+      return 'Financial Transaction & Settlement Layer';
+    case 'RESOURCE':
+      return 'Business Domain Data & Catalog Access Layer';
+    default:
+      return 'General Application Access Interface';
   }
 }

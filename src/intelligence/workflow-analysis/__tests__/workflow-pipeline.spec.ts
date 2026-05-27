@@ -60,7 +60,8 @@ test.describe('WorkflowAnalysisPipeline Golden Fixture Verification', () => {
       {
         id: 'wf_bnd_role',
         boundaryType: 'ROLE',
-        entityIds: ['wf_ent_node_login', 'wf_ent_node_roles']
+        entityIds: ['wf_ent_node_login', 'wf_ent_node_roles'],
+        alias: 'Wf Bnd Role (ROLE)'
       }
     ]);
 
@@ -130,6 +131,8 @@ test.describe('WorkflowAnalysisPipeline Golden Fixture Verification', () => {
     ]);
 
     expect(result.analysis.exploitEvidencePackage).toEqual({
+      packageId: 'pkg_path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles',
+      pathIds: ['path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
       topologySummary: 'Topology Summary: Identified 2 path topology patterns. Patterns: PRIVILEGE_AMPLIFICATION_PATH, ROLE_CHAIN_ESCALATION.',
       anomalySummary: 'Anomaly Summary: Identified 2 structural anomaly patterns. Patterns: STRUCTURAL_WORKFLOW_BYPASS, UNIQUE_TRUST_COLLAPSE.',
       asymmetrySummary: 'Asymmetry Summary: Identified 2 authorization asymmetry patterns. Patterns: UNEXPECTED_PRIVILEGED_REACHABILITY, TRUST_BOUNDARY_INCONSISTENCY.',
@@ -153,32 +156,21 @@ test.describe('WorkflowAnalysisPipeline Golden Fixture Verification', () => {
       ]
     });
 
-    expect(result.analysis.investigationViews).toEqual({
-      byTrustBoundary: {
-        wf_bnd_role: ['wf_ent_node_login', 'wf_ent_node_roles']
-      },
-      byAffectedEntity: {
-        wf_ent_node_login: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
-        wf_ent_node_products: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
-        wf_ent_node_checkout: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
-        wf_ent_node_roles: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles']
-      },
-      byAsymmetryType: {
-        UNEXPECTED_PRIVILEGED_REACHABILITY: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
-        TRUST_BOUNDARY_INCONSISTENCY: ['boundary:wf_bnd_role']
-      },
-      byTopologyAnomaly: {
-        STRUCTURAL_WORKFLOW_BYPASS: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
-        UNIQUE_TRUST_COLLAPSE: ['boundary:wf_bnd_role']
-      },
-      byPrivilegeTransition: {
-        PRIVILEGE_AMPLIFICATION_PATH: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'],
-        ROLE_CHAIN_ESCALATION: ['path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles']
-      }
+    expect(result.analysis.investigationViews?.byTrustBoundary).toEqual({
+      wf_bnd_role: ['wf_ent_node_login', 'wf_ent_node_roles']
+    });
+
+    expect(result.analysis.investigationViews?.enrichedViews?.byTrustBoundary).toEqual({
+      wf_bnd_role: [
+        { referenceId: 'wf_ent_node_login', alias: 'Auth Login [AUTH]' },
+        { referenceId: 'wf_ent_node_roles', alias: 'Roles [ADMIN]' }
+      ]
     });
 
     expect(result.analysis.replayTraceSummaries).toEqual([
       {
+        pathId: 'path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles',
+        alias: 'Auth Login -> Products -> Checkout -> Roles Flow',
         orderedReplayTrace: [
           '/api/auth/login',
           '/api/products',
@@ -198,7 +190,9 @@ test.describe('WorkflowAnalysisPipeline Golden Fixture Verification', () => {
           '/api/auth/login -> /api/products',
           '/api/products -> /api/checkout',
           '/api/checkout -> /api/roles'
-        ]
+        ],
+        sourcePrivilegeContext: 'Identity Gateway & Authentication Verification Layer',
+        targetPrivilegeContext: 'Administrative Privilege & Resource Management Layer'
       }
     ]);
 
