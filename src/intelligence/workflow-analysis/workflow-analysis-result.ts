@@ -3,12 +3,23 @@ import { WorkflowEvidence } from './workflow-evidence';
 import { WorkflowEntity, WorkflowBoundary } from '../workflow-models/workflow-entities';
 import { WorkflowRiskSignals as WorkflowRiskSignal } from '../workflow-models/workflow-risk-signals';
 
+export interface ExploitEvidencePackage {
+  topologySummary: string;
+  anomalySummary: string;
+  asymmetrySummary: string;
+  trustBoundarySummary: string;
+  evidenceLinks: string[];
+  affectedEntities: string[];
+  replayLinkedIdentifiers: string[];
+}
+
 export interface WorkflowAnalysisResult {
   paths: WorkflowPath[];
   entities: WorkflowEntity[];
   boundaries: WorkflowBoundary[];
   riskSignals: WorkflowRiskSignal[];
   evidence: WorkflowEvidence[];
+  exploitEvidencePackage?: ExploitEvidencePackage;
 }
 
 /**
@@ -31,14 +42,16 @@ export class WorkflowAnalysisBuilder {
     entities: WorkflowEntity[],
     boundaries: WorkflowBoundary[],
     riskSignals: WorkflowRiskSignal[],
-    evidence: WorkflowEvidence[]
+    evidence: WorkflowEvidence[],
+    exploitEvidencePackage?: ExploitEvidencePackage
   ): WorkflowAnalysisResult {
     return {
       paths: [...paths],
       entities: [...entities],
       boundaries: [...boundaries],
       riskSignals: [...riskSignals],
-      evidence: [...evidence]
+      evidence: [...evidence],
+      exploitEvidencePackage
     };
   }
 }

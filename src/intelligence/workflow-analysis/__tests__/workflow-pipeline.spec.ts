@@ -129,6 +129,30 @@ test.describe('WorkflowAnalysisPipeline Golden Fixture Verification', () => {
       }
     ]);
 
+    expect(result.analysis.exploitEvidencePackage).toEqual({
+      topologySummary: 'Topology Summary: Identified 2 path topology patterns. Patterns: PRIVILEGE_AMPLIFICATION_PATH, ROLE_CHAIN_ESCALATION.',
+      anomalySummary: 'Anomaly Summary: Identified 2 structural anomaly patterns. Patterns: STRUCTURAL_WORKFLOW_BYPASS, UNIQUE_TRUST_COLLAPSE.',
+      asymmetrySummary: 'Asymmetry Summary: Identified 2 authorization asymmetry patterns. Patterns: UNEXPECTED_PRIVILEGED_REACHABILITY, TRUST_BOUNDARY_INCONSISTENCY.',
+      trustBoundarySummary: 'Trust Boundary Summary: Traced 1 boundary contexts. Boundaries: wf_bnd_role.',
+      evidenceLinks: [
+        'boundary:wf_bnd_role',
+        'entity:wf_ent_node_checkout',
+        'entity:wf_ent_node_login',
+        'entity:wf_ent_node_roles',
+        'path:path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles'
+      ],
+      affectedEntities: [
+        'wf_ent_node_checkout',
+        'wf_ent_node_login',
+        'wf_ent_node_products',
+        'wf_ent_node_roles'
+      ],
+      replayLinkedIdentifiers: [
+        'path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles',
+        'wf_bnd_role'
+      ]
+    });
+
     expect(result.analysis.evidence).toHaveLength(1);
     const evidence = result.analysis.evidence[0];
     expect(evidence.pathId).toBe(path.id);

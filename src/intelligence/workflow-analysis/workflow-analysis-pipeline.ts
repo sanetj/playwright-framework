@@ -2,7 +2,7 @@ import { ActionGraph } from '../../graph/action-graph';
 import { WorkflowDiscoveryEngine } from '../workflow-discovery/discovery-engine';
 import { WorkflowEvaluator, WorkflowEvaluationResult } from './workflow-evaluator';
 import { WorkflowAnalysisSummarizer, WorkflowAnalysisSummary } from './workflow-analysis-summary';
-import { WorkflowAnalysisResult, WorkflowAnalysisBuilder } from './workflow-analysis-result';
+import { WorkflowAnalysisResult, WorkflowAnalysisBuilder, ExploitEvidencePackage } from './workflow-analysis-result';
 import { WorkflowPathExtractor } from './workflow-path-extractor';
 import { WorkflowEvidenceBuilder } from './workflow-evidence';
 import { WorkflowRiskSignals as WorkflowRiskSignal } from '../workflow-models/workflow-risk-signals';
@@ -183,13 +183,46 @@ export class WorkflowAnalysisPipeline {
       );
     });
 
+    // Build deterministic exploit evidence packages
+    const topologySummary = `Topology Summary: Identified ${topologySignals.length} path topology patterns. Patterns: ${topologySignals.map(s => s.type).join(', ')}.`;
+    const anomalySummary = `Anomaly Summary: Identified ${anomalySignals.length} structural anomaly patterns. Patterns: ${anomalySignals.map(s => s.type).join(', ')}.`;
+    const asymmetrySummary = `Asymmetry Summary: Identified ${comparativeSignals.length} authorization asymmetry patterns. Patterns: ${comparativeSignals.map(s => s.type).join(', ')}.`;
+    const trustBoundarySummary = `Trust Boundary Summary: Traced ${discoveryResult.boundaries.length} boundary contexts. Boundaries: ${discoveryResult.boundaries.map(b => b.id).join(', ')}.`;
+
+    const allEvidenceLinks = Array.from(new Set([
+      ...discoveryResult.riskSignals.exploitSignals?.flatMap(s => s.evidenceLinks) ?? [],
+      ...topologySignals.flatMap(s => s.evidenceLinks),
+      ...comparativeSignals.flatMap(s => s.evidenceLinks),
+      ...anomalySignals.flatMap(s => s.evidenceLinks)
+    ])).sort();
+
+    const affectedEntities = Array.from(new Set(
+      discoveryResult.entities.map(e => e.id)
+    )).sort();
+
+    const replayLinkedIdentifiers = Array.from(new Set([
+      ...paths.map(p => p.id),
+      ...discoveryResult.boundaries.map(b => b.id)
+    ])).sort();
+
+    const exploitEvidencePackage: ExploitEvidencePackage = {
+      topologySummary,
+      anomalySummary,
+      asymmetrySummary,
+      trustBoundarySummary,
+      evidenceLinks: allEvidenceLinks,
+      affectedEntities,
+      replayLinkedIdentifiers
+    };
+
     // Synthesize the final, immutable analysis outcome package
     const analysis = this.analysisBuilder.build(
       paths,
       discoveryResult.entities,
       discoveryResult.boundaries,
       riskSignals,
-      evidence
+      evidence,
+      exploitEvidencePackage
     );
 
     const evaluation = this.evaluator.evaluate(analysis);
