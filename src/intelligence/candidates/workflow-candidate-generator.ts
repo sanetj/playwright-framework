@@ -39,7 +39,7 @@ export class WorkflowCandidateGenerator {
   public generateFromWorkflowEvidence(
     entity: WorkflowEntity,
     evidence: WorkflowEvidence
-  ): InvestigationCandidate {
+  ): Omit<InvestigationCandidate, 'createdAt'> {
     const evidenceLinks: string[] = [];
 
     if (evidence.pathId) {
@@ -63,7 +63,6 @@ export class WorkflowCandidateGenerator {
       targetNodeId: entity.id,
       attackerRoleId: 'unknown',
       victimRoleId: 'unknown',
-      createdAt: 1716666666000,
       evidenceLinks
     };
   }
