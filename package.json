@@ -12,6 +12,7 @@
     "test:smoke": "playwright test --grep @smoke",
     "test:sanity": "playwright test --grep @sanity",
     "test:regression": "playwright test --grep @regression",
+    "test:cognition": "playwright test --config=src/intelligence/workflow-analysis/__tests__/playwright.config.ts",
     "report": "playwright show-report reports/html",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
