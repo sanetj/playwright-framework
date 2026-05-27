@@ -1,13 +1,13 @@
 import { WorkflowPath } from './workflow-path-extractor';
 import { WorkflowEvidence } from './workflow-evidence';
 import { WorkflowEntity, WorkflowBoundary } from '../workflow-models/workflow-entities';
-import { WorkflowRiskSignals } from '../workflow-models/workflow-risk-signals';
+import { WorkflowRiskSignals as WorkflowRiskSignal } from '../workflow-models/workflow-risk-signals';
 
 export interface WorkflowAnalysisResult {
   paths: WorkflowPath[];
   entities: WorkflowEntity[];
   boundaries: WorkflowBoundary[];
-  riskSignals: WorkflowRiskSignals[];
+  riskSignals: WorkflowRiskSignal[];
   evidence: WorkflowEvidence[];
 }
 
@@ -30,7 +30,7 @@ export class WorkflowAnalysisBuilder {
     paths: WorkflowPath[],
     entities: WorkflowEntity[],
     boundaries: WorkflowBoundary[],
-    riskSignals: WorkflowRiskSignals[],
+    riskSignals: WorkflowRiskSignal[],
     evidence: WorkflowEvidence[]
   ): WorkflowAnalysisResult {
     return {
@@ -42,3 +42,4 @@ export class WorkflowAnalysisBuilder {
     };
   }
 }
+
