@@ -92,10 +92,43 @@ export class WorkflowAnalysisPipeline {
       }
     }
 
+    // Build deterministic comparative signals
+    const comparativeSignals: Required<WorkflowRiskSignal>['comparativeSignals'] = [];
+
+    // Rule 1: UNEXPECTED_PRIVILEGED_REACHABILITY - any path starting with AUTH/UNKNOWN reaching ADMIN
+    for (const path of paths) {
+      if (path.entityIds.length < 2) continue;
+      const firstId = path.entityIds[0];
+      const lastId = path.entityIds[path.entityIds.length - 1];
+
+      const first = discoveryResult.entities.find(e => e.id === firstId);
+      const last = discoveryResult.entities.find(e => e.id === lastId);
+
+      if (first && last && first.category !== 'ADMIN' && last.category === 'ADMIN') {
+        comparativeSignals.push({
+          type: 'UNEXPECTED_PRIVILEGED_REACHABILITY',
+          evidenceLinks: [`path:${path.id}`, `entity:${last.id}`]
+        });
+      }
+    }
+
+    // Rule 2: TRUST_BOUNDARY_INCONSISTENCY - when a boundary contains multiple categories
+    for (const boundary of discoveryResult.boundaries) {
+      const boundaryEntities = discoveryResult.entities.filter(e => boundary.entityIds.includes(e.id));
+      const categories = new Set(boundaryEntities.map(e => e.category));
+      if (categories.size > 1) {
+        comparativeSignals.push({
+          type: 'TRUST_BOUNDARY_INCONSISTENCY',
+          evidenceLinks: [`boundary:${boundary.id}`, ...boundaryEntities.map(e => `entity:${e.id}`)]
+        });
+      }
+    }
+
     const riskSignals: WorkflowRiskSignal[] = [
       {
         ...discoveryResult.riskSignals,
-        topologySignals
+        topologySignals,
+        comparativeSignals
       }
     ];
 

@@ -15,5 +15,9 @@ export interface WorkflowRiskSignals {
     pathId: string;
     evidenceLinks: string[];
   }>;
+  comparativeSignals?: Array<{
+    type: 'ROLE_PATH_ASYMMETRY' | 'CROSS_ROLE_ACCESS_VARIANCE' | 'TRUST_BOUNDARY_INCONSISTENCY' | 'UNEXPECTED_PRIVILEGED_REACHABILITY';
+    evidenceLinks: string[];
+  }>;
 }
 
