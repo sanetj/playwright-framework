@@ -33,6 +33,9 @@ test.describe('WorkflowAnalysisPipeline Golden Fixture Verification', () => {
     const result = pipeline.run(graph);
 
     // 3. Assert: verify deterministic value objects
+    expect(result.analysis.exportContractVersion).toBe('1.0.0');
+    expect(result.analysis.cognitionSchemaVersion).toBe('1.0.0');
+
     expect(result.summary).toEqual({
       totalPaths: 1,
       totalEntities: 4,
@@ -209,4 +212,61 @@ test.describe('WorkflowAnalysisPipeline Golden Fixture Verification', () => {
       'node_roles'
     ]);
   });
+
+  test('should satisfy all deterministic export contract invariants', () => {
+    const discoveryEngine = new WorkflowDiscoveryEngine();
+    const evaluator = new WorkflowEvaluator();
+    const summarizer = new WorkflowAnalysisSummarizer();
+    const pathExtractor = new WorkflowPathExtractor();
+    const evidenceBuilder = new WorkflowEvidenceBuilder();
+    const analysisBuilder = new WorkflowAnalysisBuilder();
+
+    const pipeline = new WorkflowAnalysisPipeline(
+      discoveryEngine,
+      evaluator,
+      summarizer,
+      pathExtractor,
+      evidenceBuilder,
+      analysisBuilder
+    );
+
+    const graph = createGoldenActionGraph();
+    const result = pipeline.run(graph);
+    const analysis = result.analysis;
+
+    // 1. Versioning Invariant
+    expect(analysis.exportContractVersion).toBe('1.0.0');
+    expect(analysis.cognitionSchemaVersion).toBe('1.0.0');
+
+    // 2. Deterministic Ordering Invariant
+    const entities = analysis.entities;
+    expect(entities.map(e => e.id)).toEqual([
+      'wf_ent_node_login',
+      'wf_ent_node_products',
+      'wf_ent_node_checkout',
+      'wf_ent_node_roles'
+    ]);
+
+    // 3. EvidencePackageId Referential Uniqueness Invariant
+    const pkg = analysis.exploitEvidencePackage;
+    expect(pkg).toBeDefined();
+    expect(pkg?.packageId).toBe('pkg_path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles');
+    expect(pkg?.pathIds).toEqual(['path_wf_ent_node_login_wf_ent_node_products_wf_ent_node_checkout_wf_ent_node_roles']);
+
+    // 4. Replay Trace Cross-Reference Integrity Invariant
+    const trace = analysis.replayTraceSummaries?.[0];
+    expect(trace).toBeDefined();
+    expect(trace?.pathId).toBe(pkg?.pathIds?.[0]);
+
+    // 5. Enriched Views Direct Resolution Invariant
+    const enrichedViews = analysis.investigationViews?.enrichedViews;
+    expect(enrichedViews).toBeDefined();
+    
+    // Ensure affected entities reference trace and packageId correctly
+    const affectedEntityView = enrichedViews?.byAffectedEntity['wf_ent_node_login']?.[0];
+    expect(affectedEntityView).toBeDefined();
+    expect(affectedEntityView?.referenceId).toBe(trace?.pathId);
+    expect(affectedEntityView?.evidencePackageId).toBe(pkg?.packageId);
+  });
 });
+
