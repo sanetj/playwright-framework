@@ -1,5 +1,7 @@
 import { WorkflowEntity, WorkflowTransition } from '../workflow-models/workflow-entities';
 
+const MAX_WORKFLOW_PATHS = 100;
+
 export interface WorkflowPath {
   id: string;
   entityIds: string[];
@@ -25,7 +27,15 @@ export class WorkflowPathExtractor {
 
     // Build adjacency list
     const adj = new Map<string, string[]>();
-    for (const transition of transitions) {
+
+    // Stable sort edge traversal by sorting transition inputs lexicographically
+    const sortedTransitions = [...transitions].sort((a, b) => {
+      const fromCmp = a.fromEntityId.localeCompare(b.fromEntityId);
+      if (fromCmp !== 0) return fromCmp;
+      return a.toEntityId.localeCompare(b.toEntityId);
+    });
+
+    for (const transition of sortedTransitions) {
       if (entityIds.has(transition.fromEntityId) && entityIds.has(transition.toEntityId)) {
         if (!adj.has(transition.fromEntityId)) {
           adj.set(transition.fromEntityId, []);
@@ -34,9 +44,9 @@ export class WorkflowPathExtractor {
       }
     }
 
-    // Sort adjacent nodes lexicographically for stable traversal ordering
+    // Stable sort node expansions by sorting adjacent node lists lexicographically
     for (const list of adj.values()) {
-      list.sort();
+      list.sort((a, b) => a.localeCompare(b));
     }
 
     // Calculate in-degree to find start nodes
@@ -44,13 +54,13 @@ export class WorkflowPathExtractor {
     for (const id of entityIds) {
       inDegree.set(id, 0);
     }
-    for (const transition of transitions) {
+    for (const transition of sortedTransitions) {
       if (entityIds.has(transition.fromEntityId) && entityIds.has(transition.toEntityId)) {
         inDegree.set(transition.toEntityId, (inDegree.get(transition.toEntityId) || 0) + 1);
       }
     }
 
-    const sortedEntities = Array.from(entityIds).sort();
+    const sortedEntities = Array.from(entityIds).sort((a, b) => a.localeCompare(b));
     let starts = sortedEntities.filter(id => inDegree.get(id) === 0);
     // If purely cyclic, start traversal from every node to ensure coverage
     if (starts.length === 0) {
@@ -60,6 +70,9 @@ export class WorkflowPathExtractor {
     const paths: WorkflowPath[] = [];
 
     const traverse = (currentId: string, currentPath: string[]) => {
+      if (paths.length >= MAX_WORKFLOW_PATHS) {
+        return;
+      }
       currentPath.push(currentId);
       const nextNodes = adj.get(currentId) || [];
       const unvisitedNextNodes = nextNodes.filter(next => !currentPath.includes(next));
@@ -67,23 +80,31 @@ export class WorkflowPathExtractor {
       if (unvisitedNextNodes.length === 0) {
         // Leaf or cycle bound reached. Save path if it contains multiple nodes
         if (currentPath.length > 1) {
-          paths.push({
-            id: `path_${currentPath.join('_')}`,
-            entityIds: [...currentPath]
-          });
+          if (paths.length < MAX_WORKFLOW_PATHS) {
+            paths.push({
+              id: `path_${currentPath.join('_')}`,
+              entityIds: [...currentPath]
+            });
+          }
         }
       } else {
         for (const next of unvisitedNextNodes) {
+          if (paths.length >= MAX_WORKFLOW_PATHS) {
+            break;
+          }
           traverse(next, [...currentPath]);
         }
       }
     };
 
     for (const start of starts) {
+      if (paths.length >= MAX_WORKFLOW_PATHS) {
+        break;
+      }
       traverse(start, []);
     }
 
-    // Sort output paths lexicographically by ID for absolute determinism
+    // Stable sort traversal outputs lexicographically by ID for absolute determinism
     return paths.sort((a, b) => a.id.localeCompare(b.id));
   }
 }
