@@ -2,6 +2,7 @@ import { InvestigationCandidate, CandidateState } from '../../models/candidate/c
 import { WorkflowDiscoveryResult } from '../workflow-discovery/discovery-engine';
 import { WorkflowEntity, WorkflowBoundary } from '../workflow-models/workflow-entities';
 import { WorkflowRiskSignals } from '../workflow-models/workflow-risk-signals';
+import { WorkflowEvidence } from '../workflow-analysis/workflow-evidence';
 
 export class WorkflowCandidateGenerator {
   public generate(
@@ -31,6 +32,42 @@ export class WorkflowCandidateGenerator {
     });
   }
 
+  /**
+   * Deterministically generates an InvestigationCandidate from WorkflowEvidence.
+   * Preserves exact input order without sorting or deduplication.
+   */
+  public generateFromWorkflowEvidence(
+    entity: WorkflowEntity,
+    evidence: WorkflowEvidence
+  ): InvestigationCandidate {
+    const evidenceLinks: string[] = [];
+
+    if (evidence.pathId) {
+      evidenceLinks.push(`path:${evidence.pathId}`);
+    }
+    for (const bId of evidence.boundaryIds) {
+      evidenceLinks.push(`boundary:${bId}`);
+    }
+    for (const sig of evidence.riskSignals) {
+      evidenceLinks.push(`signal:${sig}`);
+    }
+    for (const nId of evidence.sourceNodeIds) {
+      evidenceLinks.push(`node:${nId}`);
+    }
+
+    return {
+      id: this.generateCandidateId(entity),
+      type: 'WorkflowGap',
+      state: CandidateState.DISCOVERED,
+      transformationRule: 'WorkflowDiscoveryRule',
+      targetNodeId: entity.id,
+      attackerRoleId: 'unknown',
+      victimRoleId: 'unknown',
+      createdAt: 1716666666000,
+      evidenceLinks
+    };
+  }
+
   private generateCandidateId(
     entity: WorkflowEntity,
     boundary?: WorkflowBoundary
@@ -39,3 +76,4 @@ export class WorkflowCandidateGenerator {
     return `wf_${entity.id}${boundaryPart}`;
   }
 }
+

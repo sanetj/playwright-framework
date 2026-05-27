@@ -5,4 +5,6 @@ export interface WorkflowRiskSignals {
   containsAuthEntity: boolean;
   containsExternalEntity: boolean;
   triggeredRuleIds?: string[];
+  signalType?: string;
 }
+
