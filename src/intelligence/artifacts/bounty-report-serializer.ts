@@ -35,7 +35,8 @@ export class BountyReportSerializer {
     md += `## Evidence Exchanges (${bundle.evidenceExchanges.length})\n\n`;
 
     for (const ex of bundle.evidenceExchanges) {
-      md += `### Exchange \`${ex.exchangeId.id}\` (Session: ${ex.sessionId || 'Unknown'})\n`;
+      const exId = typeof ex.exchangeId === 'object' && ex.exchangeId ? ex.exchangeId.id : ex.exchangeId;
+      md += `### Exchange \`${exId}\` (Session: ${ex.sessionId || 'Unknown'})\n`;
       md += `**Request:**\n`;
       md += '```http\n';
       md += `${ex.request.method} ${ex.request.url} HTTP/1.1\n`;
@@ -65,6 +66,73 @@ export class BountyReportSerializer {
         md += `\n${ex.response.bodyStr}\n`;
       }
       md += '```\n\n';
+    }
+
+    if (bundle.groupedContradictionSummary) {
+      const summary = bundle.groupedContradictionSummary;
+      md += `## Grouped Contradiction Summary\n\n`;
+      md += `**Total Detected Contradictions**: ${summary.totalContradictions}\n\n`;
+
+      if (summary.contradictions.length > 0) {
+        md += `| Category / Type | Endpoint / Target | Severity | Linked Exchanges | Lineage Refs |\n`;
+        md += `| --- | --- | --- | --- | --- |\n`;
+        for (const contra of summary.contradictions) {
+          const exchangesStr = contra.evidenceExchangeIds.length > 0
+            ? contra.evidenceExchangeIds.map(id => `\`${id}\``).join(', ')
+            : '*None*';
+          const lineageStr = contra.lineageRefs.length > 0
+            ? contra.lineageRefs.map(ref => `\`${ref}\``).join(', ')
+            : '*None*';
+          md += `| **${contra.findingType}** | \`${contra.endpoint}\` | ${contra.severity} | ${exchangesStr} | ${lineageStr} |\n`;
+        }
+        md += `\n`;
+
+        md += `### Detailed Contradiction Evidence Map\n\n`;
+        for (const contra of summary.contradictions) {
+          md += `#### Contradiction: \`${contra.endpoint}\` [${contra.findingType}]\n`;
+          md += `- **Severity**: ${contra.severity}\n`;
+          md += `- **Method**: \`${contra.method}\`\n`;
+          md += `- **URL**: \`${contra.url}\`\n`;
+          md += `- **Description**: ${contra.description}\n`;
+          if (contra.evidenceExchangeIds.length > 0) {
+            md += `- **Linked Evidence Exchanges**: ${contra.evidenceExchangeIds.map(id => `\`${id}\``).join(', ')}\n`;
+          }
+          if (contra.lineageRefs.length > 0) {
+            md += `- **Lineage References**: ${contra.lineageRefs.map(ref => `\`${ref}\``).join(', ')}\n`;
+          }
+          md += `\n`;
+        }
+
+        if (bundle.groupedContradictionSummary && bundle.groupedContradictionSummary.compressedSummary) {
+          const comp = bundle.groupedContradictionSummary.compressedSummary;
+          md += `### Compressed Contradiction Summary\n\n`;
+          md += `This section displays normalized contradiction references backed by a shared evidence segment pool, reducing structural duplication while preserving 100% of the replay lineage.\n\n`;
+          
+          md += `#### Shared Evidence Segment Pool\n\n`;
+          md += `| Segment ID | Linked Exchanges | Lineage Refs |\n`;
+          md += `| --- | --- | --- |\n`;
+          for (const seg of comp.sharedEvidencePool) {
+            const exchangesStr = seg.evidenceExchangeIds.length > 0
+              ? seg.evidenceExchangeIds.map(id => `\`${id}\``).join(', ')
+              : '*None*';
+            const lineageStr = seg.lineageRefs.length > 0
+              ? seg.lineageRefs.map(ref => `\`${ref}\``).join(', ')
+              : '*None*';
+            md += `| \`${seg.segmentId}\` | ${exchangesStr} | ${lineageStr} |\n`;
+          }
+          md += `\n`;
+
+          md += `#### Normalized Contradictions\n\n`;
+          md += `| Category / Type | Endpoint / Target | Severity | Shared Evidence Ref |\n`;
+          md += `| --- | --- | --- | --- |\n`;
+          for (const norm of comp.normalizedContradictions) {
+            md += `| **${norm.findingType}** | \`${norm.endpoint}\` | ${norm.severity} | \`${norm.sharedEvidenceRefId}\` |\n`;
+          }
+          md += `\n`;
+        }
+      } else {
+        md += `*No structural contradictions were identified in this session.*\n\n`;
+      }
     }
 
     writeFileSync(outputPath, md, 'utf-8');

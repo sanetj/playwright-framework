@@ -96,7 +96,7 @@ export class ReplayValidationPipeline {
       const semanticResult = this.semanticValidator.validate(originalExchange.response, mutatedResponse, targetIdorValue);
 
       const proof: ExploitProof = {
-        proofId: `proof_${Date.now()}`,
+        proofId: `proof_${originalExchange.exchangeId.id}_${plan.planId}`,
         lineage: {
           findingId: finding.findingId || 'unknown',
           replayId: replayPlanReq.executionId,

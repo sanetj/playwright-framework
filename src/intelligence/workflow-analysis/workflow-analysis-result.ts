@@ -100,6 +100,148 @@ export interface ReplayTraceSummary {
   targetPrivilegeContext: string;
 }
 
+export interface ContradictionSignal {
+  type: string;
+  pathId?: string;
+  boundaryId?: string;
+  evidenceLinks: string[];
+  description: string;
+}
+
+export interface StructuralContradictionGroup {
+  category: 'TOPOLOGY_ANOMALY' | 'PRIVILEGE_TRANSITION' | 'WORKFLOW_BYPASS' | 'REACHABILITY_ASYMMETRY' | 'TRUST_BOUNDARY_CROSSING';
+  signals: ContradictionSignal[];
+}
+
+export interface SharedLineageSegment {
+  segmentId: string;
+  evidenceLinks: string[];
+}
+
+export interface CompressedContradictionLineage {
+  sharedLineagePool: SharedLineageSegment[];
+  normalizedSignals: {
+    type: string;
+    pathId?: string;
+    boundaryId?: string;
+    sharedLineageRefId: string;
+    description: string;
+  }[];
+}
+
+export interface SharedReachabilityCorridor {
+  corridorId: string;
+  orderedEntitySequence: string[];
+  orderedTransitionSequence: string[];
+  orderedBoundarySequence: string[];
+  privilegeContextLineage: string[];
+}
+
+export interface CompressedReachabilityReference {
+  pathId: string;
+  sharedCorridorRefId: string;
+  remainingEntitySequence: string[];
+}
+
+export interface CorridorIntersectionNode {
+  intersectionId: string;
+  orderedSharedPrefix: string[];
+  participatingCorridorIds: string[];
+  divergenceEntityIds: string[];
+  divergenceBoundaryContexts: string[];
+}
+
+export interface CorridorIntersectionIndex {
+  intersections: CorridorIntersectionNode[];
+}
+
+export interface CanonicalCorridorIdentity {
+  corridorId: string;
+  canonicalIdentityKey: string;
+  orderedEntitySequenceHash: string;
+  orderedTransitionSequenceHash: string;
+  orderedBoundarySequenceHash: string;
+  privilegeContextHash: string;
+}
+
+export interface NormalizedCorridorSignature {
+  signatureId: string;
+  canonicalIdentityKey: string;
+  normalizedEntitySequence: string[];
+  normalizedTransitionSequence: string[];
+  normalizedBoundarySequence: string[];
+  normalizedPrivilegeLineage: string[];
+}
+
+export interface CanonicalCorridorReference {
+  corridorId: string;
+  canonicalIdentityKey: string;
+  signatureId: string;
+}
+
+export interface CanonicalCorridorReferenceIndex {
+  references: CanonicalCorridorReference[];
+}
+
+export interface SemanticCorridorSignature {
+  semanticSignatureId: string;
+  normalizedEntitySignature: string;
+  normalizedTransitionSignature: string;
+  normalizedBoundarySignature: string;
+  normalizedPrivilegeSignature: string;
+}
+
+export interface SemanticOwnershipIndex {
+  semanticOwners: {
+    semanticSignatureId: string;
+    corridorIds: string[];
+  }[];
+}
+
+export interface DifferentialSemanticDivergence {
+  divergenceId: string;
+  sharedCorridorRefId: string;
+  basePathId: string;
+  comparisonPathId: string;
+  divergenceEntity: string;
+  baseRemainingSequence: string[];
+  comparisonRemainingSequence: string[];
+  divergenceCategory:
+    | 'PRIVILEGE_AMPLIFICATION'
+    | 'BOUNDARY_DIVERGENCE'
+    | 'REACHABILITY_EXPANSION'
+    | 'SEMANTIC_WORKFLOW_SPLIT';
+  privilegeContextDelta: string[];
+  orderedBoundaryDelta: string[];
+}
+
+export interface CanonicalIsolationSignature {
+  isolationId: string;
+  corridorId: string;
+  privilegeIsolationKey: string;
+  boundaryIsolationKey: string;
+  replayOwnershipKey: string;
+  collisionGuardHash: string;
+}
+
+export interface ReconstructionLineageReference {
+  referenceId: string;
+  sourceType:
+    | 'SHARED_CORRIDOR'
+    | 'COMPRESSED_REACHABILITY'
+    | 'DIFFERENTIAL_DIVERGENCE'
+    | 'CANONICAL_ISOLATION';
+  sourceRefId: string;
+  reconstructedPathId: string;
+  orderedEntitySequence: string[];
+  orderedBoundarySequence: string[];
+  orderedPrivilegeContexts: string[];
+}
+
+export interface DeterministicReconstructionIndex {
+  reconstructionReferences: ReconstructionLineageReference[];
+}
+
 /**
  * WorkflowAnalysisResult
  * Top-level immutable contract freezing all deterministic cognition outcomes.
@@ -116,6 +258,19 @@ export interface WorkflowAnalysisResult {
   exploitEvidencePackage?: ExploitEvidencePackage;
   investigationViews?: InvestigationViews;
   replayTraceSummaries?: ReplayTraceSummary[];
+  groupedContradictions?: StructuralContradictionGroup[];
+  compressedLineage?: CompressedContradictionLineage;
+  sharedCorridors?: SharedReachabilityCorridor[];
+  compressedReachabilityRefs?: CompressedReachabilityReference[];
+  corridorIntersectionIndex?: CorridorIntersectionIndex;
+  canonicalCorridorIdentities?: CanonicalCorridorIdentity[];
+  normalizedCorridorSignatures?: NormalizedCorridorSignature[];
+  canonicalCorridorReferenceIndex?: CanonicalCorridorReferenceIndex;
+  semanticCorridorSignatures?: SemanticCorridorSignature[];
+  semanticOwnershipIndex?: SemanticOwnershipIndex;
+  differentialSemanticDivergences?: DifferentialSemanticDivergence[];
+  canonicalIsolationSignatures?: CanonicalIsolationSignature[];
+  reconstructionIndex?: DeterministicReconstructionIndex;
 }
 
 /**
@@ -141,7 +296,20 @@ export class WorkflowAnalysisBuilder {
     evidence: WorkflowEvidence[],
     exploitEvidencePackage?: ExploitEvidencePackage,
     investigationViews?: InvestigationViews,
-    replayTraceSummaries?: ReplayTraceSummary[]
+    replayTraceSummaries?: ReplayTraceSummary[],
+    groupedContradictions?: StructuralContradictionGroup[],
+    compressedLineage?: CompressedContradictionLineage,
+    sharedCorridors?: SharedReachabilityCorridor[],
+    compressedReachabilityRefs?: CompressedReachabilityReference[],
+    corridorIntersectionIndex?: CorridorIntersectionIndex,
+    canonicalCorridorIdentities?: CanonicalCorridorIdentity[],
+    normalizedCorridorSignatures?: NormalizedCorridorSignature[],
+    canonicalCorridorReferenceIndex?: CanonicalCorridorReferenceIndex,
+    semanticCorridorSignatures?: SemanticCorridorSignature[],
+    semanticOwnershipIndex?: SemanticOwnershipIndex,
+    differentialSemanticDivergences?: DifferentialSemanticDivergence[],
+    canonicalIsolationSignatures?: CanonicalIsolationSignature[],
+    reconstructionIndex?: DeterministicReconstructionIndex
   ): WorkflowAnalysisResult {
     return {
       exportContractVersion: '1.0.0',
@@ -153,7 +321,20 @@ export class WorkflowAnalysisBuilder {
       evidence: [...evidence],
       exploitEvidencePackage,
       investigationViews,
-      replayTraceSummaries
+      replayTraceSummaries,
+      groupedContradictions,
+      compressedLineage,
+      sharedCorridors,
+      compressedReachabilityRefs,
+      corridorIntersectionIndex,
+      canonicalCorridorIdentities,
+      normalizedCorridorSignatures,
+      canonicalCorridorReferenceIndex,
+      semanticCorridorSignatures,
+      semanticOwnershipIndex,
+      differentialSemanticDivergences,
+      canonicalIsolationSignatures,
+      reconstructionIndex
     };
   }
 }
