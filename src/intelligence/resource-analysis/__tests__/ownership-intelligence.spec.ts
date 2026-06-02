@@ -248,9 +248,9 @@ test.describe('Phase 10.2 — Ownership Intelligence Unit Tests', () => {
     const res1 = inferencer.inferOwnership(exchanges);
     const res2 = inferencer.inferOwnership(exchanges);
 
-    // Sorted by observationId: obs_OBSERVED_ACCESS_usr_sess_a_1 comes before obs_OBSERVED_ACCESS_usr_sess_a_2
-    expect(res1.observations[0].observationId).toBe('obs_OBSERVED_ACCESS_usr_sess_a_1');
-    expect(res1.observations[1].observationId).toBe('obs_OBSERVED_ACCESS_usr_sess_a_2');
+    // Sorted by observationId
+    expect(res1.observations[0].observationId).toBe('obs_OBSERVED_ACCESS_usr_sess_a_rest_basket_basketId_1');
+    expect(res1.observations[1].observationId).toBe('obs_OBSERVED_ACCESS_usr_sess_a_rest_basket_basketId_2');
 
     // Repeated execution must yield identical JSON representations
     const str1 = JSON.stringify(res1);
@@ -259,5 +259,138 @@ test.describe('Phase 10.2 — Ownership Intelligence Unit Tests', () => {
 
     // Verify absolutely no timestamps are exported
     expect((res1 as any).generatedAt).toBeUndefined();
+  });
+
+  test('7. mechanic/merchant false profile matches avoidance', () => {
+    const exchanges = [
+      createMockExchange({
+        id: 'ex_profile',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/rest/user/profile',
+        method: 'GET',
+        status: 200,
+        responseBody: '{"id": 8, "email": "userA@demo.com"}'
+      }),
+      createMockExchange({
+        id: 'ex_merchant',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/workshop/api/merchant/contact_mechanic',
+        method: 'POST',
+        status: 200,
+        responseBody: '{"id": 6}'
+      }),
+      createMockExchange({
+        id: 'ex_mechanic',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/workshop/api/mechanic/mechanic_report?report_id=7',
+        method: 'GET',
+        status: 200,
+        responseBody: '{"id": 7}'
+      })
+    ];
+
+    const result = inferencer.inferOwnership(exchanges);
+
+    // Reconciled ID must remain usr_8 and not get corrupted to usr_6 or usr_7
+    const resolvedA = result.profiles.find(p => p.sessionIds.includes('sess_a'));
+    expect(resolvedA).toBeDefined();
+    expect(resolvedA!.resolvedId).toBe('usr_8');
+  });
+
+  test('8. order/video ID collisions prevention', () => {
+    const exchanges = [
+      createMockExchange({
+        id: 'ex_profile',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/rest/user/profile',
+        method: 'GET',
+        status: 200,
+        responseBody: '{"id": 8, "email": "userA@demo.com"}'
+      }),
+      createMockExchange({
+        id: 'ex_order',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/workshop/api/shop/orders/6',
+        method: 'GET',
+        status: 200,
+        responseBody: '{"id": 6, "owner": 8}'
+      }),
+      createMockExchange({
+        id: 'ex_video',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/identity/api/v2/user/videos/6',
+        method: 'GET',
+        status: 200,
+        responseBody: '{"id": 6, "owner": 8}'
+      })
+    ];
+
+    const result = inferencer.inferOwnership(exchanges);
+
+    // Both resources must generate unique observation IDs because family signature is included
+    const orderObs = result.observations.find(o => o.targetResourceFamily.includes('orders') && o.relationship === 'OWNS');
+    const videoObs = result.observations.find(o => o.targetResourceFamily.includes('videos') && o.relationship === 'OWNS');
+
+    expect(orderObs).toBeDefined();
+    expect(videoObs).toBeDefined();
+    expect(orderObs!.observationId).not.toBe(videoObs!.observationId);
+    expect(orderObs!.observationId).toContain('workshop_api_shop_orders_id');
+    expect(videoObs!.observationId).toContain('identity_api_v2_user_videos_id');
+  });
+
+  test('9. query parameter concrete ID fallback extraction', () => {
+    const exchanges = [
+      createMockExchange({
+        id: 'ex_profile',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/rest/user/profile',
+        method: 'GET',
+        status: 200,
+        responseBody: '{"id": 8, "email": "userA@demo.com"}'
+      }),
+      createMockExchange({
+        id: 'ex_report',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/workshop/api/mechanic/mechanic_report?report_id=99',
+        method: 'GET',
+        status: 200,
+        responseBody: '{"id": 99, "owner": 8}'
+      })
+    ];
+
+    const result = inferencer.inferOwnership(exchanges);
+
+    const reportObs = result.observations.find(o => o.targetResourceFamily.includes('mechanic_report') && o.relationship === 'OWNS');
+    expect(reportObs).toBeDefined();
+    expect(reportObs!.targetResourceId).toBe('99');
+    expect(reportObs!.relationship).toBe('OWNS');
+  });
+
+  test('10. mixed identifier resource families and non-identifier params exclusion', () => {
+    const exchanges = [
+      createMockExchange({
+        id: 'ex_profile',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/rest/user/profile',
+        method: 'GET',
+        status: 200,
+        responseBody: '{"id": 8, "email": "userA@demo.com"}'
+      }),
+      createMockExchange({
+        id: 'ex_report',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/workshop/api/mechanic/mechanic_report?report_id=99&page=2&limit=10',
+        method: 'GET',
+        status: 200,
+        responseBody: '{"id": 99, "owner": 8}'
+      })
+    ];
+
+    const result = inferencer.inferOwnership(exchanges);
+
+    const reportObs = result.observations.find(o => o.targetResourceFamily.includes('mechanic_report') && o.relationship === 'OWNS');
+    expect(reportObs).toBeDefined();
+    // page and limit should be ignored, and only report_id used
+    expect(reportObs!.targetResourceId).toBe('99');
   });
 });

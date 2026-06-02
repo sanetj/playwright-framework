@@ -53,13 +53,47 @@ export class OwnershipInferencer {
       const { family, surface } = this.extractor.normalizeUrlToFamily(ex.request.url);
       let concreteId = this.extractConcreteId(urlPath, family);
       if (!concreteId) {
-        const isSelfService =
-          family.includes('authentication-details') ||
-          family.includes('profile') ||
-          family.includes('/me') ||
-          family.includes('account') ||
-          family.includes('whoami') ||
-          family.includes('authentication');
+        try {
+          if (ex.request.url.includes('?')) {
+            const queryStr = ex.request.url.split('?')[1];
+            const params = new URLSearchParams(queryStr);
+            const IDENTIFIER_WHITELIST = new Set([
+              'id',
+              'uuid',
+              'report_id',
+              'order_id',
+              'video_id',
+              'vehicle_id',
+              'invoice_id',
+              'basket_id'
+            ]);
+            const sortedKeys = Array.from(params.keys()).sort();
+            for (const key of sortedKeys) {
+              if (IDENTIFIER_WHITELIST.has(key.toLowerCase())) {
+                const val = params.get(key);
+                if (val) {
+                  concreteId = val;
+                  break;
+                }
+              }
+            }
+          }
+        } catch {
+          // Ignored
+        }
+      }
+
+      if (!concreteId) {
+        const familyLower = family.toLowerCase();
+        const familySegments = familyLower.split('/').filter(s => s.length > 0);
+        const isSelfService = familySegments.some(segment =>
+          segment === 'authentication-details' ||
+          segment === 'profile' ||
+          segment === 'me' ||
+          segment === 'account' ||
+          segment === 'whoami' ||
+          segment === 'authentication'
+        );
         if (isSelfService) {
           concreteId = 'self';
         } else {
@@ -159,13 +193,16 @@ export class OwnershipInferencer {
       let relationship: OwnershipRelationshipType = 'OBSERVED_ACCESS';
 
       // Self-service endpoint mapping triggers immediate OWNS promotion
-      const isSelfService =
-        cand.family.includes('authentication-details') ||
-        cand.family.includes('profile') ||
-        cand.family.includes('/me') ||
-        cand.family.includes('account') ||
-        cand.family.includes('whoami') ||
-        cand.family.includes('authentication');
+      const familyLower = cand.family.toLowerCase();
+      const familySegments = familyLower.split('/').filter(s => s.length > 0);
+      const isSelfService = familySegments.some(segment =>
+        segment === 'authentication-details' ||
+        segment === 'profile' ||
+        segment === 'me' ||
+        segment === 'account' ||
+        segment === 'whoami' ||
+        segment === 'authentication'
+      );
 
       // Check if resource category is a dynamic user-scoped type
       const isUserScopedResource =
@@ -190,8 +227,10 @@ export class OwnershipInferencer {
         relationship = 'OWNS';
       }
 
+      const cleanFamily = cand.family.split('/').filter(s => s.length > 0).map(s => s.replace(/:/g, '')).join('_');
+
       // Add Subject (User) -> Resource Relationship
-      const obsId = `obs_${relationship}_${cand.profile.resolvedId}_${cand.concreteId}`;
+      const obsId = `obs_${relationship}_${cand.profile.resolvedId}_${cleanFamily}_${cand.concreteId}`;
       addObservation({
         observationId: obsId,
         subjectId: cand.profile.resolvedId,
@@ -204,7 +243,7 @@ export class OwnershipInferencer {
 
       // Add Reverse Resource -> User Relationship (BELONGS_TO) if ownership is verified
       if (relationship === 'OWNS') {
-        const revObsId = `obs_BELONGS_TO_${cand.concreteId}_${cand.profile.resolvedId}`;
+        const revObsId = `obs_BELONGS_TO_${cleanFamily}_${cand.concreteId}_${cand.profile.resolvedId}`;
         addObservation({
           observationId: revObsId,
           subjectId: cand.profile.resolvedId,
@@ -218,7 +257,7 @@ export class OwnershipInferencer {
 
       // 2. Add Tenant Scoping Relationships (SCOPED_TO) if tenant ID detected
       if (cand.explicitTenantId) {
-        const tenantObsId = `obs_SCOPED_TO_${cand.explicitTenantId}_${cand.concreteId}`;
+        const tenantObsId = `obs_SCOPED_TO_${cand.explicitTenantId}_${cleanFamily}_${cand.concreteId}`;
         addObservation({
           observationId: tenantObsId,
           subjectId: cand.explicitTenantId,
@@ -244,7 +283,7 @@ export class OwnershipInferencer {
 
       // 3. Add Workspace Scoping Relationships (SCOPED_TO) if workspace ID detected
       if (cand.explicitWorkspaceId) {
-        const workspaceObsId = `obs_SCOPED_TO_${cand.explicitWorkspaceId}_${cand.concreteId}`;
+        const workspaceObsId = `obs_SCOPED_TO_${cand.explicitWorkspaceId}_${cleanFamily}_${cand.concreteId}`;
         addObservation({
           observationId: workspaceObsId,
           subjectId: cand.explicitWorkspaceId,
@@ -349,13 +388,24 @@ export class OwnershipInferencer {
 
       // Extract explicit profile fields from self-service responses
       if (ex.response && ex.response.bodyStr) {
-        const urlLower = ex.request.url.toLowerCase();
-        const isSelfEndpoint =
-          urlLower.includes('whoami') ||
-          urlLower.includes('profile') ||
-          urlLower.includes('/me') ||
-          urlLower.includes('account') ||
-          urlLower.includes('authentication');
+        let urlPath = ex.request.url;
+        try {
+          if (ex.request.url.startsWith('http://') || ex.request.url.startsWith('https://')) {
+            urlPath = new URL(ex.request.url).pathname;
+          }
+        } catch {
+          // Fallback
+        }
+        const urlLower = urlPath.toLowerCase();
+        const urlSegments = urlLower.split('/').filter(s => s.length > 0);
+        const isSelfEndpoint = urlSegments.some(segment =>
+          segment === 'whoami' ||
+          segment === 'profile' ||
+          segment === 'me' ||
+          segment === 'account' ||
+          segment === 'authentication' ||
+          segment === 'authentication-details'
+        );
 
         if (isSelfEndpoint) {
           try {
