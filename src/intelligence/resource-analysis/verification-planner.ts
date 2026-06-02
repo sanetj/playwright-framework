@@ -1,7 +1,9 @@
 import { AuthorizationPairInventory, AuthorizationPair } from './authorization-pairing';
 import { ReplayCandidateInventory, ReplayCandidate } from './replay-candidate';
 import { VerificationBlueprint, VerificationBlueprintInventory } from './verification-blueprint';
-import { AuthorizationVector } from './replay-candidate';
+import { AuthorizationVector } from './authorization-vector';
+import { isUnresolvedIdentity } from './ownership-intelligence';
+import { sanitizeResourceFamily } from './resource-analysis-utils';
 
 export class VerificationPlanner {
   /**
@@ -28,7 +30,7 @@ export class VerificationPlanner {
       }
 
       // 2. Exclusion Check: Unresolved identities (raw sessions starting with usr_sess_ or usr_session_)
-      if (this.isUnresolved(pair.subjectId) || this.isUnresolved(pair.ownerId)) {
+      if (isUnresolvedIdentity(pair.subjectId) || isUnresolvedIdentity(pair.ownerId)) {
         continue;
       }
 
@@ -45,11 +47,7 @@ export class VerificationPlanner {
       }
 
       // 5. Build human-readable deterministic blueprint ID
-      const sanitizedFamily = pair.targetResourceFamily
-        .replace(/^\//, '')
-        .replace(/\/:/g, '_')
-        .replace(/\//g, '_')
-        .replace(/:/g, '_');
+      const sanitizedFamily = sanitizeResourceFamily(pair.targetResourceFamily);
       const blueprintId = `bp_${pair.vector}_${pair.subjectId}_${sanitizedFamily}::${pair.targetResourceId}`;
 
       // Invariant: One Authorization Opportunity = One Blueprint (Deduplication)
@@ -112,10 +110,5 @@ export class VerificationPlanner {
     });
   }
 
-  /**
-   * Helper: Check if profile ID represents an unresolved session fallback
-   */
-  private isUnresolved(profileId: string): boolean {
-    return profileId.startsWith('usr_sess_') || profileId.startsWith('usr_session_');
-  }
+
 }

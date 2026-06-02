@@ -2,7 +2,9 @@ import { VerificationBlueprintInventory, VerificationBlueprint } from './verific
 import { AuthorizationPairInventory, AuthorizationPair } from './authorization-pairing';
 import { ReplayCandidateInventory, ReplayCandidate } from './replay-candidate';
 import { InvestigationAssembly, InvestigationAssemblyInventory } from './investigation-assembly';
-import { AuthorizationVector } from './replay-candidate';
+import { AuthorizationVector } from './authorization-vector';
+import { isUnresolvedIdentity } from './ownership-intelligence';
+import { sanitizeResourceFamily } from './resource-analysis-utils';
 
 export class InvestigationAssembler {
   /**
@@ -36,7 +38,7 @@ export class InvestigationAssembler {
       }
 
       // 2. Exclusion Check: Unresolved identities (raw sessions starting with usr_sess_ or usr_session_)
-      if (this.isUnresolved(bp.subjectId) || this.isUnresolved(bp.ownerId)) {
+      if (isUnresolvedIdentity(bp.subjectId) || isUnresolvedIdentity(bp.ownerId)) {
         continue;
       }
 
@@ -58,11 +60,7 @@ export class InvestigationAssembler {
       }
 
       // 6. Build deterministic, human-readable assembly ID
-      const sanitizedFamily = bp.targetResourceFamily
-        .replace(/^\//, '')
-        .replace(/\/:/g, '_')
-        .replace(/\//g, '_')
-        .replace(/:/g, '_');
+      const sanitizedFamily = sanitizeResourceFamily(bp.targetResourceFamily);
       const assemblyId = `asm_${bp.vector}_${bp.subjectId}_${sanitizedFamily}::${bp.targetResourceId}`;
 
       // Invariant: One Investigation = One Assembly (Deduplication)
@@ -134,10 +132,5 @@ export class InvestigationAssembler {
     });
   }
 
-  /**
-   * Helper: Check if profile ID represents an unresolved session fallback
-   */
-  private isUnresolved(profileId: string): boolean {
-    return profileId.startsWith('usr_sess_') || profileId.startsWith('usr_session_');
-  }
+
 }

@@ -1,7 +1,8 @@
-import { IdentityProfile, OwnershipInventory } from './ownership-intelligence';
+import { IdentityProfile, OwnershipInventory, isUnresolvedIdentity } from './ownership-intelligence';
 import { ReplayCandidateInventory, ReplayCandidate } from './replay-candidate';
 import { AuthorizationPair, AuthorizationPairInventory } from './authorization-pairing';
-import { AuthorizationVector } from './replay-candidate';
+import { AuthorizationVector } from './authorization-vector';
+import { sanitizeResourceFamily } from './resource-analysis-utils';
 
 export class AuthorizationPairGenerator {
   /**
@@ -9,10 +10,10 @@ export class AuthorizationPairGenerator {
    * to a stable, deterministic AuthorizationPairInventory.
    */
   public generatePairs(
-    profiles: IdentityProfile[],
     candidatesInventory: ReplayCandidateInventory,
     ownershipInventory: OwnershipInventory
   ): AuthorizationPairInventory {
+    const profiles = ownershipInventory.profiles;
     const pairsMap = new Map<string, AuthorizationPair>();
 
     // Fast lookup index: ReplayCandidates grouped by target resourceFamily
@@ -43,7 +44,7 @@ export class AuthorizationPairGenerator {
 
       for (const ownerId of ownerIds) {
         const ownerProfile = profilesById.get(ownerId);
-        if (!ownerProfile || !this.isProfileReconciled(ownerProfile)) {
+        if (!ownerProfile || isUnresolvedIdentity(ownerProfile.resolvedId)) {
           // Exclusion: Owner identity is unresolved (raw session fallback)
           continue;
         }
@@ -55,7 +56,7 @@ export class AuthorizationPairGenerator {
             continue;
           }
 
-          if (!this.isProfileReconciled(attackingProfile)) {
+          if (isUnresolvedIdentity(attackingProfile.resolvedId)) {
             // Exclusion: Subject identity is unresolved (raw session fallback)
             continue;
           }
@@ -95,11 +96,7 @@ export class AuthorizationPairGenerator {
             }
 
             // 2. Build human-readable deterministic pair ID
-            const sanitizedFamily = resourceFamily
-              .replace(/^\//, '')
-              .replace(/\/:/g, '_')
-              .replace(/\//g, '_')
-              .replace(/:/g, '_');
+            const sanitizedFamily = sanitizeResourceFamily(resourceFamily);
             const pairId = `pr_${vector}_${attackingProfile.resolvedId}_${sanitizedFamily}::${concreteId}`;
 
             // Invariant: One Authorization Opportunity = One Pair (Duplicate Prevention)
@@ -173,12 +170,7 @@ export class AuthorizationPairGenerator {
     });
   }
 
-  /**
-   * Helper: Check if profile is reconciled (not an unreconciled session fallback)
-   */
-  private isProfileReconciled(profile: IdentityProfile): boolean {
-    return !profile.resolvedId.startsWith('usr_sess_') && !profile.resolvedId.startsWith('usr_session_');
-  }
+
 
   /**
    * Helper: Retrieve tenant memberships for a resolved subject ID

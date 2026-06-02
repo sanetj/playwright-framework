@@ -75,10 +75,11 @@ test.describe('Phase 10.3 — Authorization Pairing Intelligence Unit Tests', ()
     const ownership: OwnershipInventory = {
       observations,
       relationshipsBySubject: { usr_12: observations },
-      resourceOwners: { '/rest/basket/:basketId::1': ['usr_12'] }
+      resourceOwners: { '/rest/basket/:basketId::1': ['usr_12'] },
+      profiles
     };
 
-    const result = generator.generatePairs(profiles, candidates, ownership);
+    const result = generator.generatePairs(candidates, ownership);
 
     expect(result.pairs.length).toBe(1);
     const pair = result.pairs[0];
@@ -112,10 +113,11 @@ test.describe('Phase 10.3 — Authorization Pairing Intelligence Unit Tests', ()
     const ownership: OwnershipInventory = {
       observations,
       relationshipsBySubject: { usr_12: observations },
-      resourceOwners: { '/rest/basket/:basketId::1': ['usr_12'] }
+      resourceOwners: { '/rest/basket/:basketId::1': ['usr_12'] },
+      profiles
     };
 
-    const result = generator.generatePairs(profiles, candidates, ownership);
+    const result = generator.generatePairs(candidates, ownership);
     expect(result.pairs.length).toBe(0);
   });
 
@@ -148,10 +150,11 @@ test.describe('Phase 10.3 — Authorization Pairing Intelligence Unit Tests', ()
     const ownership: OwnershipInventory = {
       observations,
       relationshipsBySubject: { usr_12: observations },
-      resourceOwners: { '/rest/basket/:basketId::1': ['usr_12'] }
+      resourceOwners: { '/rest/basket/:basketId::1': ['usr_12'] },
+      profiles
     };
 
-    const result = generator.generatePairs(profiles, candidates, ownership);
+    const result = generator.generatePairs(candidates, ownership);
 
     // Duplicate prevention ensures exactly one pair is created per user-resource pair
     expect(result.pairs.length).toBe(1);
@@ -182,10 +185,11 @@ test.describe('Phase 10.3 — Authorization Pairing Intelligence Unit Tests', ()
     const ownership: OwnershipInventory = {
       observations,
       relationshipsBySubject: { usr_12: observations },
-      resourceOwners: { '/tenant/:tenantId/user/:userId::1:55': ['usr_12'] }
+      resourceOwners: { '/tenant/:tenantId/user/:userId::1:55': ['usr_12'] },
+      profiles
     };
 
-    const result = generator.generatePairs(profiles, candidates, ownership);
+    const result = generator.generatePairs(candidates, ownership);
 
     const pair = result.pairs[0];
     expect(pair.resourceInstanceKey).toBe('/tenant/:tenantId/user/:userId::1:55');
@@ -226,10 +230,11 @@ test.describe('Phase 10.3 — Authorization Pairing Intelligence Unit Tests', ()
     const ownership: OwnershipInventory = {
       observations,
       relationshipsBySubject: { usr_12: observations },
-      resourceOwners: { '/rest/user/:userId::12': ['usr_12'] }
+      resourceOwners: { '/rest/user/:userId::12': ['usr_12'] },
+      profiles
     };
 
-    const result = generator.generatePairs(profiles, candidates, ownership);
+    const result = generator.generatePairs(candidates, ownership);
 
     expect(result.pairs.length).toBe(1);
     expect(result.pairs[0].vector).toBe('BAC'); // Correctly promoted to BAC
@@ -289,10 +294,11 @@ test.describe('Phase 10.3 — Authorization Pairing Intelligence Unit Tests', ()
         usr_12: [observations[0], observations[3]],
         usr_13: [observations[2]]
       },
-      resourceOwners: { '/api/invoice/:invoiceId::1002': ['usr_12'] }
+      resourceOwners: { '/api/invoice/:invoiceId::1002': ['usr_12'] },
+      profiles
     };
 
-    const result = generator.generatePairs(profiles, candidates, ownership);
+    const result = generator.generatePairs(candidates, ownership);
 
     expect(result.pairs.length).toBe(1);
     expect(result.pairs[0].vector).toBe('TENANT_ISOLATION');
@@ -336,10 +342,11 @@ test.describe('Phase 10.3 — Authorization Pairing Intelligence Unit Tests', ()
       resourceOwners: {
         '/rest/basket/:basketId::2': ['usr_owner'],
         '/rest/basket/:basketId::1': ['usr_owner']
-      }
+      },
+      profiles
     };
 
-    const result = generator.generatePairs(profiles, candidates, ownership);
+    const result = generator.generatePairs(candidates, ownership);
 
     // Sorted by pairId: ...::1 comes before ...::2
     expect(result.pairs[0].pairId).toContain('::1');
@@ -371,11 +378,12 @@ test.describe('Phase 10.3 — Authorization Pairing Intelligence Unit Tests', ()
     const ownership: OwnershipInventory = {
       observations,
       relationshipsBySubject: { usr_12: observations },
-      resourceOwners: { '/rest/basket/:basketId::1': ['usr_12'] }
+      resourceOwners: { '/rest/basket/:basketId::1': ['usr_12'] },
+      profiles
     };
 
-    const res1 = generator.generatePairs(profiles, candidates, ownership);
-    const res2 = generator.generatePairs(profiles, candidates, ownership);
+    const res1 = generator.generatePairs(candidates, ownership);
+    const res2 = generator.generatePairs(candidates, ownership);
 
     expect(JSON.stringify(res1)).toBe(JSON.stringify(res2));
   });
@@ -395,10 +403,11 @@ test.describe('Phase 10.3 — Authorization Pairing Intelligence Unit Tests', ()
     const ownership: OwnershipInventory = {
       observations: [],
       relationshipsBySubject: {},
-      resourceOwners: {}
+      resourceOwners: {},
+      profiles
     };
 
-    const result = generator.generatePairs(profiles, candidates, ownership);
+    const result = generator.generatePairs(candidates, ownership);
     expect((result as any).generatedAt).toBeUndefined();
     expect((result as any).timestamp).toBeUndefined();
   });
@@ -428,10 +437,11 @@ test.describe('Phase 10.3 — Authorization Pairing Intelligence Unit Tests', ()
     const ownership: OwnershipInventory = {
       observations,
       relationshipsBySubject: { usr_12: observations },
-      resourceOwners: { '/rest/basket/:basketId::1': ['usr_12'] }
+      resourceOwners: { '/rest/basket/:basketId::1': ['usr_12'] },
+      profiles
     };
 
-    const result = generator.generatePairs(profiles, candidates, ownership);
+    const result = generator.generatePairs(candidates, ownership);
     
     // Validate frozen immutable characteristics
     expect(Object.isFrozen(result)).toBe(true);

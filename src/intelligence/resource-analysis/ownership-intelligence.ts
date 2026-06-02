@@ -51,4 +51,17 @@ export interface OwnershipInventory {
    * Grouped index mapping resource identities ("${resourceFamily}::${concreteId}") to their inferred owner resolved IDs.
    */
   readonly resourceOwners: Record<string, string[]>;
+
+  /**
+   * Unified identity profiles resolved from passive self-service scans.
+   */
+  readonly profiles: readonly IdentityProfile[];
 }
+
+/**
+ * Passive utility to identify if a subject profile ID represents an unresolved session fallback.
+ */
+export function isUnresolvedIdentity(profileId: string): boolean {
+  return profileId.startsWith('usr_sess_') || profileId.startsWith('usr_session_');
+}
+

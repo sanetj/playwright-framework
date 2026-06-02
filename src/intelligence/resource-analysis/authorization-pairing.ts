@@ -1,4 +1,4 @@
-import { AuthorizationVector } from './replay-candidate';
+import { AuthorizationVector } from './authorization-vector';
 
 export interface AuthorizationPair {
   /**

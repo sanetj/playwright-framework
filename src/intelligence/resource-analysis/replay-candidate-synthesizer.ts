@@ -1,5 +1,7 @@
 import { ResourceSignal, ResourceSignalInventory } from './resource-signal';
-import { ReplayCandidate, ReplayCandidateInventory, AuthorizationVector } from './replay-candidate';
+import { ReplayCandidate, ReplayCandidateInventory } from './replay-candidate';
+import { AuthorizationVector } from './authorization-vector';
+
 
 export class ReplayCandidateSynthesizer {
   /**

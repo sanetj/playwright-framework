@@ -1,10 +1,7 @@
-/**
- * @canonical
- * Phase 10.1B Replay Candidate Synthesis Contracts
- * Deterministic types mapping resource signals to actionable replay targets.
- */
+import { AuthorizationVector } from './authorization-vector';
 
-export type AuthorizationVector = 'IDOR' | 'BAC' | 'TENANT_ISOLATION';
+export { AuthorizationVector };
+
 
 export interface ReplayCandidate {
   /**

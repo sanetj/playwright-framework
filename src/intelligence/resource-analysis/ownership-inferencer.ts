@@ -306,8 +306,10 @@ export class OwnershipInferencer {
     return {
       observations,
       relationshipsBySubject,
-      resourceOwners
+      resourceOwners,
+      profiles
     };
+
   }
 
   /**
