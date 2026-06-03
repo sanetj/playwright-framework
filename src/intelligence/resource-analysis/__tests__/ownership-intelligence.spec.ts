@@ -393,4 +393,69 @@ test.describe('Phase 10.2 — Ownership Intelligence Unit Tests', () => {
     // page and limit should be ignored, and only report_id used
     expect(reportObs!.targetResourceId).toBe('99');
   });
+
+  test('11. Juice Shop ownership scenarios: nested data.UserId, PascalCase keys, and dynamic promotion', () => {
+    const exchanges = [
+      // 1. Identity resolution
+      createMockExchange({
+        id: 'ex_whoami',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/rest/user/authentication-details',
+        method: 'GET',
+        status: 200,
+        responseBody: '{"status":"success","data":{"id":24,"email":"user_a@juiceshop.com"}}'
+      }),
+      // 2. Basket get (Basket ownership, explicit and exclusive)
+      createMockExchange({
+        id: 'ex_basket',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/rest/basket/6',
+        method: 'GET',
+        status: 200,
+        requestHeaders: [{ name: 'authorization', value: 'Bearer token_A' }],
+        responseBody: '{"status":"success","data":{"id":6,"UserId":24}}'
+      }),
+      // 3. Address get (Address ownership, exclusive access, nested data.UserId)
+      createMockExchange({
+        id: 'ex_address',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/api/Addresss/7',
+        method: 'GET',
+        status: 200,
+        requestHeaders: [{ name: 'authorization', value: 'Bearer token_A' }],
+        responseBody: '{"status":"success","data":{"id":7,"UserId":24,"streetAddress":"Hauptstrasse 1"}}'
+      }),
+      // 4. Card get (Card ownership, exclusive access, PascalCase UserId)
+      createMockExchange({
+        id: 'ex_card',
+        sessionId: 'sess_a',
+        url: 'http://localhost:3000/api/Cards/8',
+        method: 'GET',
+        status: 200,
+        requestHeaders: [{ name: 'authorization', value: 'Bearer token_A' }],
+        responseBody: '{"status":"success","data":{"id":8,"UserId":24,"fullName":"User A"}}'
+      })
+    ];
+
+    const result = inferencer.inferOwnership(exchanges);
+
+    // Verify Basket ownership promoted to OWNS
+    const basketObs = result.observations.find(o => o.targetResourceFamily.includes('basket') && o.relationship === 'OWNS');
+    expect(basketObs).toBeDefined();
+    expect(basketObs!.targetResourceId).toBe('6');
+    expect(basketObs!.subjectId).toBe('usr_24');
+
+    // Verify Address ownership promoted to OWNS (nested data.UserId traversed & promoted)
+    const addressObs = result.observations.find(o => o.targetResourceFamily.includes('Addresss') && o.relationship === 'OWNS');
+    expect(addressObs).toBeDefined();
+    expect(addressObs!.targetResourceId).toBe('7');
+    expect(addressObs!.subjectId).toBe('usr_24');
+
+    // Verify Card ownership promoted to OWNS (PascalCase UserId parsed & promoted)
+    const cardObs = result.observations.find(o => o.targetResourceFamily.includes('Cards') && o.relationship === 'OWNS');
+    expect(cardObs).toBeDefined();
+    expect(cardObs!.targetResourceId).toBe('8');
+    expect(cardObs!.subjectId).toBe('usr_24');
+  });
 });
+

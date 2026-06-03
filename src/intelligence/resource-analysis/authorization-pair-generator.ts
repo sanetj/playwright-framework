@@ -40,6 +40,11 @@ export class AuthorizationPairGenerator {
       const concreteId = resourceKey.slice(delimiterIndex + 2);
 
       const ownerIds = ownershipInventory.resourceOwners[resourceKey] || [];
+      const isParameterized = resourceFamily.includes(':');
+      if (!isParameterized || ownerIds.length !== 1 || concreteId === 'self' || concreteId === 'me') {
+        // Exclusion: Non-pairable resource structures (unparameterized, multiple owners, or static context selectors)
+        continue;
+      }
       const resourceTenants = this.getResourceTenants(resourceFamily, concreteId, ownershipInventory);
 
       for (const ownerId of ownerIds) {

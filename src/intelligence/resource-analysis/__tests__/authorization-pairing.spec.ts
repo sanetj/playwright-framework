@@ -448,4 +448,91 @@ test.describe('Phase 10.3 — Authorization Pairing Intelligence Unit Tests', ()
     expect(Object.isFrozen(result.pairs)).toBe(true);
     expect(Object.isFrozen(result.pairsByVector)).toBe(true);
   });
+
+  test('11. Pairability Hardening: Filter non-pairable static self/me identifiers', () => {
+    const profiles: IdentityProfile[] = [
+      { resolvedId: 'usr_12', email: 'owner@test.com', sessionIds: ['sess_owner'] },
+      { resolvedId: 'usr_13', email: 'other@test.com', sessionIds: ['sess_other'] }
+    ];
+
+    const candidates: ReplayCandidateInventory = {
+      candidates: [
+        createMockCandidate({ id: 'cand1', family: '/rest/user/authentication-details' }),
+        createMockCandidate({ id: 'cand2', family: '/api/profile' })
+      ],
+      candidatesByVector: { IDOR: [], BAC: [], TENANT_ISOLATION: [] },
+      candidatesBySurface: {}
+    };
+
+    const ownership: OwnershipInventory = {
+      observations: [],
+      relationshipsBySubject: {},
+      resourceOwners: {
+        '/rest/user/authentication-details::self': ['usr_12'],
+        '/api/profile::me': ['usr_12']
+      },
+      profiles
+    };
+
+    const result = generator.generatePairs(candidates, ownership);
+    expect(result.pairs.length).toBe(0);
+  });
+
+  test('12. Pairability Hardening: Filter resources with multiple owners', () => {
+    const profiles: IdentityProfile[] = [
+      { resolvedId: 'usr_12', email: 'owner@test.com', sessionIds: ['sess_owner'] },
+      { resolvedId: 'usr_13', email: 'other@test.com', sessionIds: ['sess_other'] }
+    ];
+
+    const candidates: ReplayCandidateInventory = {
+      candidates: [
+        createMockCandidate({ id: 'cand1', family: '/api/some-shared-resource' })
+      ],
+      candidatesByVector: { IDOR: [], BAC: [], TENANT_ISOLATION: [] },
+      candidatesBySurface: {}
+    };
+
+    const ownership: OwnershipInventory = {
+      observations: [],
+      relationshipsBySubject: {},
+      resourceOwners: {
+        '/api/some-shared-resource::1': ['usr_12', 'usr_13']
+      },
+      profiles
+    };
+
+    const result = generator.generatePairs(candidates, ownership);
+    expect(result.pairs.length).toBe(0);
+  });
+
+  test('13. Pairability Hardening: Preserve parameterized single-owner resources (RV4/RV5 check)', () => {
+    const profiles: IdentityProfile[] = [
+      { resolvedId: 'usr_12', email: 'owner@test.com', sessionIds: ['sess_owner'] },
+      { resolvedId: 'usr_13', email: 'other@test.com', sessionIds: ['sess_other'] }
+    ];
+
+    const candidates: ReplayCandidateInventory = {
+      candidates: [
+        createMockCandidate({ id: 'cand1', family: '/rest/basket/:basketId' }),
+        createMockCandidate({ id: 'cand2', family: '/api/Addresss/:id' })
+      ],
+      candidatesByVector: { IDOR: [], BAC: [], TENANT_ISOLATION: [] },
+      candidatesBySurface: {}
+    };
+
+    const ownership: OwnershipInventory = {
+      observations: [],
+      relationshipsBySubject: {},
+      resourceOwners: {
+        '/rest/basket/:basketId::6': ['usr_12'],
+        '/api/Addresss/:id::7': ['usr_12']
+      },
+      profiles
+    };
+
+    const result = generator.generatePairs(candidates, ownership);
+    expect(result.pairs.length).toBe(2);
+    expect(result.pairs.some(p => p.targetResourceFamily === '/rest/basket/:basketId')).toBe(true);
+    expect(result.pairs.some(p => p.targetResourceFamily === '/api/Addresss/:id')).toBe(true);
+  });
 });

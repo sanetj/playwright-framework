@@ -23,8 +23,18 @@ export class OwnershipInferencer {
       }
     }
 
+    // Extract resource signals dynamically to look up OBJECT_IDENTIFIER_PRESENT
+    const signalsInventory = this.extractor.extractInventory(exchanges);
+    const familySignalsMap = new Map<string, string[]>();
+    for (const sig of signalsInventory.signals) {
+      familySignalsMap.set(sig.resourceFamily, sig.investigationSignals);
+    }
+
     // Tracks which users accessed a specific concrete resource instance (status 200 OK)
     const resourceAccessMap = new Map<string, Set<string>>();
+    // Tracks whether all successful accesses to a resource carry authentication
+    const resourceAuthInvariantMap = new Map<string, boolean>();
+
     // Stores candidate observations and explicit body matching findings
     const candidateObservations: {
       ex: CanonicalHttpExchange;
@@ -35,6 +45,7 @@ export class OwnershipInferencer {
       explicitOwnerConfirmed: boolean;
       explicitTenantId?: string;
       explicitWorkspaceId?: string;
+      hasOwnershipKeyInPayload: boolean;
     }[] = [];
 
     for (const ex of exchanges) {
@@ -103,36 +114,47 @@ export class OwnershipInferencer {
 
       const resourceKey = `${family}::${concreteId}`;
 
-      // Register access in the exclusive access map if response is successful
+      // Register access and check authentication invariant in the exclusive access map if response is successful
       if (ex.response && ex.response.status >= 200 && ex.response.status < 300) {
         if (!resourceAccessMap.has(resourceKey)) {
           resourceAccessMap.set(resourceKey, new Set<string>());
         }
         resourceAccessMap.get(resourceKey)!.add(profile.resolvedId);
+
+        const isAuth = this.isExchangeAuthenticated(ex);
+        if (!resourceAuthInvariantMap.has(resourceKey)) {
+          resourceAuthInvariantMap.set(resourceKey, isAuth);
+        } else {
+          if (!isAuth) {
+            resourceAuthInvariantMap.set(resourceKey, false);
+          }
+        }
       }
 
       // Check for explicit payload ownership indicators
       let explicitOwnerConfirmed = false;
-      if (ex.response && ex.response.bodyStr) {
-        try {
-          const parsed = JSON.parse(ex.response.bodyStr);
-          if (parsed && typeof parsed === 'object') {
-            const ownerVal = parsed.owner || parsed.userId || parsed.username || parsed.email;
-            if (ownerVal !== undefined) {
-              const strVal = String(ownerVal);
-              const isMatch =
-                strVal === profile.email ||
-                strVal === profile.username ||
-                strVal === profile.accountId ||
-                `usr_${strVal}` === profile.resolvedId ||
-                strVal === profile.resolvedId.replace('usr_', '');
-              if (isMatch) {
-                explicitOwnerConfirmed = true;
-              }
-            }
-          }
-        } catch {
-          // Non-JSON response ignored
+      let hasOwnershipKeyInPayload = false;
+
+      const resOwnership = this.extractOwnershipValues(ex.response?.bodyStr);
+      const reqOwnership = this.extractOwnershipValues(ex.request?.bodyStr);
+
+      const allOwnershipKeys = new Set([...resOwnership.keys, ...reqOwnership.keys]);
+      const allOwnershipValues = [...resOwnership.values, ...reqOwnership.values];
+
+      if (allOwnershipKeys.size > 0) {
+        hasOwnershipKeyInPayload = true;
+      }
+
+      for (const val of allOwnershipValues) {
+        const isMatch =
+          val === profile.email ||
+          val === profile.username ||
+          val === profile.accountId ||
+          `usr_${val}` === profile.resolvedId ||
+          val === profile.resolvedId.replace('usr_', '');
+        if (isMatch) {
+          explicitOwnerConfirmed = true;
+          break;
         }
       }
 
@@ -170,7 +192,8 @@ export class OwnershipInferencer {
         surface,
         explicitOwnerConfirmed,
         explicitTenantId,
-        explicitWorkspaceId
+        explicitWorkspaceId,
+        hasOwnershipKeyInPayload
       });
     }
 
@@ -183,6 +206,8 @@ export class OwnershipInferencer {
         observations.push(obs);
       }
     };
+
+    const totalAuthExchanges = exchanges.filter(e => this.isExchangeAuthenticated(e)).length;
 
     for (const cand of candidateObservations) {
       const resourceKey = `${cand.family}::${cand.concreteId}`;
@@ -204,12 +229,6 @@ export class OwnershipInferencer {
         segment === 'authentication'
       );
 
-      // Check if resource category is a dynamic user-scoped type
-      const isUserScopedResource =
-        cand.surface === 'Basket Surface' ||
-        cand.surface === 'Invoice Surface' ||
-        cand.surface === 'User Surface';
-
       // Check if user has explicit ownership evidence to avoid greedy promotion of un-reconciled sessions
       const hasOwnershipEvidence = !!(
         cand.profile.email ||
@@ -218,10 +237,19 @@ export class OwnershipInferencer {
         (cand.profile.resolvedId && !cand.profile.resolvedId.startsWith(`usr_${cand.profile.sessionIds[0]}`))
       );
 
+      // Rule 3: Evidence-driven promotion rules
+      const familySignals = familySignalsMap.get(cand.family) || [];
+      const hasObjectIdSignal = familySignals.includes('OBJECT_IDENTIFIER_PRESENT');
+      const isAuthInvariantMet = totalAuthExchanges === 0 || resourceAuthInvariantMap.get(resourceKey) !== false;
+      const hasOwnershipKey =
+        cand.hasOwnershipKeyInPayload ||
+        this.hasOwnershipKeyInQuery(cand.ex.request.url) ||
+        this.hasOwnershipKeyInFamily(cand.family);
+
       const isPromotable =
         isSelfService ||
         cand.explicitOwnerConfirmed ||
-        (isExclusive && isUserScopedResource && hasOwnershipEvidence);
+        (isExclusive && hasObjectIdSignal && isAuthInvariantMet && hasOwnershipKey && hasOwnershipEvidence);
 
       if (isPromotable && cand.ex.response && cand.ex.response.status >= 200 && cand.ex.response.status < 300) {
         relationship = 'OWNS';
@@ -307,6 +335,7 @@ export class OwnershipInferencer {
         });
       }
     }
+
 
     // Sort observations alphabetically by observationId to preserve 100% determinism
     observations.sort((a, b) => a.observationId.localeCompare(b.observationId));
@@ -465,4 +494,95 @@ export class OwnershipInferencer {
 
     return resolvedProfiles;
   }
+
+  private extractOwnershipValues(bodyStr: string | undefined): { keys: string[], values: string[] } {
+    const keys: string[] = [];
+    const values: string[] = [];
+    if (!bodyStr) return { keys, values };
+
+    try {
+      const parsed = JSON.parse(bodyStr);
+      const traverse = (obj: any, depth: number) => {
+        if (depth > 3 || !obj || typeof obj !== 'object') return;
+
+        if (Array.isArray(obj)) {
+          for (const item of obj) {
+            traverse(item, depth + 1);
+          }
+          return;
+        }
+
+        const whitelist = new Set([
+          'userid', 'owner', 'username', 'email', 'accountid',
+          'tenantid', 'workspaceid', 'projectid', 'teamid'
+        ]);
+
+        for (const [key, val] of Object.entries(obj)) {
+          const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (whitelist.has(normalizedKey)) {
+            keys.push(normalizedKey);
+            if (val !== null && val !== undefined && (typeof val === 'string' || typeof val === 'number')) {
+              values.push(String(val));
+            }
+          }
+          if (val && typeof val === 'object') {
+            traverse(val, depth + 1);
+          }
+        }
+      };
+
+      traverse(parsed, 1);
+    } catch {
+      // Ignored
+    }
+
+    return { keys, values };
+  }
+
+  private hasOwnershipKeyInQuery(urlStr: string): boolean {
+    try {
+      if (urlStr.includes('?')) {
+        const queryStr = urlStr.split('?')[1];
+        const params = new URLSearchParams(queryStr);
+        const whitelist = new Set([
+          'userid', 'owner', 'username', 'email', 'accountid',
+          'tenantid', 'workspaceid', 'projectid', 'teamid'
+        ]);
+        for (const key of params.keys()) {
+          const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (whitelist.has(normalizedKey)) {
+            return true;
+          }
+        }
+      }
+    } catch {
+      // Ignored
+    }
+    return false;
+  }
+
+  private isExchangeAuthenticated(ex: CanonicalHttpExchange): boolean {
+    if (!ex.request.headers) return false;
+    for (const h of ex.request.headers) {
+      const name = h.name.toLowerCase();
+      if (name === 'authorization' || name === 'cookie') {
+        if (h.value && h.value.trim().length > 0) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private hasOwnershipKeyInFamily(family: string): boolean {
+    const familyLower = family.toLowerCase();
+    const keywords = ['user', 'owner', 'basket', 'cart', 'invoice', 'billing', 'profile', 'account', 'tenant', 'workspace', 'project', 'team'];
+    for (const kw of keywords) {
+      if (familyLower.includes(kw)) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
+
