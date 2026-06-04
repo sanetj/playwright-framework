@@ -1,5 +1,5 @@
 import { ReplayExecutionPlan } from './replay-execution-plan';
-import { ReplayExecutionContext, ReplayExecutionResult } from './replay-execution-result';
+import { ReplayExecutionContext, ReplayExecutionResult, RawReplayExecutionResponse, HttpTransportAdapter } from './replay-execution-result';
 
 export interface ReplayRequestDefinition {
   readonly url: string;
@@ -158,7 +158,7 @@ export class ReplayResultSerializer {
       readonly bodyStr?: string;
     },
     error?: {
-      readonly category: 'MISSING_CREDENTIAL_CONTEXT' | 'TARGET_UNREACHABLE' | 'TIMEOUT' | 'UNSUPPORTED_METHOD' | 'EXECUTION_ERROR' | 'MALFORMED_RESPONSE' | 'UNKNOWN_FAILURE';
+      readonly category: 'MISSING_CREDENTIAL_CONTEXT' | 'TARGET_UNREACHABLE' | 'TIMEOUT' | 'UNSUPPORTED_METHOD' | 'EXECUTION_ERROR' | 'MALFORMED_RESPONSE' | 'UNKNOWN_FAILURE' | 'CONNECTION_FAILURE' | 'TLS_FAILURE';
       readonly message: string;
     },
     diagnostics?: {
@@ -215,5 +215,76 @@ export class ReplayResultSerializer {
     }
 
     return Object.freeze(result);
+  }
+}
+
+export class ReplayHttpDispatcher {
+  private readonly adapter: HttpTransportAdapter;
+
+  constructor(adapter: HttpTransportAdapter) {
+    this.adapter = adapter;
+  }
+
+  /**
+   * Safely dispatches a request definition using the abstract transport adapter.
+   * Restricts outgoing methods strictly to GET and HEAD.
+   */
+  public async dispatch(
+    request: ReplayRequestDefinition,
+    timeoutMs: number
+  ): Promise<RawReplayExecutionResponse> {
+    // Safety check: verify HTTP method at execution time
+    const method = request.method.toUpperCase();
+    if (method !== 'GET' && method !== 'HEAD') {
+      return Object.freeze({
+        success: false,
+        error: Object.freeze({
+          category: 'UNSUPPORTED_METHOD' as const,
+          message: `UNSUPPORTED_METHOD: HTTP method ${method} is not permitted by dispatcher safety configuration (GET/HEAD only).`
+        }),
+        diagnostics: Object.freeze({
+          observedResponseTimeMs: 0,
+          clientEngine: 'dispatcher'
+        })
+      });
+    }
+
+    const start = Date.now();
+    try {
+      const rawRes = await this.adapter.sendRequest({
+        url: request.url,
+        method: method as 'GET' | 'HEAD',
+        headers: request.headers,
+        timeoutMs
+      });
+      const duration = Date.now() - start;
+
+      const finalTiming = rawRes.diagnostics.observedResponseTimeMs > 0
+        ? rawRes.diagnostics.observedResponseTimeMs
+        : duration;
+
+      return Object.freeze({
+        success: rawRes.success,
+        response: rawRes.response ? Object.freeze(rawRes.response) : undefined,
+        error: rawRes.error ? Object.freeze(rawRes.error) : undefined,
+        diagnostics: Object.freeze({
+          observedResponseTimeMs: finalTiming,
+          clientEngine: rawRes.diagnostics.clientEngine
+        })
+      });
+    } catch (e: any) {
+      const duration = Date.now() - start;
+      return Object.freeze({
+        success: false,
+        error: Object.freeze({
+          category: 'EXECUTION_ERROR' as const,
+          message: e.message || 'Unknown network transport failure'
+        }),
+        diagnostics: Object.freeze({
+          observedResponseTimeMs: duration,
+          clientEngine: 'unknown'
+        })
+      });
+    }
   }
 }

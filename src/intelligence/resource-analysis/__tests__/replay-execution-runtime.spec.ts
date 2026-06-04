@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { ReplayRequestBuilder, ReplayResultSerializer, ReplayRequestDefinition } from '../replay-execution-runtime';
+import { ReplayRequestBuilder, ReplayResultSerializer, ReplayHttpDispatcher, ReplayRequestDefinition } from '../replay-execution-runtime';
 import { ReplayExecutionPlan } from '../replay-execution-plan';
-import { ReplayExecutionContext, CredentialVaultResolver } from '../replay-execution-result';
+import { ReplayExecutionContext, CredentialVaultResolver, RawReplayExecutionResponse, HttpTransportAdapter } from '../replay-execution-result';
 
 class MockCredentialResolver implements CredentialVaultResolver {
   private store = new Map<string, { name: string; value: string }[]>();
@@ -16,6 +16,21 @@ class MockCredentialResolver implements CredentialVaultResolver {
       return { headers: null as any };
     }
     return { headers };
+  }
+}
+
+class MockTransportAdapter implements HttpTransportAdapter {
+  private handler?: (req: any) => Promise<RawReplayExecutionResponse>;
+
+  public setHandler(handler: (req: any) => Promise<RawReplayExecutionResponse>) {
+    this.handler = handler;
+  }
+
+  public async sendRequest(req: any): Promise<RawReplayExecutionResponse> {
+    if (!this.handler) {
+      throw new Error('No mock handler registered');
+    }
+    return this.handler(req);
   }
 }
 
@@ -343,5 +358,198 @@ test.describe('Phase 11.1B-B — Replay Result Serializer Unit Tests', () => {
     expect(Object.isFrozen(res1)).toBe(true);
     expect(Object.isFrozen(res1.requestSent)).toBe(true);
     expect(Object.isFrozen(res1.requestSent.headers)).toBe(true);
+  });
+});
+
+test.describe('Phase 11.1B-C-A — Replay HTTP Dispatcher Unit Tests', () => {
+  let dispatcher: ReplayHttpDispatcher;
+  let mockAdapter: MockTransportAdapter;
+  let mockRequest: ReplayRequestDefinition;
+
+  test.beforeEach(() => {
+    mockAdapter = new MockTransportAdapter();
+    dispatcher = new ReplayHttpDispatcher(mockAdapter);
+    mockRequest = {
+      url: 'http://localhost:3000/api/Addresss/8',
+      method: 'GET',
+      headers: [{ name: 'Accept', value: 'application/json' }],
+      planId: 'plan_b1',
+      bundleId: 'b1',
+      assemblyId: 'asm1',
+      baselineExchangeId: 'ex1',
+      replayCandidateId: 'cand1'
+    };
+  });
+
+  test('1. Successful dispatch forwards to transport adapter and captures response', async () => {
+    mockAdapter.setHandler(async (req) => {
+      expect(req.url).toBe(mockRequest.url);
+      expect(req.method).toBe(mockRequest.method);
+      return {
+        success: true,
+        response: {
+          statusCode: 200,
+          headers: [{ name: 'Content-Type', value: 'application/json' }],
+          bodyStr: '{"ok": true}'
+        },
+        error: undefined,
+        diagnostics: {
+          observedResponseTimeMs: 15,
+          clientEngine: 'mock'
+        }
+      };
+    });
+
+    const res = await dispatcher.dispatch(mockRequest, 5000);
+    expect(res.success).toBe(true);
+    expect(res.response?.statusCode).toBe(200);
+    expect(res.response?.bodyStr).toBe('{"ok": true}');
+    expect(res.diagnostics.observedResponseTimeMs).toBe(15);
+  });
+
+  test('2. Timeout classification maps transport errors', async () => {
+    mockAdapter.setHandler(async () => {
+      return {
+        success: false,
+        error: {
+          category: 'TIMEOUT',
+          message: 'Connection timed out'
+        },
+        diagnostics: {
+          observedResponseTimeMs: 5000,
+          clientEngine: 'mock'
+        }
+      };
+    });
+
+    const res = await dispatcher.dispatch(mockRequest, 5000);
+    expect(res.success).toBe(false);
+    expect(res.error?.category).toBe('TIMEOUT');
+    expect(res.error?.message).toBe('Connection timed out');
+  });
+
+  test('3. Target unreachable classification maps DNS issues', async () => {
+    mockAdapter.setHandler(async () => {
+      return {
+        success: false,
+        error: {
+          category: 'TARGET_UNREACHABLE',
+          message: 'getaddrinfo ENOTFOUND host'
+        },
+        diagnostics: {
+          observedResponseTimeMs: 50,
+          clientEngine: 'mock'
+        }
+      };
+    });
+
+    const res = await dispatcher.dispatch(mockRequest, 5000);
+    expect(res.success).toBe(false);
+    expect(res.error?.category).toBe('TARGET_UNREACHABLE');
+  });
+
+  test('4. Connection failure classification maps socket termination', async () => {
+    mockAdapter.setHandler(async () => {
+      return {
+        success: false,
+        error: {
+          category: 'CONNECTION_FAILURE',
+          message: 'read ECONNRESET'
+        },
+        diagnostics: {
+          observedResponseTimeMs: 100,
+          clientEngine: 'mock'
+        }
+      };
+    });
+
+    const res = await dispatcher.dispatch(mockRequest, 5000);
+    expect(res.success).toBe(false);
+    expect(res.error?.category).toBe('CONNECTION_FAILURE');
+  });
+
+  test('5. TLS failure classification maps SSL handshake failure', async () => {
+    mockAdapter.setHandler(async () => {
+      return {
+        success: false,
+        error: {
+          category: 'TLS_FAILURE',
+          message: 'unable to verify the first certificate'
+        },
+        diagnostics: {
+          observedResponseTimeMs: 80,
+          clientEngine: 'mock'
+        }
+      };
+    });
+
+    const res = await dispatcher.dispatch(mockRequest, 5000);
+    expect(res.success).toBe(false);
+    expect(res.error?.category).toBe('TLS_FAILURE');
+  });
+
+  test('6. Unsupported method rejection throws safety block errors', async () => {
+    const unsafeReq: ReplayRequestDefinition = {
+      ...mockRequest,
+      method: 'POST' as any
+    };
+
+    const res = await dispatcher.dispatch(unsafeReq, 5000);
+    expect(res.success).toBe(false);
+    expect(res.error?.category).toBe('UNSUPPORTED_METHOD');
+  });
+
+  test('7. Diagnostics collection tracks observed latency and engine', async () => {
+    mockAdapter.setHandler(async () => {
+      return {
+        success: true,
+        response: { statusCode: 200, headers: [] },
+        diagnostics: {
+          observedResponseTimeMs: 142,
+          clientEngine: 'mock-playwright'
+        }
+      };
+    });
+
+    const res = await dispatcher.dispatch(mockRequest, 5000);
+    expect(res.diagnostics.observedResponseTimeMs).toBe(142);
+    expect(res.diagnostics.clientEngine).toBe('mock-playwright');
+  });
+
+  test('8. Deterministic repeated dispatch yields identical response structures', async () => {
+    mockAdapter.setHandler(async () => {
+      return {
+        success: true,
+        response: { statusCode: 200, headers: [], bodyStr: 'val' },
+        diagnostics: {
+          observedResponseTimeMs: 10,
+          clientEngine: 'mock'
+        }
+      };
+    });
+
+    const res1 = await dispatcher.dispatch(mockRequest, 5000);
+    const res2 = await dispatcher.dispatch(mockRequest, 5000);
+
+    expect(JSON.stringify(res1)).toBe(JSON.stringify(res2));
+    expect(Object.isFrozen(res1)).toBe(true);
+    expect(Object.isFrozen(res1.diagnostics)).toBe(true);
+  });
+
+  test('9. Adapter invocation correctness verifies parameter transmission', async () => {
+    let invoked = false;
+    mockAdapter.setHandler(async (req) => {
+      invoked = true;
+      expect(req.timeoutMs).toBe(3200);
+      expect(req.headers[0].name).toBe('Accept');
+      return {
+        success: true,
+        response: { statusCode: 200, headers: [] },
+        diagnostics: { observedResponseTimeMs: 5, clientEngine: 'mock' }
+      };
+    });
+
+    await dispatcher.dispatch(mockRequest, 3200);
+    expect(invoked).toBe(true);
   });
 });

@@ -20,7 +20,7 @@ export interface ReplayExecutionResult {
   readonly replayCandidateId: string;
 
   readonly executionStatus: 'SUCCESS' | 'FAILED' | 'ABORTED';
-  readonly failureCategory?: 'MISSING_CREDENTIAL_CONTEXT' | 'TARGET_UNREACHABLE' | 'TIMEOUT' | 'UNSUPPORTED_METHOD' | 'EXECUTION_ERROR' | 'MALFORMED_RESPONSE' | 'UNKNOWN_FAILURE';
+  readonly failureCategory?: 'MISSING_CREDENTIAL_CONTEXT' | 'TARGET_UNREACHABLE' | 'TIMEOUT' | 'UNSUPPORTED_METHOD' | 'EXECUTION_ERROR' | 'MALFORMED_RESPONSE' | 'UNKNOWN_FAILURE' | 'CONNECTION_FAILURE' | 'TLS_FAILURE';
   readonly failureMessage?: string;
 
   readonly requestSent: {
@@ -39,4 +39,35 @@ export interface ReplayExecutionResult {
     readonly observedResponseTimeMs: number;
     readonly clientEngine: string;
   };
+}
+
+export interface RawReplayExecutionResponse {
+  readonly success: boolean;
+
+  readonly response?: {
+    readonly statusCode: number;
+    readonly headers: readonly { name: string; value: string }[];
+    readonly bodyStr?: string;
+  };
+
+  readonly error?: {
+    readonly category: 'MISSING_CREDENTIAL_CONTEXT' | 'TARGET_UNREACHABLE' | 'TIMEOUT' | 'UNSUPPORTED_METHOD' | 'EXECUTION_ERROR' | 'CONNECTION_FAILURE' | 'TLS_FAILURE' | 'MALFORMED_RESPONSE' | 'UNKNOWN_FAILURE';
+    readonly message: string;
+  };
+
+  readonly diagnostics: {
+    readonly observedResponseTimeMs: number;
+    readonly clientEngine: string;
+  };
+}
+
+export interface HttpTransportAdapter {
+  sendRequest(
+    request: {
+      readonly url: string;
+      readonly method: 'GET' | 'HEAD';
+      readonly headers: readonly { name: string; value: string }[];
+      readonly timeoutMs: number;
+    }
+  ): Promise<RawReplayExecutionResponse>;
 }
