@@ -1,5 +1,5 @@
 import { ReplayExecutionPlan } from './replay-execution-plan';
-import { ReplayExecutionContext } from './replay-execution-result';
+import { ReplayExecutionContext, ReplayExecutionResult } from './replay-execution-result';
 
 export interface ReplayRequestDefinition {
   readonly url: string;
@@ -104,5 +104,116 @@ export class ReplayRequestBuilder {
       baselineExchangeId: plan.baselineExchangeId,
       replayCandidateId: plan.replayCandidateId
     });
+  }
+}
+
+/**
+ * Case-insensitively processes headers to redact cookies, authorization headers,
+ * tokens, keys, passwords, and sessions based on fixed deterministic rules.
+ */
+function redactHeaders(
+  headers: readonly { name: string; value: string }[]
+): readonly { name: string; value: string }[] {
+  const sensitiveKeys = new Set(['authorization', 'cookie', 'set-cookie', 'proxy-authorization']);
+  const sensitiveSubstrings = ['token', 'secret', 'key', 'password', 'session', 'cookie', 'auth'];
+  const sensitivePrefixes = ['x-api-', 'x-auth-'];
+
+  const processed = headers.map(h => {
+    const nameLower = h.name.toLowerCase();
+
+    // 1. Exact key checks
+    let isSensitive = sensitiveKeys.has(nameLower);
+
+    // 2. Prefix checks
+    if (!isSensitive) {
+      isSensitive = sensitivePrefixes.some(pref => nameLower.startsWith(pref));
+    }
+
+    // 3. Substring checks
+    if (!isSensitive) {
+      isSensitive = sensitiveSubstrings.some(sub => nameLower.includes(sub));
+    }
+
+    return {
+      name: h.name,
+      value: isSensitive ? '[REDACTED]' : h.value
+    };
+  });
+
+  // Sort alphabetically to maintain absolute output determinism
+  return Object.freeze(processed.sort((a, b) => a.name.localeCompare(b.name)));
+}
+
+export class ReplayResultSerializer {
+  /**
+   * Statelessly compiles HTTP request and response values into a safe,
+   * secrets-redacted, and traceable ReplayExecutionResult structure.
+   */
+  public serializeResult(
+    request: ReplayRequestDefinition,
+    status: 'SUCCESS' | 'FAILED' | 'ABORTED',
+    response?: {
+      readonly statusCode: number;
+      readonly headers: readonly { name: string; value: string }[];
+      readonly bodyStr?: string;
+    },
+    error?: {
+      readonly category: 'MISSING_CREDENTIAL_CONTEXT' | 'TARGET_UNREACHABLE' | 'TIMEOUT' | 'UNSUPPORTED_METHOD' | 'EXECUTION_ERROR' | 'MALFORMED_RESPONSE' | 'UNKNOWN_FAILURE';
+      readonly message: string;
+    },
+    diagnostics?: {
+      readonly observedResponseTimeMs: number;
+      readonly clientEngine: string;
+    }
+  ): ReplayExecutionResult {
+    const resultId = `result_${request.planId}`;
+
+    const requestSent = {
+      url: request.url,
+      method: request.method,
+      headers: redactHeaders(request.headers)
+    };
+
+    let responseReceived: {
+      readonly statusCode: number;
+      readonly headers: readonly { name: string; value: string }[];
+      readonly bodyStr?: string;
+    } | undefined = undefined;
+
+    if (response) {
+      responseReceived = {
+        statusCode: response.statusCode,
+        headers: redactHeaders(response.headers),
+        bodyStr: response.bodyStr
+      };
+    }
+
+    const diag = {
+      observedResponseTimeMs: diagnostics?.observedResponseTimeMs ?? 0,
+      clientEngine: diagnostics?.clientEngine ?? 'unknown'
+    };
+
+    const result: ReplayExecutionResult = {
+      resultId,
+      planId: request.planId,
+      bundleId: request.bundleId,
+      assemblyId: request.assemblyId,
+      baselineExchangeId: request.baselineExchangeId,
+      replayCandidateId: request.replayCandidateId,
+      executionStatus: status,
+      requestSent: Object.freeze(requestSent),
+      diagnostics: Object.freeze(diag)
+    };
+
+    if (responseReceived) {
+      (result as any).responseReceived = Object.freeze(responseReceived);
+    }
+
+    if (error) {
+      (result as any).failureCategory = error.category;
+      (result as any).failureMessage = error.message;
+    }
+
+    return Object.freeze(result);
   }
 }

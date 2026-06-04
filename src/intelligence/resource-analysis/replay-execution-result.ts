@@ -20,7 +20,7 @@ export interface ReplayExecutionResult {
   readonly replayCandidateId: string;
 
   readonly executionStatus: 'SUCCESS' | 'FAILED' | 'ABORTED';
-  readonly failureCategory?: 'MISSING_CREDENTIAL_CONTEXT' | 'TARGET_UNREACHABLE' | 'TIMEOUT' | 'UNSUPPORTED_METHOD' | 'EXECUTION_ERROR';
+  readonly failureCategory?: 'MISSING_CREDENTIAL_CONTEXT' | 'TARGET_UNREACHABLE' | 'TIMEOUT' | 'UNSUPPORTED_METHOD' | 'EXECUTION_ERROR' | 'MALFORMED_RESPONSE' | 'UNKNOWN_FAILURE';
   readonly failureMessage?: string;
 
   readonly requestSent: {
