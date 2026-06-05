@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ReplayRequestBuilder, ReplayResultSerializer, ReplayHttpDispatcher, ReplayRequestDefinition } from '../replay-execution-runtime';
+import { ReplayRequestBuilder, ReplayResultSerializer, ReplayHttpDispatcher, ReplayRequestDefinition, ReplayExecutionRuntime } from '../replay-execution-runtime';
 import { ReplayExecutionPlan } from '../replay-execution-plan';
 import { ReplayExecutionContext, CredentialVaultResolver, RawReplayExecutionResponse, HttpTransportAdapter } from '../replay-execution-result';
 
@@ -553,3 +553,168 @@ test.describe('Phase 11.1B-C-A — Replay HTTP Dispatcher Unit Tests', () => {
     expect(invoked).toBe(true);
   });
 });
+
+test.describe('Phase 11.1B-C-B — Replay Execution Runtime Integration Tests', () => {
+  let mockResolver: MockCredentialResolver;
+  let mockAdapter: MockTransportAdapter;
+  let runtime: ReplayExecutionRuntime;
+  let context: ReplayExecutionContext;
+
+  test.beforeEach(() => {
+    mockResolver = new MockCredentialResolver();
+    mockAdapter = new MockTransportAdapter();
+    runtime = new ReplayExecutionRuntime(mockAdapter);
+    context = {
+      targetBaseUrl: 'http://localhost:3000',
+      timeoutMs: 5000,
+      credentialResolver: mockResolver
+    };
+  });
+
+  test('1. Successful orchestration path matches spec', async () => {
+    mockResolver.register('usr_attacker', [{ name: 'Cookie', value: 'session=attacker_cookie' }]);
+    mockAdapter.setHandler(async (req) => {
+      return {
+        success: true,
+        response: {
+          statusCode: 200,
+          headers: [{ name: 'Content-Type', value: 'application/json' }],
+          bodyStr: '{"data": "success"}'
+        },
+        diagnostics: {
+          observedResponseTimeMs: 15,
+          clientEngine: 'mock'
+        }
+      };
+    });
+
+    const plan = createMockPlan();
+    const result = await runtime.execute(plan, context);
+
+    expect(result.executionStatus).toBe('SUCCESS');
+    expect(result.responseReceived?.statusCode).toBe(200);
+    expect(result.responseReceived?.bodyStr).toBe('{"data": "success"}');
+    expect(result.diagnostics.observedResponseTimeMs).toBe(15);
+    expect(result.diagnostics.clientEngine).toBe('mock');
+    expect(result.failureCategory).toBeUndefined();
+  });
+
+  test('2. Request builder failure short-circuits to output and maps UNSUPPORTED_METHOD', async () => {
+    mockResolver.register('usr_attacker', []);
+    const plan = createMockPlan({ allowedMethod: 'POST' as any });
+
+    const result = await runtime.execute(plan, context);
+
+    expect(result.executionStatus).toBe('FAILED');
+    expect(result.failureCategory).toBe('UNSUPPORTED_METHOD');
+    expect(result.diagnostics.observedResponseTimeMs).toBe(0);
+    expect(result.diagnostics.clientEngine).toBe('none');
+    expect(result.responseReceived).toBeUndefined();
+  });
+
+  test('3. Credential resolution failure is caught and mapped to MISSING_CREDENTIAL_CONTEXT', async () => {
+    // Registering nothing will cause auth context resolution error
+    const plan = createMockPlan();
+    const result = await runtime.execute(plan, context);
+
+    expect(result.executionStatus).toBe('FAILED');
+    expect(result.failureCategory).toBe('MISSING_CREDENTIAL_CONTEXT');
+    expect(result.diagnostics.observedResponseTimeMs).toBe(0);
+    expect(result.diagnostics.clientEngine).toBe('none');
+    expect(result.responseReceived).toBeUndefined();
+  });
+
+  test('4. Dispatcher failure (timeout) propagates successfully', async () => {
+    mockResolver.register('usr_attacker', []);
+    mockAdapter.setHandler(async () => {
+      return {
+        success: false,
+        error: {
+          category: 'TIMEOUT',
+          message: 'Connection timed out'
+        },
+        diagnostics: {
+          observedResponseTimeMs: 5000,
+          clientEngine: 'mock'
+        }
+      };
+    });
+
+    const plan = createMockPlan();
+    const result = await runtime.execute(plan, context);
+
+    expect(result.executionStatus).toBe('FAILED');
+    expect(result.failureCategory).toBe('TIMEOUT');
+    expect(result.failureMessage).toBe('Connection timed out');
+    expect(result.diagnostics.observedResponseTimeMs).toBe(5000);
+    expect(result.diagnostics.clientEngine).toBe('mock');
+  });
+
+  test('5. Traceability preservation guarantees lineage fields in success and failure', async () => {
+    // Success path verification
+    mockResolver.register('usr_attacker', []);
+    mockAdapter.setHandler(async () => {
+      return {
+        success: true,
+        response: { statusCode: 200, headers: [] },
+        diagnostics: { observedResponseTimeMs: 10, clientEngine: 'mock' }
+      };
+    });
+
+    const plan = createMockPlan({
+      planId: 'p_trace',
+      bundleId: 'b_trace',
+      assemblyId: 'a_trace',
+      baselineExchangeId: 'be_trace',
+      replayCandidateId: 'rc_trace'
+    });
+
+    const successResult = await runtime.execute(plan, context);
+    expect(successResult.planId).toBe('p_trace');
+    expect(successResult.bundleId).toBe('b_trace');
+    expect(successResult.assemblyId).toBe('a_trace');
+    expect(successResult.baselineExchangeId).toBe('be_trace');
+    expect(successResult.replayCandidateId).toBe('rc_trace');
+
+    // Failure path verification (Credential failure)
+    const emptyResolverContext = {
+      targetBaseUrl: 'http://localhost:3000',
+      timeoutMs: 5000,
+      credentialResolver: new MockCredentialResolver()
+    };
+    const failResult = await runtime.execute(plan, emptyResolverContext);
+    expect(failResult.planId).toBe('p_trace');
+    expect(failResult.bundleId).toBe('b_trace');
+    expect(failResult.assemblyId).toBe('a_trace');
+    expect(failResult.baselineExchangeId).toBe('be_trace');
+    expect(failResult.replayCandidateId).toBe('rc_trace');
+  });
+
+  test('6. Deterministic repeated execution yields identical results', async () => {
+    mockResolver.register('usr_attacker', [{ name: 'Cookie', value: 'session=attacker_cookie' }]);
+    mockAdapter.setHandler(async () => {
+      return {
+        success: true,
+        response: {
+          statusCode: 200,
+          headers: [{ name: 'Content-Type', value: 'application/json' }],
+          bodyStr: '{"data": "success"}'
+        },
+        diagnostics: {
+          observedResponseTimeMs: 15,
+          clientEngine: 'mock'
+        }
+      };
+    });
+
+    const plan = createMockPlan();
+    const res1 = await runtime.execute(plan, context);
+    const res2 = await runtime.execute(plan, context);
+
+    expect(JSON.stringify(res1)).toBe(JSON.stringify(res2));
+    expect(Object.isFrozen(res1)).toBe(true);
+    expect(Object.isFrozen(res1.requestSent)).toBe(true);
+    expect(Object.isFrozen(res1.requestSent.headers)).toBe(true);
+  });
+});
+

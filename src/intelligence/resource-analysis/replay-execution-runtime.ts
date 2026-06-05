@@ -288,3 +288,86 @@ export class ReplayHttpDispatcher {
     }
   }
 }
+
+export class ReplayExecutionRuntime {
+  private readonly builder: ReplayRequestBuilder;
+  private readonly dispatcher: ReplayHttpDispatcher;
+  private readonly serializer: ReplayResultSerializer;
+
+  constructor(adapter: HttpTransportAdapter) {
+    this.builder = new ReplayRequestBuilder();
+    this.dispatcher = new ReplayHttpDispatcher(adapter);
+    this.serializer = new ReplayResultSerializer();
+  }
+
+  /**
+   * Orchestrates the entire execution flow: request building, dispatching, and serialization.
+   * Intercepts pre-dispatch errors and translates them into structured failure results.
+   */
+  public async execute(
+    plan: ReplayExecutionPlan,
+    context: ReplayExecutionContext
+  ): Promise<ReplayExecutionResult> {
+    let request: ReplayRequestDefinition;
+    try {
+      request = await this.builder.buildRequest(plan, context);
+    } catch (e: any) {
+      const errorMessage = e.message || '';
+      let category: 'MISSING_CREDENTIAL_CONTEXT' | 'UNSUPPORTED_METHOD' | 'EXECUTION_ERROR' = 'EXECUTION_ERROR';
+
+      if (errorMessage.includes('UNRESOLVED_AUTH_CONTEXT')) {
+        category = 'MISSING_CREDENTIAL_CONTEXT';
+      } else if (errorMessage.includes('UNSUPPORTED_METHOD')) {
+        category = 'UNSUPPORTED_METHOD';
+      }
+
+      const fallbackRequest: ReplayRequestDefinition = {
+        url: '',
+        method: plan.allowedMethod || 'GET',
+        headers: [],
+        planId: plan.planId,
+        bundleId: plan.bundleId,
+        assemblyId: plan.assemblyId,
+        baselineExchangeId: plan.baselineExchangeId,
+        replayCandidateId: plan.replayCandidateId
+      };
+
+      const diagnostics = {
+        observedResponseTimeMs: 0,
+        clientEngine: 'none' as const
+      };
+
+      return this.serializer.serializeResult(
+        fallbackRequest,
+        'FAILED',
+        undefined,
+        {
+          category,
+          message: errorMessage
+        },
+        diagnostics
+      );
+    }
+
+    const dispatchResult = await this.dispatcher.dispatch(request, context.timeoutMs);
+
+    if (dispatchResult.success) {
+      return this.serializer.serializeResult(
+        request,
+        'SUCCESS',
+        dispatchResult.response,
+        undefined,
+        dispatchResult.diagnostics
+      );
+    } else {
+      return this.serializer.serializeResult(
+        request,
+        'FAILED',
+        dispatchResult.response,
+        dispatchResult.error,
+        dispatchResult.diagnostics
+      );
+    }
+  }
+}
+
