@@ -53,4 +53,43 @@ test.describe('WorkflowCanonicalizer', () => {
     expect(edges[0].to).toBe('api:GET:/items/{ID}');
     expect(edges[0].weight).toBe(2);
   });
+  test('should mask prefix dynamic IDs and collapse duplicates', () => {
+    const graph = new ActionGraph();
+    graph.addNode({ id: 'api:GET:/orders/req_abc123', kind: 'api', layer: 'structural', label: '/orders/req_abc123', attrs: {} });
+    graph.addNode({ id: 'api:GET:/orders/req_xyz789', kind: 'api', layer: 'structural', label: '/orders/req_xyz789', attrs: {} });
+    
+    const canonicalizer = new WorkflowCanonicalizer();
+    const canonGraph = canonicalizer.canonicalize(graph);
+    const nodes = canonGraph.toJSON().nodes;
+    
+    expect(nodes.length).toBe(1);
+    expect(nodes[0].id).toBe('api:GET:/orders/{ID}');
+  });
+
+  test('should mask Mongo ObjectIds and collapse duplicates', () => {
+    const graph = new ActionGraph();
+    graph.addNode({ id: 'api:GET:/files/507f1f77bcf86cd799439011', kind: 'api', layer: 'structural', label: '/files/507f1f77bcf86cd799439011', attrs: {} });
+    graph.addNode({ id: 'api:GET:/files/507f1f77bcf86cd799439012', kind: 'api', layer: 'structural', label: '/files/507f1f77bcf86cd799439012', attrs: {} });
+    
+    const canonicalizer = new WorkflowCanonicalizer();
+    const canonGraph = canonicalizer.canonicalize(graph);
+    const nodes = canonGraph.toJSON().nodes;
+    
+    expect(nodes.length).toBe(1);
+    expect(nodes[0].id).toBe('api:GET:/files/{ID}');
+  });
+
+  test('should preserve semantic route names', () => {
+    const graph = new ActionGraph();
+    graph.addNode({ id: 'api:GET:/api/organizations/users', kind: 'api', layer: 'structural', label: '/api/organizations/users', attrs: {} });
+    graph.addNode({ id: 'api:GET:/api/subscriptions/users', kind: 'api', layer: 'structural', label: '/api/subscriptions/users', attrs: {} });
+    
+    const canonicalizer = new WorkflowCanonicalizer();
+    const canonGraph = canonicalizer.canonicalize(graph);
+    const nodes = canonGraph.toJSON().nodes;
+    
+    expect(nodes.length).toBe(2);
+    expect(nodes.find(n => n.id === 'api:GET:/api/organizations/users')).toBeDefined();
+    expect(nodes.find(n => n.id === 'api:GET:/api/subscriptions/users')).toBeDefined();
+  });
 });

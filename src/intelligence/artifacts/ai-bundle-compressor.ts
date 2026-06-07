@@ -90,65 +90,34 @@ export class AiBundleCompressor {
     // 1. Summarize Findings
     const findings: InvestigationBundle['differentialAnalysis']['findings'] = [];
     
-    for (const node of diffResult.exclusiveToComparison) {
-      // Very naive scoring for missing components, full implementation in pipeline
-      const roi = roiScorer.calculateRoiScore('GET', node.label, true, false, false);
-      const priority = priorityRanker.rankFinding(roi, 0.5, 0.8); // Placeholder scores
+    for (const finding of diffResult.findings) {
+      const parts = (finding.targetEntityId || '').split(':');
+      const method = parts.length > 1 ? parts[1] : 'GET';
+      const url = parts.length > 2 ? parts.slice(2).join(':') : (finding.targetEntityId || '');
+      
+      const isSensitive = roiScorer.isSensitive(url);
+      const isPrivEsc = finding.type === 'PRIVILEGE_ESCALATION_CANDIDATE';
+      const roi = roiScorer.calculateRoiScore(method, url, isPrivEsc, method === 'DELETE', isSensitive);
+      const priority = priorityRanker.rankFinding(roi, 0.8, 1.0); // Assume high reproducibility for E2E dummy
       
       findings.push({
-        type: 'PRIVILEGE_ESCALATION_CANDIDATE',
-        targetEndpoint: node.label,
+        type: finding.type as any,
+        targetEndpoint: finding.targetEntityId || 'unknown',
         severity: 'HIGH',
         priority,
         roiScore: roi,
-        description: `Endpoint reachable by ${diffResult.comparisonRoleId} but not by ${diffResult.baseRoleId}.`,
-        isValidated: (node as any).isValidated,
-        validationConfidence: (node as any).validationConfidence,
-        proofs: (node as any).proofs
+        description: finding.description,
+        isValidated: (finding as any).isValidated,
+        validationConfidence: (finding as any).validationConfidence,
+        proofs: (finding as any).proofs,
+        proofNarrative: (finding as any).isValidated ? `Successfully validated ${finding.type} via deterministic replay mutation.` : undefined
       });
     }
-
-    if (diffResult.statusContradictions) {
-      for (const contra of diffResult.statusContradictions) {
-        let type: 'STATUS_CONTRADICTION' | 'PRIVILEGE_ESCALATION_CANDIDATE' | 'IDOR_CANDIDATE' = 'STATUS_CONTRADICTION';
-        if (contra.baseStatus === 403 && contra.comparisonStatus === 200) {
-           type = 'PRIVILEGE_ESCALATION_CANDIDATE';
-        }
-        
-        // Extract method and url from nodeId (e.g. api:GET:http://...)
-        const parts = contra.nodeId.split(':');
-        const method = parts.length > 1 ? parts[1] : 'GET';
-        const url = parts.length > 2 ? parts.slice(2).join(':') : contra.nodeId;
-        
-        const isSensitive = roiScorer.isSensitive(url);
-        const roi = roiScorer.calculateRoiScore(method, url, type === 'PRIVILEGE_ESCALATION_CANDIDATE', method === 'DELETE', isSensitive);
-        const priority = priorityRanker.rankFinding(roi, 0.8, 1.0); // Assume high reproducibility for E2E dummy
-
-        findings.push({
-          type,
-          targetEndpoint: contra.nodeId,
-          severity: 'HIGH',
-          priority,
-          roiScore: roi,
-          description: `Base role got status ${contra.baseStatus}, but comparison role got ${contra.comparisonStatus}.`,
-          isValidated: (contra as any).isValidated,
-          validationConfidence: (contra as any).validationConfidence,
-          proofs: (contra as any).proofs,
-          proofNarrative: (contra as any).isValidated ? `Successfully validated ${type} via deterministic replay mutation.` : undefined
-        });
-      }
-    }
-
-    // 2. Compress Exchanges Using Export Profiles
-    const profileManager = new ExportProfileManager();
-    const config = profileManager.getConfig(exportMode);
-    const redactor = new BundleRedactor();
-
-    const compressedExchanges = exchanges.slice(0, 10).map(ex => redactor.redactExchange(ex, config));
 
     // 3. Build Grouped Contradiction Summary deterministically
     const contradictionList: ContradictionEvidenceMapping[] = [];
     const byType: Record<string, string[]> = {};
+    const requiredExchangeIds = new Set<string>();
 
     for (const finding of findings) {
       const parts = finding.targetEndpoint.split(':');
@@ -167,15 +136,24 @@ export class AiBundleCompressor {
         return u.split('?')[0];
       };
 
+      const maskIds = (u: string): string => {
+        const idMaskRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\b[0-9a-f]{24}\b|\b[a-zA-Z]+_[a-zA-Z0-9]+\b|\b\d+\b/gi;
+        return u.replace(idMaskRegex, '{ID}');
+      };
+
       const findingPath = getPathOnly(url);
 
       const matchingExchanges = exchanges.filter(ex => {
         if (ex.request.method.toUpperCase() !== method.toUpperCase()) return false;
-        const exPath = getPathOnly(ex.request.url);
+        const rawExPath = getPathOnly(ex.request.url);
+        const exPath = maskIds(rawExPath);
         return exPath === findingPath || exPath.includes(findingPath) || findingPath.includes(exPath);
       });
 
       const evidenceExchangeIds = matchingExchanges.map(ex => ex.exchangeId.id).sort();
+      for (const id of evidenceExchangeIds) {
+        requiredExchangeIds.add(id);
+      }
 
       const lineageRefs: string[] = [];
       for (const ex of matchingExchanges) {
@@ -215,6 +193,15 @@ export class AiBundleCompressor {
     for (const key of Object.keys(byType)) {
       byType[key].sort();
     }
+
+    // 2. Compress Exchanges Using Export Profiles
+    const profileManager = new ExportProfileManager();
+    const config = profileManager.getConfig(exportMode);
+    const redactor = new BundleRedactor();
+
+    const compressedExchanges = exchanges
+      .filter(ex => requiredExchangeIds.has(ex.exchangeId.id))
+      .map(ex => redactor.redactExchange(ex, config));
 
     // Deterministically compress structurally repeated E2E lineage/evidence
     const uniqueEvidenceMapStrings: string[] = [];

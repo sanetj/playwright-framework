@@ -1,7 +1,7 @@
 import { ActionGraph, GraphNode, GraphEdge } from '../../graph/action-graph';
 
 export class WorkflowCanonicalizer {
-  private readonly idMaskRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\b\d+\b/gi;
+  private readonly idMaskRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\b[0-9a-f]{24}\b|\b[a-zA-Z]+_[a-zA-Z0-9]+\b|\b\d+\b/gi;
 
   /**
    * Transforms an ActionGraph by masking dynamic IDs in routes and APIs,

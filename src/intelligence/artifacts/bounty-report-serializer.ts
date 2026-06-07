@@ -24,13 +24,123 @@ export class BountyReportSerializer {
       const method = parts.length > 1 ? parts[1] : 'GET';
       const url = parts.length > 2 ? parts.slice(2).join(':') : finding.targetEndpoint;
       
-      const mockConfidence = { score: 0.9, severity: finding.severity, factors: ['Deterministic Replay Verified', 'Clear Auth Boundary Crossed'] };
-      
-      md += triageGen.generate(finding.type, finding.priority, mockConfidence as any, finding.targetEndpoint, finding.description);
+      const buildValidationAwareConfidence = (f: any) => {
+        let score = 0.0;
+        let severity = f.severity;
+        const factors: string[] = [];
+
+        if (f.validationConfidence === 'HIGH') {
+          score = 1.0;
+          severity = 'HIGH';
+        } else if (f.validationConfidence === 'MEDIUM') {
+          score = 0.7;
+          severity = 'MEDIUM';
+        } else if (f.validationConfidence === 'LOW') {
+          score = 0.3;
+          severity = 'LOW';
+        }
+
+        if (f.isValidated === true) {
+          factors.push('Deterministic Replay Verified');
+        } else if (f.isValidated === false || f.validationConfidence === 'LOW') {
+          factors.push('Unvalidated');
+        }
+
+        if (f.proofs && f.proofs.length > 0) {
+          factors.push('Proof Constructed');
+        }
+
+        if (f.type === 'PRIVILEGE_ESCALATION_CANDIDATE') {
+          factors.push('Clear Auth Boundary Crossed');
+        }
+
+        return { score, severity, factors };
+      };
+
+      const realConfidence = buildValidationAwareConfidence(finding);
+      md += triageGen.generate(finding.type, finding.priority, realConfidence as any, finding.targetEndpoint, finding.description);
       md += impactGen.buildImpact(bundle.differentialAnalysis.baseRole, bundle.differentialAnalysis.comparisonRole, method, url, method === 'DELETE', url.includes('admin') || url.includes('user'));
       md += reproGen.buildNarrative(bundle.evidenceExchanges.slice(0,1) as any, bundle.evidenceExchanges[bundle.evidenceExchanges.length -1] as any);
       md += `---\n\n`;
     }
+
+    // --- Slice D: Path Family Clustering (Serializer Local) ---
+    const getPathOnly = (u: string): string => {
+      const match = u.match(/https?:\/\/[^\/]+(\/.*)/);
+      if (match && match[1]) {
+        return match[1].split('?')[0];
+      }
+      const idx = u.indexOf('/');
+      if (idx !== -1 && !u.startsWith('http')) {
+        return u.substring(idx).split('?')[0];
+      }
+      return u.split('?')[0] || u;
+    };
+
+    const maskIds = (u: string): string => {
+      const idMaskRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\b[0-9a-f]{24}\b|\b[a-zA-Z]+_[a-zA-Z0-9]+\b|\b\d+\b/gi;
+      return u.replace(idMaskRegex, '{ID}');
+    };
+
+    const clusters: Record<string, {
+      pathFamily: string;
+      findingsCount: number;
+      validatedCount: number;
+      unvalidatedCount: number;
+      findingTypes: Set<string>;
+    }> = {};
+
+    for (const finding of bundle.differentialAnalysis.findings) {
+      if (!finding.targetEndpoint) continue;
+      
+      const parts = finding.targetEndpoint.split(':');
+      const url = parts.length > 2 ? parts.slice(2).join(':') : finding.targetEndpoint;
+      
+      let pathFamily = url;
+      try {
+        pathFamily = maskIds(getPathOnly(url));
+      } catch (e) {
+        // Fallback to raw string
+      }
+
+      const clusterKey = pathFamily;
+
+      if (!clusters[clusterKey]) {
+        clusters[clusterKey] = {
+          pathFamily: clusterKey,
+          findingsCount: 0,
+          validatedCount: 0,
+          unvalidatedCount: 0,
+          findingTypes: new Set<string>()
+        };
+      }
+
+      clusters[clusterKey].findingsCount++;
+      if ((finding as any).isValidated === true) {
+        clusters[clusterKey].validatedCount++;
+      } else {
+        clusters[clusterKey].unvalidatedCount++;
+      }
+      clusters[clusterKey].findingTypes.add(finding.type);
+    }
+
+    const clusterKeys = Object.keys(clusters);
+    if (clusterKeys.length > 0) {
+      md += `## Clusters\n\n`;
+      for (const key of clusterKeys) {
+        const c = clusters[key];
+        md += `### Path Family: ${c.pathFamily}\n\n`;
+        md += `- Total Findings: ${c.findingsCount}\n`;
+        md += `- Validated: ${c.validatedCount}\n`;
+        md += `- Unvalidated: ${c.unvalidatedCount}\n`;
+        md += `- Finding Types:\n`;
+        for (const ftype of c.findingTypes) {
+          md += `  - ${ftype}\n`;
+        }
+        md += `\n`;
+      }
+    }
+    // --- End Slice D ---
 
     md += `## Evidence Exchanges (${bundle.evidenceExchanges.length})\n\n`;
 

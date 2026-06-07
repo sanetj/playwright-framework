@@ -13,6 +13,7 @@ import { EntityOwnershipRegistry } from '../state/entity-ownership-registry';
 import { LivePerturbationInterceptor } from '../../runtime/instrumentation/live-perturbation-interceptor';
 import { ReplayValidationPipeline } from '../../runtime/validation/replay-validation-pipeline';
 import { ValidatedFinding } from '../../runtime/validation/exploit-validation-engine';
+import { ReplayEligibleCandidate } from '../../runtime/validation/replay-eligible-candidate';
 
 export class InvestigationPipeline implements NetworkEvidenceHandler {
   private runtime: PlaywrightMultiSessionRuntime;
@@ -69,16 +70,36 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
     const validatedFindings: ValidatedFinding[] = [];
 
     for (const finding of diffResult.findings) {
-      // Find the base exchange that caused this finding
-      // For simplicity, we just pick the first base exchange with the same URL
-      const originalExchange = this.exchanges.find(e => e.sessionId === baseSession.sessionId && e.request.url.includes(finding.targetEntityId || ''));
+      // 7a. Canonical Witness Selection (CES-1)
+      const corroboratingExchanges = this.exchanges.filter(e => 
+        e.request.url.includes(finding.targetEntityId || '') && 
+        e.response?.status === finding.baseStatus
+      ).sort((a, b) => a.exchangeId.sequenceNumber - b.exchangeId.sequenceNumber);
+
+      const baselineExchange = corroboratingExchanges[0];
       
-      if (originalExchange) {
+      if (baselineExchange) {
          console.log(`Validating finding on ${finding.targetEntityId}...`);
-         const validated = await validationPipeline.validateFinding(finding, this.runtime, originalExchange);
+
+         const candidate: ReplayEligibleCandidate = {
+           finding,
+           baselineExchange,
+           comparisonProfile: compRole,
+           sessionIsolationBoundary: { 
+             boundaryId: 'replay_boundary', 
+             enforceClearCookies: true, 
+             enforceClearLocalStorage: true, 
+             enforceClearSessionStorage: true, 
+             incognitoContext: true 
+           }
+         };
+
+         const validated = await validationPipeline.validateFinding(candidate, this.runtime);
          if (validated) {
             validatedFindings.push(validated);
          }
+      } else {
+         console.warn(`No corroborating witness found for finding on ${finding.targetEntityId}. Skipping promotion.`);
       }
     }
     

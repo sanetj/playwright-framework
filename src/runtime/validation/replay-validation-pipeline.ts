@@ -3,7 +3,7 @@ import { MutationPlanGenerator } from '../replay/replay-mutation-plan';
 import { ReplayCoordinator, ReplayExecutionMode } from '../replay/replay-coordinator';
 import { ContextualPerturbationEngine } from '../replay/contextual-perturbation';
 import { LivePerturbationInterceptor } from '../instrumentation/live-perturbation-interceptor';
-import { ReplayBranchContext } from '../replay/replay-branch';
+
 import { MutationRiskClassifier, MutationRiskLevel } from '../governance/mutation-risk-classifier';
 import { ProofSemanticValidator } from '../../runtime/validation/proof-semantic-validator';
 import { ExploitProof, ProofClassification } from '../evidence/exploit-proof-capture';
@@ -12,6 +12,7 @@ import { PlaywrightMultiSessionRuntime } from '../execution/playwright-multi-ses
 import { CanonicalHttpExchange } from '../evidence/canonical-http-evidence';
 import { ReplayPerturbationEnvelope } from '../../intelligence/perturbation/governed-perturbation';
 import { RuntimeSession } from '../../intelligence/runtime/multi-session-runtime';
+import { ReplayEligibleCandidate } from './replay-eligible-candidate';
 
 export class ReplayValidationPipeline {
   private planGen = new MutationPlanGenerator();
@@ -19,45 +20,32 @@ export class ReplayValidationPipeline {
   private riskClassifier = new MutationRiskClassifier();
   private semanticValidator = new ProofSemanticValidator();
   private validationEngine = new ExploitValidationEngine();
-  private branchContext = new ReplayBranchContext();
+
   private perturbationEngine = new ContextualPerturbationEngine();
 
   public async validateFinding(
-    finding: DifferentialFinding,
-    runtime: PlaywrightMultiSessionRuntime,
-    originalExchange: CanonicalHttpExchange
+    candidate: ReplayEligibleCandidate,
+    runtime: PlaywrightMultiSessionRuntime
   ): Promise<ValidatedFinding | null> {
     
     // 1. Generate Mutation Plans
-    const plans = this.planGen.generatePlans(originalExchange.request);
+    const plans = this.planGen.generatePlans(candidate.baselineExchange.request);
     if (plans.length === 0) return null;
     
     // For simplicity, take the first valid plan
     const plan = plans[0];
 
     // 2. Risk Classification
-    const risk = this.riskClassifier.classify(plan, originalExchange.request.method);
+    const risk = this.riskClassifier.classify(plan, candidate.baselineExchange.request.method);
     if (!this.riskClassifier.isExecutionAllowed(risk)) {
       return null;
     }
 
-    // 3. Branch Context (we do BROWSER_CONTEXT mode if we want to restore full state)
-    // For this example, we will just use HTTP_ONLY against the existing session's context if possible
-    // Wait, to do it properly with ReplayBranchContext:
-    const originalCtx = runtime.getPlaywrightContext(originalExchange.sessionId);
-    const originalPage = originalCtx.pages()[0]; // assume one page
-    
-    const snapshot = await this.branchContext.captureSnapshot(originalExchange.sessionId, originalPage);
-    const originalSession = runtime.activeSessions.get(originalExchange.sessionId);
-    if (!originalSession) return null;
-
     let newSession: RuntimeSession | undefined;
 
     try {
-      newSession = await runtime.launchIsolatedSession(originalSession.roleProfile, originalSession.isolationBoundary);
+      newSession = await runtime.launchIsolatedSession(candidate.comparisonProfile, candidate.sessionIsolationBoundary);
       const newCtx = runtime.getPlaywrightContext(newSession.sessionId);
-      const newPage = await newCtx.newPage();
-      const fork = await this.branchContext.forkSession(snapshot, newCtx, newPage);
 
       // 4. Setup Interceptor and Coordinator
       const interceptor = new LivePerturbationInterceptor();
@@ -76,9 +64,9 @@ export class ReplayValidationPipeline {
       const targetIdorValue = plan.mutations.find(m => m.injectedValue)?.injectedValue || '';
 
       // We apply contextual mutation to get a deterministic plan
-      const mutatedCanonicalReq = this.perturbationEngine.applyMutation(originalExchange.request, plan);
+      const mutatedCanonicalReq = this.perturbationEngine.applyMutation(candidate.baselineExchange.request, plan);
       const replayPlanReq = this.coordinator.planReplay({
-         ...originalExchange,
+         ...candidate.baselineExchange,
          request: mutatedCanonicalReq
       }, plan.planId);
 
@@ -88,35 +76,34 @@ export class ReplayValidationPipeline {
       const mutatedResponse = await this.coordinator.executeReplay(
         replayPlanReq,
         interceptor,
-        fork.browserContext,
+        newCtx,
         ReplayExecutionMode.HTTP_ONLY // Can use BROWSER_CONTEXT as needed
       );
 
       // 6. Capture Proof and Semantically Validate
-      const semanticResult = this.semanticValidator.validate(originalExchange.response, mutatedResponse, targetIdorValue);
+      const semanticResult = this.semanticValidator.validate(candidate.baselineExchange.response, mutatedResponse, targetIdorValue);
 
       const proof: ExploitProof = {
-        proofId: `proof_${originalExchange.exchangeId.id}_${plan.planId}`,
+        proofId: `proof_${candidate.baselineExchange.exchangeId.id}_${plan.planId}`,
         lineage: {
-          findingId: finding.findingId || 'unknown',
+          findingId: candidate.finding.findingId || 'unknown',
           replayId: replayPlanReq.executionId,
-          sourceExchangeIds: [originalExchange.exchangeId],
+          sourceExchangeIds: [candidate.baselineExchange.exchangeId],
           mutationIds: [plan.planId],
-          sessionLineage: [snapshot.sessionId, fork.forkId],
-          roleLineage: [finding.targetRole],
+          sessionLineage: [candidate.baselineExchange.sessionId],
+          roleLineage: [candidate.finding.targetRole],
           proofArtifacts: []
         },
-        originalExchange,
+        originalExchange: candidate.baselineExchange,
         mutatedResponse,
-        statusDelta: { before: originalExchange.response?.status || 0, after: mutatedResponse.status },
+        statusDelta: { before: candidate.baselineExchange.response?.status || 0, after: mutatedResponse.status },
         confidence: semanticResult.confidence,
         classification: 'IDOR' // Simplify for now
       };
 
-      // 7. Validation Engine
-      const validated = this.validationEngine.validate(finding, proof);
+      // 7. Validate Finding against engine
+      return this.validationEngine.validate(candidate.finding, proof);
       
-      return validated;
     } finally {
       if (newSession) {
         await runtime.terminateSession(newSession.sessionId);

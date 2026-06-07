@@ -1,5 +1,4 @@
-import { ValidatedFinding } from '../../runtime/validation/exploit-validation-engine';
-import { ExploitProof } from '../evidence/exploit-proof-capture';
+import { ReproducibilityEligibleCandidate } from './reproducibility-eligible-candidate';
 import { RuntimeSession } from '../../intelligence/runtime/multi-session-runtime';
 import { StateDependencyResult } from '../replay/state-dependency-detector';
 import { SemanticSuccessEvaluator, SemanticSuccessResult } from '../validation/semantic-success-evaluator';
@@ -7,7 +6,7 @@ import { CanonicalHttpExchange } from '../evidence/canonical-http-evidence';
 import { PlaywrightMultiSessionRuntime } from '../execution/playwright-multi-session';
 import { ContextualPerturbationEngine } from '../replay/contextual-perturbation';
 import { ReplayCoordinator, ReplayExecutionMode } from '../replay/replay-coordinator';
-import { ReplayBranchContext } from '../replay/replay-branch';
+
 import { LivePerturbationInterceptor } from '../instrumentation/live-perturbation-interceptor';
 import { MutationPlanGenerator } from '../replay/replay-mutation-plan';
 
@@ -27,7 +26,7 @@ export interface ReproducibilityResult {
 export class ReproducibilityEngine {
   private semanticEvaluator = new SemanticSuccessEvaluator();
   private coordinator = new ReplayCoordinator();
-  private branchContext = new ReplayBranchContext();
+
   private perturbationEngine = new ContextualPerturbationEngine();
   private planGen = new MutationPlanGenerator();
 
@@ -35,8 +34,7 @@ export class ReproducibilityEngine {
    * Executes the exploit N times to verify stability.
    */
   public async testReproducibility(
-    finding: ValidatedFinding,
-    proof: ExploitProof,
+    candidate: ReproducibilityEligibleCandidate,
     dependency: StateDependencyResult,
     runtime: PlaywrightMultiSessionRuntime,
     targetEntity: string,
@@ -51,9 +49,9 @@ export class ReproducibilityEngine {
       let isSuccess = false;
 
       if (mode === ReproducibilityMode.MUTATION_ONLY) {
-        isSuccess = await this.runMutationOnlyReplay(finding, proof, runtime, targetEntity);
+        isSuccess = await this.runMutationOnlyReplay(candidate, runtime, targetEntity);
       } else {
-        isSuccess = await this.runFullReplay(finding, proof, runtime, targetEntity);
+        isSuccess = await this.runFullReplay(candidate, runtime, targetEntity);
       }
 
       if (isSuccess) {
@@ -74,29 +72,17 @@ export class ReproducibilityEngine {
   }
 
   private async runMutationOnlyReplay(
-    finding: ValidatedFinding, 
-    proof: ExploitProof, 
+    candidate: ReproducibilityEligibleCandidate, 
     runtime: PlaywrightMultiSessionRuntime,
     targetEntity: string
   ): Promise<boolean> {
-    const originalExchange = proof.originalExchange;
-    
-    // Retrieve original context
-    const originalCtx = runtime.getPlaywrightContext(originalExchange.sessionId);
-    const originalPage = originalCtx.pages()[0];
-    
-    // Fork context for deterministic replay
-    const snapshot = await this.branchContext.captureSnapshot(originalExchange.sessionId, originalPage);
-    const originalSession = runtime.activeSessions.get(originalExchange.sessionId);
-    if (!originalSession) return false;
+    const originalExchange = candidate.proof.originalExchange;
 
     let newSession: RuntimeSession | undefined;
 
     try {
-      newSession = await runtime.launchIsolatedSession(originalSession.roleProfile, originalSession.isolationBoundary);
+      newSession = await runtime.launchIsolatedSession(candidate.comparisonProfile, candidate.sessionIsolationBoundary);
       const newCtx = runtime.getPlaywrightContext(newSession.sessionId);
-      const newPage = await newCtx.newPage();
-      const fork = await this.branchContext.forkSession(snapshot, newCtx, newPage);
 
       // Get mutation plan
       const plans = this.planGen.generatePlans(originalExchange.request);
@@ -125,7 +111,7 @@ export class ReproducibilityEngine {
       const mutatedResponse = await this.coordinator.executeReplay(
         replayPlanReq,
         interceptor,
-        fork.browserContext,
+        newCtx,
         ReplayExecutionMode.HTTP_ONLY
       );
 
@@ -143,8 +129,7 @@ export class ReproducibilityEngine {
   }
 
   private async runFullReplay(
-    finding: ValidatedFinding,
-    proof: ExploitProof,
+    candidate: ReproducibilityEligibleCandidate,
     runtime: PlaywrightMultiSessionRuntime,
     targetEntity: string
   ): Promise<boolean> {
@@ -152,6 +137,6 @@ export class ReproducibilityEngine {
     // by triggering UI interactions or re-running the crawler requests,
     // and then apply the mutation at the end.
     // For now, we simulate this by running the mutation-only logic.
-    return this.runMutationOnlyReplay(finding, proof, runtime, targetEntity);
+    return this.runMutationOnlyReplay(candidate, runtime, targetEntity);
   }
 }

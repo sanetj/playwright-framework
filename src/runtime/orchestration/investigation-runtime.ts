@@ -2,6 +2,7 @@
 import { DeterministicIdGenerator } from '../replay/replay-seed';
 import { StateDependencyDetector } from '../replay/state-dependency-detector';
 import { ReproducibilityEngine } from '../reproducibility/reproducibility-engine';
+import { ReproducibilityEligibleCandidate } from '../reproducibility/reproducibility-eligible-candidate';
 import { ReplayMinimizer } from '../replay/replay-minimizer';
 import { TriagerVerificationMode } from '../verification/triager-verification';
 import { FalsePositiveEliminator } from '../validation/false-positive-eliminator';
@@ -81,8 +82,14 @@ export class InvestigationRuntime {
        const dependency = this.dependencyDetector.analyze(mockLineage, mockExchanges);
 
        // 3. Reproducibility Engine (Delegated)
+       const candidate: ReproducibilityEligibleCandidate = {
+           finding,
+           proof: mockProof,
+           comparisonProfile: { roleId: finding.targetRole || 'unknown', targetEndpoints: [] },
+           sessionIsolationBoundary: { boundaryId: 'mock_boundary', isolationLevel: 'SHARED', browserContextOptions: {} }
+       };
        const reproducibility = await this.reproducibilityEngine.testReproducibility(
-           finding, mockProof, dependency, runtime, targetEntity
+           candidate, dependency, runtime, targetEntity
        );
 
        // 4. Triager Verification (Delegated)
