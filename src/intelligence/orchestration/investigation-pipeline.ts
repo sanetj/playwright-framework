@@ -67,9 +67,9 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
 
     // 7. Live Perturbation Probing (Exploit Validation)
     const validationPipeline = new ReplayValidationPipeline();
-    const validatedFindings: ValidatedFinding[] = [];
 
-    for (const finding of diffResult.findings) {
+    for (let i = 0; i < diffResult.findings.length; i++) {
+      const finding = diffResult.findings[i];
       // 7a. Canonical Witness Selection (CES-1)
       const corroboratingExchanges = this.exchanges.filter(e => 
         e.request.url.includes(finding.targetEntityId || '') && 
@@ -96,16 +96,11 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
 
          const validated = await validationPipeline.validateFinding(candidate, this.runtime);
          if (validated) {
-            validatedFindings.push(validated);
+            diffResult.findings[i] = validated;
          }
       } else {
          console.warn(`No corroborating witness found for finding on ${finding.targetEntityId}. Skipping promotion.`);
       }
-    }
-    
-    // Replace findings with validated findings in the diff result
-    if (validatedFindings.length > 0) {
-       diffResult.findings = validatedFindings;
     }
 
     // 8. Bundle & Compress
