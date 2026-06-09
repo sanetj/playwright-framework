@@ -6,6 +6,7 @@ import { FindingPriorityRanker, FindingPriorityLevel } from '../../runtime/diffe
 import { ExportProfileManager, ExportProfileMode } from '../../runtime/artifacts/export-profile';
 import { BundleRedactor } from '../../runtime/artifacts/bundle-redaction';
 import { ExploitProof } from '../../runtime/evidence/exploit-proof-capture';
+import { OwnershipLink } from '../ontology/entity-lineage';
 
 export interface ContradictionEvidenceMapping {
   findingType: string;
@@ -69,6 +70,7 @@ export interface InvestigationBundle {
   evidenceExchanges: any[];
   lineage: LineageExtractionResult[];
   groupedContradictionSummary?: GroupedContradictionSummary;
+  ownershipLinks?: OwnershipLink[];
 }
 
 export class AiBundleCompressor {
@@ -81,7 +83,8 @@ export class AiBundleCompressor {
     diffResult: DifferentialComparisonResult, 
     exchanges: CanonicalHttpExchange[], 
     lineageData: LineageExtractionResult[],
-    exportMode: ExportProfileMode = ExportProfileMode.CONCISE_AI
+    exportMode: ExportProfileMode = ExportProfileMode.CONCISE_AI,
+    ownershipLinks: OwnershipLink[] = []
   ): InvestigationBundle {
     
     const roiScorer = new BountyRoiScorer();
@@ -268,7 +271,8 @@ export class AiBundleCompressor {
       },
       evidenceExchanges: compressedExchanges,
       lineage: lineageData,
-      groupedContradictionSummary
+      groupedContradictionSummary,
+      ownershipLinks
     };
   }
 

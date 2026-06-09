@@ -55,4 +55,12 @@ export class EntityOwnershipRegistry {
   public getAllEntities(): string[] {
     return Array.from(this.ownershipMap.keys());
   }
+
+  public exportAllLinks(): OwnershipLink[] {
+    const allLinks: OwnershipLink[] = [];
+    for (const links of this.ownershipMap.values()) {
+      allLinks.push(...links);
+    }
+    return allLinks;
+  }
 }

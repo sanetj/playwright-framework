@@ -105,7 +105,7 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
 
     // 8. Bundle & Compress
     const compressor = new AiBundleCompressor();
-    const bundle = compressor.compress(this.targetUrl, diffResult, this.exchanges, this.lineages);
+    const bundle = compressor.compress(this.targetUrl, diffResult, this.exchanges, this.lineages, undefined, this.ownershipRegistry.exportAllLinks());
 
     // 9. Cleanup
     await this.runtime.terminateAll();

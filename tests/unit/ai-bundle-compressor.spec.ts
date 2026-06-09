@@ -137,7 +137,9 @@ test.describe('AiBundleCompressor', () => {
       findings: []
     };
 
-    const bundle = compressor.compress('test.com', diffResult, [], [], ExportProfileMode.CONCISE_AI);
+    const bundle = compressor.compress('test.com', diffResult, [], [], ExportProfileMode.CONCISE_AI, [
+      { entityId: 'foo', sessionId: 'sess1', linkType: 'OWNER', establishedAtTs: 123, evidenceEventId: 'ev1' }
+    ]);
     
     expect(bundle).toHaveProperty('targetDomain');
     expect(bundle).toHaveProperty('generatedAt');
@@ -146,5 +148,8 @@ test.describe('AiBundleCompressor', () => {
     expect(bundle).toHaveProperty('evidenceExchanges');
     expect(bundle).toHaveProperty('lineage');
     expect(Array.isArray(bundle.evidenceExchanges)).toBe(true);
+    expect(bundle).toHaveProperty('ownershipLinks');
+    expect(bundle.ownershipLinks?.length).toBe(1);
+    expect(bundle.ownershipLinks?.[0].entityId).toBe('foo');
   });
 });
