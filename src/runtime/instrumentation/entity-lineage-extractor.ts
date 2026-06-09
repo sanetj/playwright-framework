@@ -9,6 +9,8 @@ export interface ExtractedEntity {
 
 export interface LineageExtractionResult {
   exchangeId: string;
+  sessionId: string;
+  timestamp: number;
   entities: ExtractedEntity[];
 }
 
@@ -44,6 +46,8 @@ export class EntityLineageExtractor {
 
     return {
       exchangeId: exchange.exchangeId.id,
+      sessionId: exchange.sessionId,
+      timestamp: exchange.timestamp,
       entities: this.deduplicate(entities)
     };
   }
