@@ -132,7 +132,9 @@ test.describe('AiBundleCompressor', () => {
       comparisonRoleId: 'admin',
       exclusiveToBase: [],
       exclusiveToComparison: [],
-      sharedReachability: [],
+      sharedReachability: [
+        { id: 'api:GET:/users/{ID}', layer: 'structural', kind: 'api', label: '/users/{ID}', attrs: {} }
+      ],
       statusContradictions: [],
       findings: []
     };
@@ -151,5 +153,8 @@ test.describe('AiBundleCompressor', () => {
     expect(bundle).toHaveProperty('ownershipLinks');
     expect(bundle.ownershipLinks?.length).toBe(1);
     expect(bundle.ownershipLinks?.[0].entityId).toBe('foo');
+    expect(bundle.differentialAnalysis).toHaveProperty('sharedReachability');
+    expect(bundle.differentialAnalysis.sharedReachability?.length).toBe(1);
+    expect(bundle.differentialAnalysis.sharedReachability?.[0]).toBe('api:GET:/users/{ID}');
   });
 });

@@ -63,9 +63,11 @@ export interface InvestigationBundle {
       // Exploit Validation Properties
       isValidated?: boolean;
       validationConfidence?: string;
+
       proofs?: ExploitProof[];
       proofNarrative?: string;
     }[];
+    sharedReachability?: string[];
   };
   evidenceExchanges: any[];
   lineage: LineageExtractionResult[];
@@ -267,7 +269,8 @@ export class AiBundleCompressor {
       differentialAnalysis: {
         baseRole: diffResult.baseRoleId,
         comparisonRole: diffResult.comparisonRoleId,
-        findings
+        findings,
+        sharedReachability: diffResult.sharedReachability.map(node => node.id)
       },
       evidenceExchanges: compressedExchanges,
       lineage: lineageData,
