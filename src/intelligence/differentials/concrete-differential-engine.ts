@@ -13,7 +13,9 @@ export interface DifferentialFinding {
 
 export interface DifferentialComparisonResult {
   baseRoleId: string;
+  baseRoleSessionId?: string;
   comparisonRoleId: string;
+  comparisonRoleSessionId?: string;
   
   // APIs reachable by comparisonRole but NOT by baseRole
   // If baseRole is 'User' and comparison is 'Admin', these are Admin-only APIs.

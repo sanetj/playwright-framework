@@ -51,7 +51,9 @@ export interface InvestigationBundle {
   exportMode: string;
   differentialAnalysis: {
     baseRole: string;
+    baseRoleSessionId?: string;
     comparisonRole: string;
+    comparisonRoleSessionId?: string;
     findings: {
       type: 'IDOR_CANDIDATE' | 'PRIVILEGE_ESCALATION_CANDIDATE' | 'TENANT_ESCAPE_CANDIDATE' | 'STATUS_CONTRADICTION';
       targetEndpoint: string;
@@ -68,6 +70,8 @@ export interface InvestigationBundle {
       proofNarrative?: string;
     }[];
     sharedReachability?: string[];
+    exclusiveToBase?: string[];
+    exclusiveToComparison?: string[];
   };
   evidenceExchanges: any[];
   lineage: LineageExtractionResult[];
@@ -268,9 +272,13 @@ export class AiBundleCompressor {
       exportMode,
       differentialAnalysis: {
         baseRole: diffResult.baseRoleId,
+        baseRoleSessionId: diffResult.baseRoleSessionId,
         comparisonRole: diffResult.comparisonRoleId,
+        comparisonRoleSessionId: diffResult.comparisonRoleSessionId,
         findings,
-        sharedReachability: diffResult.sharedReachability.map(node => node.id)
+        sharedReachability: diffResult.sharedReachability.map(node => node.id),
+        exclusiveToBase: diffResult.exclusiveToBase.map(node => node.id),
+        exclusiveToComparison: diffResult.exclusiveToComparison.map(node => node.id)
       },
       evidenceExchanges: compressedExchanges,
       lineage: lineageData,

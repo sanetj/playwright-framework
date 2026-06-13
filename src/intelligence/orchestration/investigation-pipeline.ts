@@ -64,6 +64,8 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
     // 6. Differential Analysis (Response Aware)
     const engine = new ConcreteDifferentialEngine();
     const diffResult = engine.compare(canonBase, canonComp, baseRole.roleId, compRole.roleId);
+    diffResult.baseRoleSessionId = baseSession.sessionId;
+    diffResult.comparisonRoleSessionId = compSession.sessionId;
 
     // 7. Live Perturbation Probing (Exploit Validation)
     const validationPipeline = new ReplayValidationPipeline();
