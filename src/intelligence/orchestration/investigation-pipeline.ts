@@ -15,6 +15,9 @@ import { ReplayValidationPipeline } from '../../runtime/validation/replay-valida
 import { ValidatedFinding } from '../../runtime/validation/exploit-validation-engine';
 import { ReplayEligibleCandidate } from '../../runtime/validation/replay-eligible-candidate';
 import { OwnershipInferencer } from '../resource-analysis/ownership-inferencer';
+import { ResourceSignalExtractor } from '../resource-analysis/resource-signal-extractor';
+import { ReplayCandidateSynthesizer } from '../resource-analysis/replay-candidate-synthesizer';
+import { DifferentialFinding } from '../differentials/concrete-differential-engine';
 
 export class InvestigationPipeline implements NetworkEvidenceHandler {
   private runtime: PlaywrightMultiSessionRuntime;
@@ -71,40 +74,53 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
     // 7. Live Perturbation Probing (Exploit Validation)
     const validationPipeline = new ReplayValidationPipeline();
 
-    for (let i = 0; i < diffResult.findings.length; i++) {
-      const finding = diffResult.findings[i];
-      // 7a. Canonical Witness Selection (CES-1)
-      const corroboratingExchanges = this.exchanges.filter(e => 
-        e.request.url.includes(finding.targetEntityId || '') && 
-        e.response?.status === finding.baseStatus
-      ).sort((a, b) => a.exchangeId.sequenceNumber - b.exchangeId.sequenceNumber);
+    // 7a. Evidence-First Candidate Synthesis (Phase 12.6 Architectural Replacement)
+    const extractor = new ResourceSignalExtractor();
+    const inventory = extractor.extractInventory(this.exchanges);
+    const synthesizer = new ReplayCandidateSynthesizer();
+    const semanticCandidates = synthesizer.synthesize(inventory);
 
-      const baselineExchange = corroboratingExchanges[0];
-      
-      if (baselineExchange) {
-         console.log(`Validating finding on ${finding.targetEntityId}...`);
+    const semanticFindings: DifferentialFinding[] = [];
 
-         const candidate: ReplayEligibleCandidate = {
-           finding,
-           baselineExchange,
-           comparisonProfile: compRole,
-           sessionIsolationBoundary: { 
-             boundaryId: 'replay_boundary', 
-             enforceClearCookies: true, 
-             enforceClearLocalStorage: true, 
-             enforceClearSessionStorage: true, 
-             incognitoContext: true 
-           }
-         };
+    for (const cand of semanticCandidates.candidates) {
+      const baselineExchange = this.exchanges.find(e => e.exchangeId.id === cand.baselineExchangeId);
+      if (!baselineExchange) continue;
 
-         const validated = await validationPipeline.validateFinding(candidate, this.runtime);
-         if (validated) {
-            diffResult.findings[i] = validated;
-         }
+      console.log(`Validating semantic candidate ${cand.candidateId} on ${baselineExchange.request.url}...`);
+
+      const pseudoFinding: DifferentialFinding = {
+        findingId: `sem_${cand.candidateId}`,
+        type: cand.targetVector === 'IDOR' ? 'IDOR_CANDIDATE' : 'PRIVILEGE_ESCALATION_CANDIDATE',
+        targetEntityId: `api:${cand.httpMethod}:${baselineExchange.request.url}`,
+        targetRole: compRole.roleName,
+        baseStatus: baselineExchange.response?.status || 200,
+        comparisonStatus: 200, // Discovered at replay
+        description: `Semantic Evidence Candidate: ${cand.synthesisReasons.join(', ')}`
+      };
+
+      const eligibleCandidate: ReplayEligibleCandidate = {
+        finding: pseudoFinding,
+        baselineExchange,
+        comparisonProfile: compRole,
+        sessionIsolationBoundary: { 
+          boundaryId: 'replay_boundary', 
+          enforceClearCookies: true, 
+          enforceClearLocalStorage: true, 
+          enforceClearSessionStorage: true, 
+          incognitoContext: true 
+        }
+      };
+
+      const validated = await validationPipeline.validateFinding(eligibleCandidate, this.runtime);
+      if (validated) {
+         semanticFindings.push(validated);
       } else {
-         console.warn(`No corroborating witness found for finding on ${finding.targetEntityId}. Skipping promotion.`);
+         semanticFindings.push({ ...pseudoFinding, isValidated: false } as ValidatedFinding);
       }
     }
+
+    // Replace starved structural findings with proven semantic findings
+    diffResult.findings = semanticFindings;
 
     // 7.5. Ownership Intelligence Activation (Phase 12.5)
     const ownershipInferencer = new OwnershipInferencer();
