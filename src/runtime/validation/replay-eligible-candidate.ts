@@ -1,4 +1,4 @@
-import { DifferentialFinding } from '../../intelligence/differentials/concrete-differential-engine';
+import { DifferentialFinding } from '../../intelligence/differentials/differential-finding';
 import { CanonicalHttpExchange } from '../evidence/canonical-http-evidence';
 import { RuntimeRoleProfile, SessionIsolationBoundary } from '../../intelligence/runtime/multi-session-runtime';
 

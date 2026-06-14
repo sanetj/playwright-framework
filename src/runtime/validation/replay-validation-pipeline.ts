@@ -1,4 +1,4 @@
-import { DifferentialFinding } from '../../intelligence/differentials/concrete-differential-engine';
+import { DifferentialFinding } from '../../intelligence/differentials/differential-finding';
 import { MutationPlanGenerator } from '../replay/replay-mutation-plan';
 import { ReplayCoordinator, ReplayExecutionMode } from '../replay/replay-coordinator';
 import { ContextualPerturbationEngine } from '../replay/contextual-perturbation';

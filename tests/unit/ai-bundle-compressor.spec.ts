@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { AiBundleCompressor } from '../../src/intelligence/artifacts/ai-bundle-compressor';
-import { DifferentialComparisonResult } from '../../src/intelligence/differentials/concrete-differential-engine';
+import { DifferentialFinding } from '../../src/intelligence/differentials/differential-finding';
 import { CanonicalHttpExchange } from '../../src/runtime/evidence/canonical-http-evidence';
 import { ExportProfileMode } from '../../src/runtime/artifacts/export-profile';
 
@@ -27,13 +27,9 @@ test.describe('AiBundleCompressor', () => {
     const exchanges: CanonicalHttpExchange[] = [
       createMockExchange(1, 'GET', 'http://test.com/users/123')
     ];
-    const diffResult: DifferentialComparisonResult = {
-      baseRoleId: 'user',
-      comparisonRoleId: 'admin',
-      exclusiveToBase: [],
-      exclusiveToComparison: [],
-      sharedReachability: [],
-      statusContradictions: [],
+    const diffResult = {
+      baseRole: 'user',
+      comparisonRole: 'admin',
       findings: [{
         type: 'PRIVILEGE_ESCALATION_CANDIDATE',
         targetEntityId: 'api:GET:http://test.com/users/{ID}',
@@ -55,13 +51,9 @@ test.describe('AiBundleCompressor', () => {
     const exchanges: CanonicalHttpExchange[] = [
       createMockExchange(1, 'GET', 'http://test.com/orders/req_abc123')
     ];
-    const diffResult: DifferentialComparisonResult = {
-      baseRoleId: 'user',
-      comparisonRoleId: 'admin',
-      exclusiveToBase: [],
-      exclusiveToComparison: [],
-      sharedReachability: [],
-      statusContradictions: [],
+    const diffResult = {
+      baseRole: 'user',
+      comparisonRole: 'admin',
       findings: [{
         type: 'PRIVILEGE_ESCALATION_CANDIDATE',
         targetEntityId: 'api:GET:http://test.com/orders/{ID}',
@@ -80,13 +72,9 @@ test.describe('AiBundleCompressor', () => {
     const exchanges: CanonicalHttpExchange[] = [
       createMockExchange(1, 'GET', 'http://test.com/files/507f1f77bcf86cd799439011')
     ];
-    const diffResult: DifferentialComparisonResult = {
-      baseRoleId: 'user',
-      comparisonRoleId: 'admin',
-      exclusiveToBase: [],
-      exclusiveToComparison: [],
-      sharedReachability: [],
-      statusContradictions: [],
+    const diffResult = {
+      baseRole: 'user',
+      comparisonRole: 'admin',
       findings: [{
         type: 'PRIVILEGE_ESCALATION_CANDIDATE',
         targetEntityId: 'api:GET:http://test.com/files/{ID}',
@@ -105,13 +93,9 @@ test.describe('AiBundleCompressor', () => {
     const exchanges: CanonicalHttpExchange[] = [
       createMockExchange(1, 'GET', 'http://test.com/api/admin/settings')
     ];
-    const diffResult: DifferentialComparisonResult = {
-      baseRoleId: 'user',
-      comparisonRoleId: 'admin',
-      exclusiveToBase: [],
-      exclusiveToComparison: [],
-      sharedReachability: [],
-      statusContradictions: [],
+    const diffResult = {
+      baseRole: 'user',
+      comparisonRole: 'admin',
       findings: [{
         type: 'PRIVILEGE_ESCALATION_CANDIDATE',
         targetEntityId: 'api:GET:http://test.com/api/admin/settings',
@@ -127,16 +111,10 @@ test.describe('AiBundleCompressor', () => {
 
   test('should preserve bundle schema', () => {
     const compressor = new AiBundleCompressor();
-    const diffResult: DifferentialComparisonResult = {
-      baseRoleId: 'user',
-      comparisonRoleId: 'admin',
-      exclusiveToBase: [],
-      exclusiveToComparison: [],
-      sharedReachability: [
-        { id: 'api:GET:/users/{ID}', layer: 'structural', kind: 'api', label: '/users/{ID}', attrs: {} }
-      ],
-      statusContradictions: [],
-      findings: []
+    const diffResult = {
+      baseRole: 'user',
+      comparisonRole: 'admin',
+      findings: [] as DifferentialFinding[]
     };
 
     const bundle = compressor.compress('test.com', diffResult, [], [], ExportProfileMode.CONCISE_AI, [
@@ -153,8 +131,6 @@ test.describe('AiBundleCompressor', () => {
     expect(bundle).toHaveProperty('ownershipLinks');
     expect(bundle.ownershipLinks?.length).toBe(1);
     expect(bundle.ownershipLinks?.[0].entityId).toBe('foo');
-    expect(bundle.differentialAnalysis).toHaveProperty('sharedReachability');
-    expect(bundle.differentialAnalysis.sharedReachability?.length).toBe(1);
-    expect(bundle.differentialAnalysis.sharedReachability?.[0]).toBe('api:GET:/users/{ID}');
+    expect(bundle.evidenceExchanges.length).toBe(0);
   });
 });

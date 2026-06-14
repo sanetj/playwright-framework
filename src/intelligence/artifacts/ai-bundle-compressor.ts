@@ -1,4 +1,4 @@
-import { DifferentialComparisonResult } from '../differentials/concrete-differential-engine';
+import { DifferentialFinding } from '../differentials/differential-finding';
 import { CanonicalHttpExchange } from '../../runtime/evidence/canonical-http-evidence';
 import { LineageExtractionResult } from '../../runtime/instrumentation/entity-lineage-extractor';
 import { BountyRoiScorer } from '../../runtime/differential/bounty-roi-score';
@@ -70,9 +70,6 @@ export interface InvestigationBundle {
       proofs?: ExploitProof[];
       proofNarrative?: string;
     }[];
-    sharedReachability?: string[];
-    exclusiveToBase?: string[];
-    exclusiveToComparison?: string[];
   };
   evidenceExchanges: any[];
   lineage: LineageExtractionResult[];
@@ -86,9 +83,9 @@ export class AiBundleCompressor {
    * Compresses the raw evidence, differential results, and lineage into a minimal,
    * high-signal JSON structure designed specifically to fit into LLM context windows.
    */
-  public compress(
+   public compress(
     domain: string,
-    diffResult: DifferentialComparisonResult, 
+    diffResult: { baseRole: string, baseRoleSessionId?: string, comparisonRole: string, comparisonRoleSessionId?: string, findings: DifferentialFinding[] }, 
     exchanges: CanonicalHttpExchange[], 
     lineageData: LineageExtractionResult[],
     exportMode: ExportProfileMode = ExportProfileMode.CONCISE_AI,
@@ -274,14 +271,11 @@ export class AiBundleCompressor {
       generatedAt: new Date().toISOString(),
       exportMode,
       differentialAnalysis: {
-        baseRole: diffResult.baseRoleId,
+        baseRole: diffResult.baseRole,
         baseRoleSessionId: diffResult.baseRoleSessionId,
-        comparisonRole: diffResult.comparisonRoleId,
+        comparisonRole: diffResult.comparisonRole,
         comparisonRoleSessionId: diffResult.comparisonRoleSessionId,
-        findings,
-        sharedReachability: diffResult.sharedReachability.map(node => node.id),
-        exclusiveToBase: diffResult.exclusiveToBase.map(node => node.id),
-        exclusiveToComparison: diffResult.exclusiveToComparison.map(node => node.id)
+        findings
       },
       evidenceExchanges: compressedExchanges,
       lineage: lineageData,

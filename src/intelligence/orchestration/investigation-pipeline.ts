@@ -4,8 +4,7 @@ import { NetworkEvidenceInterceptor, NetworkEvidenceHandler } from '../../runtim
 import { CanonicalHttpExchange } from '../../runtime/evidence/canonical-http-evidence';
 import { LineageExtractionResult } from '../../runtime/instrumentation/entity-lineage-extractor';
 import { ActionGraph, GraphNode } from '../../graph/action-graph';
-import { WorkflowCanonicalizer } from '../workflows/workflow-canonicalizer';
-import { ConcreteDifferentialEngine, DifferentialComparisonResult } from '../differentials/concrete-differential-engine';
+
 import { AiBundleCompressor, InvestigationBundle } from '../artifacts/ai-bundle-compressor';
 import { RuntimeRoleProfile } from '../runtime/multi-session-runtime';
 import { GovernedCrawlEngine } from '../../runtime/execution/governed-crawl-engine';
@@ -17,7 +16,7 @@ import { ReplayEligibleCandidate } from '../../runtime/validation/replay-eligibl
 import { OwnershipInferencer } from '../resource-analysis/ownership-inferencer';
 import { ResourceSignalExtractor } from '../resource-analysis/resource-signal-extractor';
 import { ReplayCandidateSynthesizer } from '../resource-analysis/replay-candidate-synthesizer';
-import { DifferentialFinding } from '../differentials/concrete-differential-engine';
+import { DifferentialFinding } from '../differentials/differential-finding';
 
 export class InvestigationPipeline implements NetworkEvidenceHandler {
   private runtime: PlaywrightMultiSessionRuntime;
@@ -60,16 +59,11 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
     const baseGraph = this.buildGraphFromExchanges(baseSession.sessionId);
     const compGraph = this.buildGraphFromExchanges(compSession.sessionId);
 
-    // 5. Canonicalize Graphs
-    const canonicalizer = new WorkflowCanonicalizer();
-    const canonBase = canonicalizer.canonicalize(baseGraph);
-    const canonComp = canonicalizer.canonicalize(compGraph);
+    // 5. Canonicalize Graphs (RETIRED - Phase 12.7)
+    // const canonicalizer = new WorkflowCanonicalizer();
 
-    // 6. Differential Analysis (Response Aware)
-    const engine = new ConcreteDifferentialEngine();
-    const diffResult = engine.compare(canonBase, canonComp, baseRole.roleId, compRole.roleId);
-    diffResult.baseRoleSessionId = baseSession.sessionId;
-    diffResult.comparisonRoleSessionId = compSession.sessionId;
+    // 6. Differential Analysis (RETIRED - Phase 12.7)
+    // const engine = new ConcreteDifferentialEngine();
 
     // 7. Live Perturbation Probing (Exploit Validation)
     const validationPipeline = new ReplayValidationPipeline();
@@ -118,10 +112,6 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
          semanticFindings.push({ ...pseudoFinding, isValidated: false } as ValidatedFinding);
       }
     }
-
-    // Replace starved structural findings with proven semantic findings
-    diffResult.findings = semanticFindings;
-
     // 7.5. Ownership Intelligence Activation (Phase 12.5)
     const ownershipInferencer = new OwnershipInferencer();
     const ownershipInventory = ownershipInferencer.inferOwnership(this.exchanges);
@@ -130,7 +120,13 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
     const compressor = new AiBundleCompressor();
     const bundle = compressor.compress(
       this.targetUrl, 
-      diffResult, 
+      {
+        baseRole: baseRole.roleId,
+        baseRoleSessionId: baseSession.sessionId,
+        comparisonRole: compRole.roleId,
+        comparisonRoleSessionId: compSession.sessionId,
+        findings: semanticFindings
+      }, 
       this.exchanges, 
       this.lineages, 
       undefined, 
