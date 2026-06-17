@@ -107,6 +107,11 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
           enforceClearLocalStorage: true, 
           enforceClearSessionStorage: true, 
           incognitoContext: true 
+        },
+        intelligenceTelemetry: {
+          priorityMultiplier: cand.priorityMultiplier,
+          ownershipRelationship: cand.ownershipRelationship,
+          synthesisReasons: cand.synthesisReasons
         }
       };
 

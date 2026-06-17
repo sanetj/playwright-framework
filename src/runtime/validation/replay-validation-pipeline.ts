@@ -98,7 +98,8 @@ export class ReplayValidationPipeline {
         mutatedResponse,
         statusDelta: { before: candidate.baselineExchange.response?.status || 0, after: mutatedResponse.status },
         confidence: semanticResult.confidence,
-        classification: 'IDOR' // Simplify for now
+        classification: 'IDOR', // Simplify for now
+        intelligenceTelemetry: candidate.intelligenceTelemetry
       };
 
       // 7. Validate Finding against engine
