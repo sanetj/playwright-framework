@@ -1,6 +1,7 @@
 import { ResourceSignal, ResourceSignalInventory } from './resource-signal';
 import { ReplayCandidate, ReplayCandidateInventory } from './replay-candidate';
 import { AuthorizationVector } from './authorization-vector';
+import { OwnershipInventory } from './ownership-intelligence';
 
 
 export class ReplayCandidateSynthesizer {
@@ -8,7 +9,11 @@ export class ReplayCandidateSynthesizer {
    * Passive candidate generation translating resource signals into structured replay candidates.
    * Maps dynamic parameters and headers for each vulnerability vector context.
    */
-  public synthesize(inventory: ResourceSignalInventory): ReplayCandidateInventory {
+  public synthesize(
+    inventory: ResourceSignalInventory,
+    ownership?: OwnershipInventory,
+    replayActorSessionId?: string
+  ): ReplayCandidateInventory {
     const candidates: ReplayCandidate[] = [];
 
     for (const sig of inventory.signals) {
@@ -121,8 +126,74 @@ export class ReplayCandidateSynthesizer {
       }
     }
 
-    // Sort flat signals array alphabetically by candidateId to ensure determinism
-    candidates.sort((a, b) => a.candidateId.localeCompare(b.candidateId));
+    // Phase 12.8 Ownership Intelligence Prioritization
+    let replayActorProfileId: string | undefined;
+
+    if (ownership && replayActorSessionId) {
+      for (const p of ownership.profiles) {
+        if (p.sessionIds.includes(replayActorSessionId)) {
+          replayActorProfileId = p.resolvedId;
+          break;
+        }
+      }
+    }
+
+    const prioritizedCandidates: ReplayCandidate[] = [];
+
+    for (const cand of candidates) {
+      let multiplier = 1.0;
+      let relation = 'UNKNOWN_OR_PUBLIC';
+
+      if (ownership && replayActorProfileId) {
+        // Attempt to find ownership mapping for this specific concrete resource execution
+        // Since cand doesn't store the concrete ID directly, we resolve it based on the baseline exchange
+        let targetOwnerIds: string[] | undefined;
+
+        // The simplest way to evaluate ownership here is to check the resource family owners.
+        // For precision, we look up the baselineExchangeId in ownership observations.
+        const relevantObs = ownership.observations.find(
+          o => o.baselineExchangeId === cand.baselineExchangeId && o.relationship === 'OWNS'
+        );
+
+        if (relevantObs) {
+          const resourceKey = `${relevantObs.targetResourceFamily}::${relevantObs.targetResourceId}`;
+          targetOwnerIds = ownership.resourceOwners[resourceKey];
+        }
+
+        if (targetOwnerIds && targetOwnerIds.length > 0) {
+          if (targetOwnerIds.includes(replayActorProfileId)) {
+            // Rule 2: Self-owner candidate
+            multiplier = 0.1;
+            relation = `SELF_OWNER: ${replayActorProfileId}`;
+          } else {
+            // Rule 1: Cross-owner candidate
+            multiplier = 3.0;
+            relation = `CROSS_OWNER: Target owned by [${targetOwnerIds.join(',')}] vs Actor ${replayActorProfileId}`;
+          }
+        }
+      }
+
+      prioritizedCandidates.push({
+        ...cand,
+        priorityMultiplier: multiplier,
+        ownershipRelationship: relation
+      });
+    }
+
+    // Zero Deletion Doctrine Proof
+    const countBefore = prioritizedCandidates.length;
+
+    // Sort: Primary by priorityMultiplier (descending), Secondary by candidateId (ascending/determinism)
+    prioritizedCandidates.sort((a, b) => {
+      const diff = (b.priorityMultiplier || 1.0) - (a.priorityMultiplier || 1.0);
+      if (diff !== 0) return diff;
+      return a.candidateId.localeCompare(b.candidateId);
+    });
+
+    const countAfter = prioritizedCandidates.length;
+    if (countBefore !== countAfter) {
+      throw new Error(`Zero Deletion Doctrine Violation: Candidate count altered during prioritization sorting (${countBefore} vs ${countAfter})`);
+    }
 
     // Group by targeted vector
     const candidatesByVector: Record<AuthorizationVector, ReplayCandidate[]> = {
@@ -131,13 +202,13 @@ export class ReplayCandidateSynthesizer {
       TENANT_ISOLATION: []
     };
 
-    for (const cand of candidates) {
+    for (const cand of prioritizedCandidates) {
       candidatesByVector[cand.targetVector].push(cand);
     }
 
     // Group by logical surface context
     const candidatesBySurface: Record<string, ReplayCandidate[]> = {};
-    for (const cand of candidates) {
+    for (const cand of prioritizedCandidates) {
       if (!candidatesBySurface[cand.authorizationSurface]) {
         candidatesBySurface[cand.authorizationSurface] = [];
       }
@@ -146,14 +217,22 @@ export class ReplayCandidateSynthesizer {
 
     // Sort grouped collections to guarantee stable byte-identical outputs
     for (const vectorName of Object.keys(candidatesByVector) as AuthorizationVector[]) {
-      candidatesByVector[vectorName].sort((a, b) => a.candidateId.localeCompare(b.candidateId));
+      candidatesByVector[vectorName].sort((a, b) => {
+        const diff = (b.priorityMultiplier || 1.0) - (a.priorityMultiplier || 1.0);
+        if (diff !== 0) return diff;
+        return a.candidateId.localeCompare(b.candidateId);
+      });
     }
     for (const surfaceName of Object.keys(candidatesBySurface)) {
-      candidatesBySurface[surfaceName].sort((a, b) => a.candidateId.localeCompare(b.candidateId));
+      candidatesBySurface[surfaceName].sort((a, b) => {
+        const diff = (b.priorityMultiplier || 1.0) - (a.priorityMultiplier || 1.0);
+        if (diff !== 0) return diff;
+        return a.candidateId.localeCompare(b.candidateId);
+      });
     }
 
     return {
-      candidates,
+      candidates: prioritizedCandidates,
       candidatesByVector,
       candidatesBySurface
     };

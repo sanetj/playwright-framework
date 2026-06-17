@@ -71,8 +71,13 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
     // 7a. Evidence-First Candidate Synthesis (Phase 12.6 Architectural Replacement)
     const extractor = new ResourceSignalExtractor();
     const inventory = extractor.extractInventory(this.exchanges);
+    
+    // 7b. Ownership Intelligence Activation (Phase 12.8)
+    const ownershipInferencer = new OwnershipInferencer();
+    const ownershipInventory = ownershipInferencer.inferOwnership(this.exchanges);
+    
     const synthesizer = new ReplayCandidateSynthesizer();
-    const semanticCandidates = synthesizer.synthesize(inventory);
+    const semanticCandidates = synthesizer.synthesize(inventory, ownershipInventory, compSession.sessionId);
 
     const semanticFindings: DifferentialFinding[] = [];
 
@@ -112,10 +117,7 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
          semanticFindings.push({ ...pseudoFinding, isValidated: false } as ValidatedFinding);
       }
     }
-    // 7.5. Ownership Intelligence Activation (Phase 12.5)
-    const ownershipInferencer = new OwnershipInferencer();
-    const ownershipInventory = ownershipInferencer.inferOwnership(this.exchanges);
-
+    
     // 8. Bundle & Compress
     const compressor = new AiBundleCompressor();
     const bundle = compressor.compress(

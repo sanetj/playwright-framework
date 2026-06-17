@@ -33,6 +33,20 @@ export interface ReplayCandidate {
    * Lexicographically sorted reasons justifying this candidate synthesis.
    */
   readonly synthesisReasons: string[];
+
+  /**
+   * Ownership Intelligence Priority Multiplier (Phase 12.8)
+   * Values:
+   * 3.0x : Cross-owner candidate (High Priority)
+   * 1.0x : Unknown / Public (Standard Priority)
+   * 0.1x : Self-owner candidate (Low Priority)
+   */
+  readonly priorityMultiplier?: number;
+
+  /**
+   * Explanatory text for the priority assignment (e.g., 'CROSS_OWNER: usr_A != usr_B')
+   */
+  readonly ownershipRelationship?: string;
 }
 
 export interface ReplayCandidateInventory {
