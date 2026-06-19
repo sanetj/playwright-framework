@@ -111,6 +111,7 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
         intelligenceTelemetry: {
           priorityMultiplier: cand.priorityMultiplier,
           ownershipRelationship: cand.ownershipRelationship,
+          authorizationIntent: cand.authorizationIntent,
           synthesisReasons: cand.synthesisReasons
         }
       };

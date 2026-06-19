@@ -47,6 +47,11 @@ export interface ReplayCandidate {
    * Explanatory text for the priority assignment (e.g., 'CROSS_OWNER: usr_A != usr_B')
    */
   readonly ownershipRelationship?: string;
+
+  /**
+   * Authorization Pairing Intent (Phase 12.10)
+   */
+  readonly authorizationIntent?: string;
 }
 
 export interface ReplayCandidateInventory {

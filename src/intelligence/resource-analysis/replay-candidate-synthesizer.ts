@@ -143,6 +143,7 @@ export class ReplayCandidateSynthesizer {
     for (const cand of candidates) {
       let multiplier = 1.0;
       let relation = 'UNKNOWN_OR_PUBLIC';
+      let intent = 'UNKNOWN';
 
       if (ownership && replayActorProfileId) {
         // Attempt to find ownership mapping for this specific concrete resource execution
@@ -165,10 +166,13 @@ export class ReplayCandidateSynthesizer {
             // Rule 2: Self-owner candidate
             multiplier = 0.1;
             relation = `SELF_OWNER: ${replayActorProfileId}`;
+            intent = 'AUTHORIZED';
           } else {
             // Rule 1: Cross-owner candidate
             multiplier = 3.0;
             relation = `CROSS_OWNER: Target owned by [${targetOwnerIds.join(',')}] vs Actor ${replayActorProfileId}`;
+            intent = 'UNAUTHORIZED_CROSS_TENANT';
+            multiplier *= 2.0; // Composes Authorization Pairing with Ownership
           }
         }
       }
@@ -176,7 +180,8 @@ export class ReplayCandidateSynthesizer {
       prioritizedCandidates.push({
         ...cand,
         priorityMultiplier: multiplier,
-        ownershipRelationship: relation
+        ownershipRelationship: relation,
+        authorizationIntent: intent
       });
     }
 
