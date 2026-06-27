@@ -1,0 +1,326 @@
+17:10:41.121584 git.c:439               trace: built-in: git push -u origin push-test-small
+17:10:41.138946 run-command.c:655       trace: run_command: GIT_DIR=.git git remote-https origin https://github.com/sanetj/playwright-framework
+17:10:41.143717 git.c:725               trace: exec: git-remote-https origin https://github.com/sanetj/playwright-framework
+17:10:41.143975 run-command.c:655       trace: run_command: git-remote-https origin https://github.com/sanetj/playwright-framework
+17:10:41.154934 http.c:699              == Info: Couldn't find host github.com in the .netrc file; using defaults
+17:10:41.176929 http.c:699              == Info: Host github.com:443 was resolved.
+17:10:41.176935 http.c:699              == Info: IPv6: (none)
+17:10:41.176936 http.c:699              == Info: IPv4: 20.207.73.82
+17:10:41.176951 http.c:699              == Info:   Trying 20.207.73.82:443...
+17:10:41.214525 http.c:699              == Info: Connected to github.com (20.207.73.82) port 443
+17:10:41.214606 http.c:699              == Info: ALPN: curl offers http/1.1
+17:10:41.214720 http.c:699              == Info: (304) (OUT), TLS handshake, Client hello (1):
+17:10:41.218173 http.c:699              == Info:  CAfile: /etc/ssl/cert.pem
+17:10:41.218177 http.c:699              == Info:  CApath: none
+17:10:41.230085 http.c:699              == Info: (304) (IN), TLS handshake, Server hello (2):
+17:10:41.230176 http.c:699              == Info: (304) (IN), TLS handshake, Unknown (8):
+17:10:41.230189 http.c:699              == Info: (304) (IN), TLS handshake, Certificate (11):
+17:10:41.231731 http.c:699              == Info: (304) (IN), TLS handshake, CERT verify (15):
+17:10:41.231841 http.c:699              == Info: (304) (IN), TLS handshake, Finished (20):
+17:10:41.231893 http.c:699              == Info: (304) (OUT), TLS handshake, Finished (20):
+17:10:41.231899 http.c:699              == Info: SSL connection using TLSv1.3 / AEAD-CHACHA20-POLY1305-SHA256 / [blank] / UNDEF
+17:10:41.231901 http.c:699              == Info: ALPN: server accepted http/1.1
+17:10:41.231903 http.c:699              == Info: Server certificate:
+17:10:41.231906 http.c:699              == Info:  subject: CN=github.com
+17:10:41.231909 http.c:699              == Info:  start date: May  5 00:00:00 2026 GMT
+17:10:41.231910 http.c:699              == Info:  expire date: Aug  2 23:59:59 2026 GMT
+17:10:41.231914 http.c:699              == Info:  subjectAltName: host "github.com" matched cert's "github.com"
+17:10:41.231919 http.c:699              == Info:  issuer: C=GB; O=Sectigo Limited; CN=Sectigo Public Server Authentication CA DV E36
+17:10:41.231920 http.c:699              == Info:  SSL certificate verify ok.
+17:10:41.231921 http.c:699              == Info: using HTTP/1.x
+17:10:41.231943 http.c:646              => Send header, 0000000214 bytes (0x000000d6)
+17:10:41.231947 http.c:658              => Send header: GET /sanetj/playwright-framework/info/refs?service=git-receive-pack HTTP/1.1
+17:10:41.231948 http.c:658              => Send header: Host: github.com
+17:10:41.231948 http.c:658              => Send header: User-Agent: git/2.40.1
+17:10:41.231949 http.c:658              => Send header: Accept: */*
+17:10:41.231950 http.c:658              => Send header: Accept-Encoding: deflate, gzip
+17:10:41.231951 http.c:658              => Send header: Accept-Language: C, *;q=0.9
+17:10:41.231952 http.c:658              => Send header: Pragma: no-cache
+17:10:41.231952 http.c:658              => Send header:
+17:10:41.231956 http.c:699              == Info: Request completely sent off
+17:10:41.444182 http.c:646              <= Recv header, 0000000027 bytes (0x0000001b)
+17:10:41.444210 http.c:658              <= Recv header: HTTP/1.1 401 Unauthorized
+17:10:41.444215 http.c:646              <= Recv header, 0000000026 bytes (0x0000001a)
+17:10:41.444216 http.c:658              <= Recv header: Server: GitHub-Babel/3.0
+17:10:41.444220 http.c:646              <= Recv header, 0000000054 bytes (0x00000036)
+17:10:41.444221 http.c:658              <= Recv header: Content-Security-Policy: default-src 'none'; sandbox
+17:10:41.444223 http.c:646              <= Recv header, 0000000041 bytes (0x00000029)
+17:10:41.444225 http.c:658              <= Recv header: Content-Type: text/plain; charset=UTF-8
+17:10:41.444227 http.c:646              <= Recv header, 0000000040 bytes (0x00000028)
+17:10:41.444230 http.c:658              <= Recv header: www-authenticate: Basic realm="GitHub"
+17:10:41.444232 http.c:646              <= Recv header, 0000000020 bytes (0x00000014)
+17:10:41.444233 http.c:658              <= Recv header: Content-Length: 26
+17:10:41.444234 http.c:646              <= Recv header, 0000000037 bytes (0x00000025)
+17:10:41.444236 http.c:658              <= Recv header: Date: Fri, 19 Jun 2026 11:40:41 GMT
+17:10:41.444237 http.c:646              <= Recv header, 0000000023 bytes (0x00000017)
+17:10:41.444242 http.c:658              <= Recv header: X-Frame-Options: DENY
+17:10:41.444244 http.c:646              <= Recv header, 0000000073 bytes (0x00000049)
+17:10:41.444245 http.c:658              <= Recv header: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+17:10:41.444247 http.c:646              <= Recv header, 0000000059 bytes (0x0000003b)
+17:10:41.444248 http.c:658              <= Recv header: X-GitHub-Request-Id: EE7F:1817AD:2BBC145:3125A3E:6A352AB9
+17:10:41.444250 http.c:646              <= Recv header, 0000000002 bytes (0x00000002)
+17:10:41.444251 http.c:658              <= Recv header:
+17:10:41.444259 http.c:699              == Info: Connection #0 to host github.com left intact
+17:10:41.444657 run-command.c:655       trace: run_command: 'git credential-osxkeychain get'
+17:10:41.457094 git.c:725               trace: exec: git-credential-osxkeychain get
+17:10:41.457516 run-command.c:655       trace: run_command: git-credential-osxkeychain get
+17:10:46.623593 http.c:699              == Info: Found bundle for host: 0x14b619b70 [serially]
+17:10:46.623625 http.c:699              == Info: Re-using existing connection with host github.com
+17:10:46.623658 http.c:699              == Info: Server auth using Basic with user '153614898'
+17:10:46.623859 http.c:646              => Send header, 0000000305 bytes (0x00000131)
+17:10:46.623866 http.c:658              => Send header: GET /sanetj/playwright-framework/info/refs?service=git-receive-pack HTTP/1.1
+17:10:46.623868 http.c:658              => Send header: Host: github.com
+17:10:46.623870 http.c:658              => Send header: Authorization: Basic <redacted>
+17:10:46.623871 http.c:658              => Send header: User-Agent: git/2.40.1
+17:10:46.623873 http.c:658              => Send header: Accept: */*
+17:10:46.623874 http.c:658              => Send header: Accept-Encoding: deflate, gzip
+17:10:46.623876 http.c:658              => Send header: Accept-Language: C, *;q=0.9
+17:10:46.623877 http.c:658              => Send header: Pragma: no-cache
+17:10:46.623879 http.c:658              => Send header:
+17:10:46.623888 http.c:699              == Info: Request completely sent off
+17:10:46.974883 http.c:646              <= Recv header, 0000000017 bytes (0x00000011)
+17:10:46.974905 http.c:658              <= Recv header: HTTP/1.1 200 OK
+17:10:46.974913 http.c:646              <= Recv header, 0000000026 bytes (0x0000001a)
+17:10:46.974915 http.c:658              <= Recv header: Server: GitHub-Babel/3.0
+17:10:46.974919 http.c:646              <= Recv header, 0000000060 bytes (0x0000003c)
+17:10:46.974921 http.c:658              <= Recv header: Content-Type: application/x-git-receive-pack-advertisement
+17:10:46.974924 http.c:646              <= Recv header, 0000000054 bytes (0x00000036)
+17:10:46.974926 http.c:658              <= Recv header: Content-Security-Policy: default-src 'none'; sandbox
+17:10:46.974928 http.c:646              <= Recv header, 0000000040 bytes (0x00000028)
+17:10:46.974930 http.c:658              <= Recv header: expires: Fri, 01 Jan 1980 00:00:00 GMT
+17:10:46.974933 http.c:646              <= Recv header, 0000000018 bytes (0x00000012)
+17:10:46.974934 http.c:658              <= Recv header: pragma: no-cache
+17:10:46.974937 http.c:646              <= Recv header, 0000000053 bytes (0x00000035)
+17:10:46.974938 http.c:658              <= Recv header: Cache-Control: no-cache, max-age=0, must-revalidate
+17:10:46.974940 http.c:646              <= Recv header, 0000000023 bytes (0x00000017)
+17:10:46.974942 http.c:658              <= Recv header: Vary: Accept-Encoding
+17:10:46.974945 http.c:646              <= Recv header, 0000000028 bytes (0x0000001c)
+17:10:46.974947 http.c:658              <= Recv header: Transfer-Encoding: chunked
+17:10:46.974949 http.c:646              <= Recv header, 0000000037 bytes (0x00000025)
+17:10:46.974951 http.c:658              <= Recv header: Date: Fri, 19 Jun 2026 11:40:46 GMT
+17:10:46.974953 http.c:646              <= Recv header, 0000000023 bytes (0x00000017)
+17:10:46.974955 http.c:658              <= Recv header: X-Frame-Options: DENY
+17:10:46.974957 http.c:646              <= Recv header, 0000000073 bytes (0x00000049)
+17:10:46.974959 http.c:658              <= Recv header: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+17:10:46.974962 http.c:646              <= Recv header, 0000000059 bytes (0x0000003b)
+17:10:46.974965 http.c:658              <= Recv header: X-GitHub-Request-Id: EE7F:1817AD:2BBCA63:312641A:6A352AB9
+17:10:46.974968 http.c:646              <= Recv header, 0000000002 bytes (0x00000002)
+17:10:46.974969 http.c:658              <= Recv header:
+17:10:46.975071 http.c:699              == Info: Connection #0 to host github.com left intact
+17:10:46.975099 run-command.c:655       trace: run_command: 'git credential-osxkeychain store'
+17:10:46.996237 git.c:725               trace: exec: git-credential-osxkeychain store
+17:10:46.997066 run-command.c:655       trace: run_command: git-credential-osxkeychain store
+17:10:47.028931 pkt-line.c:80           packet:          git< # service=git-receive-pack
+17:10:47.028951 pkt-line.c:80           packet:          git< 0000
+17:10:47.028954 pkt-line.c:80           packet:          git< 8d24299a61d76b58cdec62fa3783e86602017e34 refs/heads/archive/phase10-experiment\0report-status report-status-v2 delete-refs side-band-64k ofs-delta atomic object-format=sha1 quiet agent=github/spokes-receive-pack-acac8763c60f636c44baaf5c3887895cf5f55c30 session-id=EE7F:1817AD:2BBCA63:312641A:6A352AB9 push-options
+17:10:47.029240 pkt-line.c:80           packet:          git< 477f50c5d223918dce512767800ab5ad82b611d0 refs/heads/codex/build-production-grade-fixture-architecture
+17:10:47.029245 pkt-line.c:80           packet:          git< 306159f1fbc8af6b7b7444885b70a6634ff3f986 refs/heads/codex/build-production-grade-fixture-architecture-dqhdk3
+17:10:47.029247 pkt-line.c:80           packet:          git< 676bfdaa3e5ac8370221fb0993f32ed78e2706a7 refs/heads/codex/build-production-grade-fixture-architecture-zewiui
+17:10:47.029251 pkt-line.c:80           packet:          git< 220b24ab69b94b4d25af6380c946ebf764388c4b refs/heads/codex/build-webapp-intelligence-audit-tool
+17:10:47.029252 pkt-line.c:80           packet:          git< 5dd30e4f4f2272e08da4c709e387eb5fff9cf7ae refs/heads/codex/build-webapp-intelligence-audit-tool-1moxo6
+17:10:47.029254 pkt-line.c:80           packet:          git< 40fd3a69a1031b5ac151aa9ad32bb193f95bc6a0 refs/heads/codex/build-webapp-intelligence-audit-tool-5lb35n
+17:10:47.029255 pkt-line.c:80           packet:          git< e99ad683c0f612251d2ed09526e5fbe246566840 refs/heads/codex/build-webapp-intelligence-audit-tool-ewukt7
+17:10:47.029257 pkt-line.c:80           packet:          git< 6967d00839fa62c4a89b5b268ad82525a43c4129 refs/heads/codex/build-webapp-intelligence-audit-tool-hhytt7
+17:10:47.029258 pkt-line.c:80           packet:          git< d9fe8d81349e611312659c45475a381c39e31aca refs/heads/codex/build-webapp-intelligence-audit-tool-rhleqs
+17:10:47.029260 pkt-line.c:80           packet:          git< a7e4ce2c1e6707482913c6ea3059ea521a208ffe refs/heads/codex/build-webapp-intelligence-audit-tool-wlwyoi
+17:10:47.029261 pkt-line.c:80           packet:          git< d239c054d1930df8361b9e35232f2d230cdaadab refs/heads/codex/extend-playwright-automation-framework-features
+17:10:47.029262 pkt-line.c:80           packet:          git< 7c2176b6b92582bb9d94ee9b8cdc6d1b2d8cd6f7 refs/heads/codex/extend-playwright-automation-framework-features-yw1eg0
+17:10:47.029264 pkt-line.c:80           packet:          git< e84f08fe317e2f217e0ecce44e8ba6ac90a071a2 refs/heads/codex/generate-complete-project-scaffolding
+17:10:47.029265 pkt-line.c:80           packet:          git< e22bd546d7ec8b44b959fc4273e3c5571c2f63d8 refs/heads/codex/generate-playwright-page-object-model-classes
+17:10:47.029267 pkt-line.c:80           packet:          git< 3f53520a52ce6a9dae0a9a523a8a9994042c7a9d refs/heads/feature/phase-6-0-cognition-foundation
+17:10:47.029268 pkt-line.c:80           packet:          git< df412cd98d9a0ef5a973076dfae5133cf8a33418 refs/heads/feature/phase-6-1-deterministic-cognition
+17:10:47.029270 pkt-line.c:80           packet:          git< 0441d147ef408154af42019d1fcd6c9dc63a824d refs/heads/feature/phase-7-1-epistemic-dynamics
+17:10:47.029271 pkt-line.c:80           packet:          git< 57c33065d859cd2a40179c298ad4d7f945e35ce3 refs/heads/feature/phase-7-adversarial-cognition
+17:10:47.029272 pkt-line.c:80           packet:          git< 802b72321f71a85f578e6bc31df3679c3351f650 refs/heads/feature/phase-8-1-multirole-runtime
+17:10:47.029273 pkt-line.c:80           packet:          git< 1faaa2c442698b1a3d4914173a4eec597c169db7 refs/heads/feature/phase-8-2-execution-wiring
+17:10:47.029275 pkt-line.c:80           packet:          git< 84d71b79056ec001b399032b190219d34f439efc refs/heads/main
+17:10:47.029278 pkt-line.c:80           packet:          git< 43afec5d8f5a14339cf018cf6f74de0b90ba7f29 refs/heads/phase-10-01-architecture-stabilization
+17:10:47.029279 pkt-line.c:80           packet:          git< 07651ca27e123ec050243f2b53aaadd12bcb8ec0 refs/heads/phase-10-01-bugfix
+17:10:47.029281 pkt-line.c:80           packet:          git< 3c16997620ebb898ab7ada4d83b4c04c9888dcdd refs/heads/phase-10-adaptive-investigation-intelligence
+17:10:47.029282 pkt-line.c:80           packet:          git< ecaefa2a04fae91919a166939ba20f7b3d6cd4e5 refs/heads/phase-9-1-operational-hardening
+17:10:47.029283 pkt-line.c:80           packet:          git< bc7a6f4dd586a1277ee10213b3e2f26f186bd4a1 refs/heads/phase-9-1-recovery
+17:10:47.029285 pkt-line.c:80           packet:          git< 8d0a141550b915b4f2b4b07f7b391cead9ad92f3 refs/heads/phase-9-2-replay-validation
+17:10:47.029286 pkt-line.c:80           packet:          git< 0fe190fbce528b859c5203293d9460563b6f0bdf refs/heads/phase-9-3-submission-pipeline
+17:10:47.029287 pkt-line.c:80           packet:          git< 83ab001628089ad3512c2f68741192116e2f9ee2 refs/heads/phase-9-operational-runtime
+17:10:47.029289 pkt-line.c:80           packet:          git< cd78a879f9a09998139d94d3b8304f9a79f318f4 refs/heads/phase10-rv4-integration-validation
+17:10:47.029290 pkt-line.c:80           packet:          git< c4c9cc0ee5683f3702db7060d82aad12f8ed8250 refs/heads/phase10.1b-replay-candidates
+17:10:47.029291 pkt-line.c:80           packet:          git< bf1ff7b994cd2f5f1043da3c6f0cb6f699c0db6b refs/heads/phase10.2-ownership-intelligence
+17:10:47.029293 pkt-line.c:80           packet:          git< d4a3edfdf1b2d604e60ad69cc3a56fcd02cc496a refs/heads/phase10.4-verification-planning
+17:10:47.029294 pkt-line.c:80           packet:          git< 2e96ccfb1be859e35315157bf9c18fe6d961ca36 refs/heads/phase10.5-investigation-assembly
+17:10:47.029295 pkt-line.c:80           packet:          git< 61259e59c1ef2105992e18b78f7c4786ceb07928 refs/heads/phase10.5a-architecture-hardening
+17:10:47.029297 pkt-line.c:80           packet:          git< 77ad5b083a39265d9aed52f61565eefae96fcee8 refs/heads/phase10.h1-ownership-hardening
+17:10:47.029298 pkt-line.c:80           packet:          git< 5bdd3334d52ad2bfec7f966c8e52f5e32cc9a647 refs/heads/phase9.2-integration
+17:10:47.029299 pkt-line.c:80           packet:          git< 01fd2129e49e2cab9cc3dfcafdc9005ecaddbb12 refs/heads/phase9.3-development
+17:10:47.029301 pkt-line.c:80           packet:          git< fb2ae470af85aecaeb6cfa205f2a62e99e981fb3 refs/heads/recovery/pre-phase10
+17:10:47.029302 pkt-line.c:80           packet:          git< 8d24299a61d76b58cdec62fa3783e86602017e34 refs/tags/backup-before-recovery
+17:10:47.029303 pkt-line.c:80           packet:          git< ad6e244ecc6ebc029c046b4aeb3081549e5bf276 refs/tags/checkpoint-phase10-h1-ownership-hardening
+17:10:47.029305 pkt-line.c:80           packet:          git< 1b69d7120d6a50c1bd74690e6183fa215bcd9e51 refs/tags/checkpoint-phase10-investigation-intelligence
+17:10:47.029306 pkt-line.c:80           packet:          git< 87f562cfa58f18f70fe31ac86b10b46a225b7927 refs/tags/checkpoint-phase10-rv4-complete
+17:10:47.029307 pkt-line.c:80           packet:          git< d7d43875bda1366df7789dfadf678ac619024697 refs/tags/checkpoint-phase10.2-ownership-intelligence
+17:10:47.029309 pkt-line.c:80           packet:          git< bf01af566e945824aa84438eabb8280f2a670566 refs/tags/checkpoint-phase10.4-verification-blueprints
+17:10:47.029310 pkt-line.c:80           packet:          git< 0a7b1984193ae25aa9d44523cc77f930a034714e refs/tags/checkpoint-phase10.5-investigation-assembly
+17:10:47.029311 pkt-line.c:80           packet:          git< cea4c6ab39857b24c96d84060bb69c538fc54db1 refs/tags/checkpoint-phase10.5a-architecture-hardening
+17:10:47.029313 pkt-line.c:80           packet:          git< 9078f091987428b443981ff1c43f59386bf55a05 refs/tags/checkpoint-rv3a-recovery
+17:10:47.029314 pkt-line.c:80           packet:          git< b967c2767eb1d33904928456d17f0acae9c3f29c refs/tags/phase10.1-investigation-foundation
+17:10:47.029315 pkt-line.c:80           packet:          git< 5bdd3334d52ad2bfec7f966c8e52f5e32cc9a647 refs/tags/phase9.1-recovery-stable
+17:10:47.029317 pkt-line.c:80           packet:          git< 6726cb169fecbd48e53a237e1e67d495a29409e6 refs/tags/phase9.2-reintegration-stable
+17:10:47.029318 pkt-line.c:80           packet:          git< bc7a6f4dd586a1277ee10213b3e2f26f186bd4a1 refs/tags/phase9.2-stable
+17:10:47.029319 pkt-line.c:80           packet:          git< b1425a05933392a87492fc1a71407306f517911d refs/tags/recovery-phase9.1-stable
+17:10:47.029321 pkt-line.c:80           packet:          git< 0000
+17:10:47.029613 pkt-line.c:80           packet:          git> refs/heads/push-test-small:refs/heads/push-test-small
+17:10:47.029616 pkt-line.c:80           packet:          git> 0000
+17:10:47.029624 run-command.c:655       trace: run_command: git send-pack --stateless-rpc --helper-status --thin --no-progress https://github.com/sanetj/playwright-framework/ --stdin
+17:10:47.039964 git.c:439               trace: built-in: git send-pack --stateless-rpc --helper-status --thin --no-progress https://github.com/sanetj/playwright-framework/ --stdin
+17:10:47.040815 pkt-line.c:80           packet:          git< refs/heads/push-test-small:refs/heads/push-test-small
+17:10:47.040820 pkt-line.c:80           packet:          git< 0000
+17:10:47.040824 pkt-line.c:80           packet:          git< 8d24299a61d76b58cdec62fa3783e86602017e34 refs/heads/archive/phase10-experiment\0report-status report-status-v2 delete-refs side-band-64k ofs-delta atomic object-format=sha1 quiet agent=github/spokes-receive-pack-acac8763c60f636c44baaf5c3887895cf5f55c30 session-id=EE7F:1817AD:2BBCA63:312641A:6A352AB9 push-options
+17:10:47.040829 pkt-line.c:80           packet:          git< 477f50c5d223918dce512767800ab5ad82b611d0 refs/heads/codex/build-production-grade-fixture-architecture
+17:10:47.040831 pkt-line.c:80           packet:          git< 306159f1fbc8af6b7b7444885b70a6634ff3f986 refs/heads/codex/build-production-grade-fixture-architecture-dqhdk3
+17:10:47.040833 pkt-line.c:80           packet:          git< 676bfdaa3e5ac8370221fb0993f32ed78e2706a7 refs/heads/codex/build-production-grade-fixture-architecture-zewiui
+17:10:47.040835 pkt-line.c:80           packet:          git< 220b24ab69b94b4d25af6380c946ebf764388c4b refs/heads/codex/build-webapp-intelligence-audit-tool
+17:10:47.040838 pkt-line.c:80           packet:          git< 5dd30e4f4f2272e08da4c709e387eb5fff9cf7ae refs/heads/codex/build-webapp-intelligence-audit-tool-1moxo6
+17:10:47.040839 pkt-line.c:80           packet:          git< 40fd3a69a1031b5ac151aa9ad32bb193f95bc6a0 refs/heads/codex/build-webapp-intelligence-audit-tool-5lb35n
+17:10:47.040842 pkt-line.c:80           packet:          git< e99ad683c0f612251d2ed09526e5fbe246566840 refs/heads/codex/build-webapp-intelligence-audit-tool-ewukt7
+17:10:47.040844 pkt-line.c:80           packet:          git< 6967d00839fa62c4a89b5b268ad82525a43c4129 refs/heads/codex/build-webapp-intelligence-audit-tool-hhytt7
+17:10:47.040845 pkt-line.c:80           packet:          git< d9fe8d81349e611312659c45475a381c39e31aca refs/heads/codex/build-webapp-intelligence-audit-tool-rhleqs
+17:10:47.040847 pkt-line.c:80           packet:          git< a7e4ce2c1e6707482913c6ea3059ea521a208ffe refs/heads/codex/build-webapp-intelligence-audit-tool-wlwyoi
+17:10:47.040849 pkt-line.c:80           packet:          git< d239c054d1930df8361b9e35232f2d230cdaadab refs/heads/codex/extend-playwright-automation-framework-features
+17:10:47.040851 pkt-line.c:80           packet:          git< 7c2176b6b92582bb9d94ee9b8cdc6d1b2d8cd6f7 refs/heads/codex/extend-playwright-automation-framework-features-yw1eg0
+17:10:47.040853 pkt-line.c:80           packet:          git< e84f08fe317e2f217e0ecce44e8ba6ac90a071a2 refs/heads/codex/generate-complete-project-scaffolding
+17:10:47.040855 pkt-line.c:80           packet:          git< e22bd546d7ec8b44b959fc4273e3c5571c2f63d8 refs/heads/codex/generate-playwright-page-object-model-classes
+17:10:47.040857 pkt-line.c:80           packet:          git< 3f53520a52ce6a9dae0a9a523a8a9994042c7a9d refs/heads/feature/phase-6-0-cognition-foundation
+17:10:47.040858 pkt-line.c:80           packet:          git< df412cd98d9a0ef5a973076dfae5133cf8a33418 refs/heads/feature/phase-6-1-deterministic-cognition
+17:10:47.040860 pkt-line.c:80           packet:          git< 0441d147ef408154af42019d1fcd6c9dc63a824d refs/heads/feature/phase-7-1-epistemic-dynamics
+17:10:47.040862 pkt-line.c:80           packet:          git< 57c33065d859cd2a40179c298ad4d7f945e35ce3 refs/heads/feature/phase-7-adversarial-cognition
+17:10:47.040864 pkt-line.c:80           packet:          git< 802b72321f71a85f578e6bc31df3679c3351f650 refs/heads/feature/phase-8-1-multirole-runtime
+17:10:47.040865 pkt-line.c:80           packet:          git< 1faaa2c442698b1a3d4914173a4eec597c169db7 refs/heads/feature/phase-8-2-execution-wiring
+17:10:47.040867 pkt-line.c:80           packet:          git< 84d71b79056ec001b399032b190219d34f439efc refs/heads/main
+17:10:47.040869 pkt-line.c:80           packet:          git< 43afec5d8f5a14339cf018cf6f74de0b90ba7f29 refs/heads/phase-10-01-architecture-stabilization
+17:10:47.040871 pkt-line.c:80           packet:          git< 07651ca27e123ec050243f2b53aaadd12bcb8ec0 refs/heads/phase-10-01-bugfix
+17:10:47.040873 pkt-line.c:80           packet:          git< 3c16997620ebb898ab7ada4d83b4c04c9888dcdd refs/heads/phase-10-adaptive-investigation-intelligence
+17:10:47.040875 pkt-line.c:80           packet:          git< ecaefa2a04fae91919a166939ba20f7b3d6cd4e5 refs/heads/phase-9-1-operational-hardening
+17:10:47.040877 pkt-line.c:80           packet:          git< bc7a6f4dd586a1277ee10213b3e2f26f186bd4a1 refs/heads/phase-9-1-recovery
+17:10:47.040878 pkt-line.c:80           packet:          git< 8d0a141550b915b4f2b4b07f7b391cead9ad92f3 refs/heads/phase-9-2-replay-validation
+17:10:47.040880 pkt-line.c:80           packet:          git< 0fe190fbce528b859c5203293d9460563b6f0bdf refs/heads/phase-9-3-submission-pipeline
+17:10:47.040882 pkt-line.c:80           packet:          git< 83ab001628089ad3512c2f68741192116e2f9ee2 refs/heads/phase-9-operational-runtime
+17:10:47.040884 pkt-line.c:80           packet:          git< cd78a879f9a09998139d94d3b8304f9a79f318f4 refs/heads/phase10-rv4-integration-validation
+17:10:47.040886 pkt-line.c:80           packet:          git< c4c9cc0ee5683f3702db7060d82aad12f8ed8250 refs/heads/phase10.1b-replay-candidates
+17:10:47.040889 pkt-line.c:80           packet:          git< bf1ff7b994cd2f5f1043da3c6f0cb6f699c0db6b refs/heads/phase10.2-ownership-intelligence
+17:10:47.040891 pkt-line.c:80           packet:          git< d4a3edfdf1b2d604e60ad69cc3a56fcd02cc496a refs/heads/phase10.4-verification-planning
+17:10:47.040892 pkt-line.c:80           packet:          git< 2e96ccfb1be859e35315157bf9c18fe6d961ca36 refs/heads/phase10.5-investigation-assembly
+17:10:47.040894 pkt-line.c:80           packet:          git< 61259e59c1ef2105992e18b78f7c4786ceb07928 refs/heads/phase10.5a-architecture-hardening
+17:10:47.040896 pkt-line.c:80           packet:          git< 77ad5b083a39265d9aed52f61565eefae96fcee8 refs/heads/phase10.h1-ownership-hardening
+17:10:47.040898 pkt-line.c:80           packet:          git< 5bdd3334d52ad2bfec7f966c8e52f5e32cc9a647 refs/heads/phase9.2-integration
+17:10:47.040900 pkt-line.c:80           packet:          git< 01fd2129e49e2cab9cc3dfcafdc9005ecaddbb12 refs/heads/phase9.3-development
+17:10:47.040902 pkt-line.c:80           packet:          git< fb2ae470af85aecaeb6cfa205f2a62e99e981fb3 refs/heads/recovery/pre-phase10
+17:10:47.040904 pkt-line.c:80           packet:          git< 8d24299a61d76b58cdec62fa3783e86602017e34 refs/tags/backup-before-recovery
+17:10:47.040905 pkt-line.c:80           packet:          git< ad6e244ecc6ebc029c046b4aeb3081549e5bf276 refs/tags/checkpoint-phase10-h1-ownership-hardening
+17:10:47.040907 pkt-line.c:80           packet:          git< 1b69d7120d6a50c1bd74690e6183fa215bcd9e51 refs/tags/checkpoint-phase10-investigation-intelligence
+17:10:47.040909 pkt-line.c:80           packet:          git< 87f562cfa58f18f70fe31ac86b10b46a225b7927 refs/tags/checkpoint-phase10-rv4-complete
+17:10:47.040911 pkt-line.c:80           packet:          git< d7d43875bda1366df7789dfadf678ac619024697 refs/tags/checkpoint-phase10.2-ownership-intelligence
+17:10:47.040913 pkt-line.c:80           packet:          git< bf01af566e945824aa84438eabb8280f2a670566 refs/tags/checkpoint-phase10.4-verification-blueprints
+17:10:47.040924 pkt-line.c:80           packet:          git< 0a7b1984193ae25aa9d44523cc77f930a034714e refs/tags/checkpoint-phase10.5-investigation-assembly
+17:10:47.040928 pkt-line.c:80           packet:          git< cea4c6ab39857b24c96d84060bb69c538fc54db1 refs/tags/checkpoint-phase10.5a-architecture-hardening
+17:10:47.040930 pkt-line.c:80           packet:          git< 9078f091987428b443981ff1c43f59386bf55a05 refs/tags/checkpoint-rv3a-recovery
+17:10:47.040932 pkt-line.c:80           packet:          git< b967c2767eb1d33904928456d17f0acae9c3f29c refs/tags/phase10.1-investigation-foundation
+17:10:47.040934 pkt-line.c:80           packet:          git< 5bdd3334d52ad2bfec7f966c8e52f5e32cc9a647 refs/tags/phase9.1-recovery-stable
+17:10:47.040936 pkt-line.c:80           packet:          git< 6726cb169fecbd48e53a237e1e67d495a29409e6 refs/tags/phase9.2-reintegration-stable
+17:10:47.040938 pkt-line.c:80           packet:          git< bc7a6f4dd586a1277ee10213b3e2f26f186bd4a1 refs/tags/phase9.2-stable
+17:10:47.040940 pkt-line.c:80           packet:          git< b1425a05933392a87492fc1a71407306f517911d refs/tags/recovery-phase9.1-stable
+17:10:47.040942 pkt-line.c:80           packet:          git< 0000
+17:10:47.045084 pkt-line.c:80           packet:          git> 0000000000000000000000000000000000000000 9fd96b9f417dedefe5a17bb8eb9eb295fb04e7d8 refs/heads/push-test-small\0 report-status-v2 side-band-64k quiet object-format=sha1 agent=git/2.40.1
+17:10:47.045088 pkt-line.c:80           packet:          git> 0000
+17:10:47.045119 run-command.c:655       trace: run_command: git pack-objects --all-progress-implied --revs --stdout --thin --delta-base-offset -q
+17:10:47.045107 pkt-line.c:80           packet:          git< 00ba0000000000000000000000000000000000000000 9fd96b9f417dedefe5a17bb8eb9eb295fb04e7d8 refs/heads/push-test-small\0 report-status-v2 side-band-64k quiet object-format=sha1 agent=git/2.40.10000
+17:10:47.058875 git.c:439               trace: built-in: git pack-objects --all-progress-implied --revs --stdout --thin --delta-base-offset -q
+17:10:47.137677 pkt-line.c:80           packet:          git< PACK ...
+17:10:47.160642 http.c:699              == Info: Found bundle for host: 0x14b619b70 [serially]
+17:10:47.160655 http.c:699              == Info: Re-using existing connection with host github.com
+17:10:47.160662 http.c:699              == Info: Server auth using Basic with user '153614898'
+17:10:47.160761 http.c:646              => Send header, 0000000316 bytes (0x0000013c)
+17:10:47.160764 http.c:658              => Send header: POST /sanetj/playwright-framework/git-receive-pack HTTP/1.1
+17:10:47.160765 http.c:658              => Send header: Host: github.com
+17:10:47.160766 http.c:658              => Send header: Authorization: Basic <redacted>
+17:10:47.160770 http.c:658              => Send header: User-Agent: git/2.40.1
+17:10:47.160771 http.c:658              => Send header: Content-Type: application/x-git-receive-pack-request
+17:10:47.160772 http.c:658              => Send header: Accept: application/x-git-receive-pack-result
+17:10:47.160773 http.c:658              => Send header: Content-Length: 4
+17:10:47.160774 http.c:658              => Send header:
+17:10:47.160776 http.c:699              == Info: upload completely sent off: 4 bytes
+17:10:47.587552 http.c:646              <= Recv header, 0000000017 bytes (0x00000011)
+17:10:47.587587 http.c:658              <= Recv header: HTTP/1.1 200 OK
+17:10:47.587599 http.c:646              <= Recv header, 0000000026 bytes (0x0000001a)
+17:10:47.587603 http.c:658              <= Recv header: Server: GitHub-Babel/3.0
+17:10:47.587610 http.c:646              <= Recv header, 0000000053 bytes (0x00000035)
+17:10:47.587614 http.c:658              <= Recv header: Content-Type: application/x-git-receive-pack-result
+17:10:47.587619 http.c:646              <= Recv header, 0000000054 bytes (0x00000036)
+17:10:47.587623 http.c:658              <= Recv header: Content-Security-Policy: default-src 'none'; sandbox
+17:10:47.587627 http.c:646              <= Recv header, 0000000040 bytes (0x00000028)
+17:10:47.587631 http.c:658              <= Recv header: expires: Fri, 01 Jan 1980 00:00:00 GMT
+17:10:47.587635 http.c:646              <= Recv header, 0000000018 bytes (0x00000012)
+17:10:47.587639 http.c:658              <= Recv header: pragma: no-cache
+17:10:47.587643 http.c:646              <= Recv header, 0000000053 bytes (0x00000035)
+17:10:47.587647 http.c:658              <= Recv header: Cache-Control: no-cache, max-age=0, must-revalidate
+17:10:47.587652 http.c:646              <= Recv header, 0000000023 bytes (0x00000017)
+17:10:47.587655 http.c:658              <= Recv header: Vary: Accept-Encoding
+17:10:47.587661 http.c:646              <= Recv header, 0000000019 bytes (0x00000013)
+17:10:47.587664 http.c:658              <= Recv header: Content-Length: 0
+17:10:47.587669 http.c:646              <= Recv header, 0000000037 bytes (0x00000025)
+17:10:47.587673 http.c:658              <= Recv header: Date: Fri, 19 Jun 2026 11:40:47 GMT
+17:10:47.587677 http.c:646              <= Recv header, 0000000023 bytes (0x00000017)
+17:10:47.587680 http.c:658              <= Recv header: X-Frame-Options: DENY
+17:10:47.587685 http.c:646              <= Recv header, 0000000073 bytes (0x00000049)
+17:10:47.587689 http.c:658              <= Recv header: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+17:10:47.587693 http.c:646              <= Recv header, 0000000059 bytes (0x0000003b)
+17:10:47.587697 http.c:658              <= Recv header: X-GitHub-Request-Id: EE7F:1817AD:2BBCB68:3126538:6A352ABF
+17:10:47.587702 http.c:646              <= Recv header, 0000000002 bytes (0x00000002)
+17:10:47.587705 http.c:658              <= Recv header:
+17:10:47.587730 http.c:699              == Info: Connection #0 to host github.com left intact
+17:10:47.587810 http.c:699              == Info: Found bundle for host: 0x14b619b70 [serially]
+17:10:47.587829 http.c:699              == Info: Re-using existing connection with host github.com
+17:10:47.587847 http.c:699              == Info: Server auth using Basic with user '153614898'
+17:10:47.588054 http.c:646              => Send header, 0000000386 bytes (0x00000182)
+17:10:47.588069 http.c:658              => Send header: POST /sanetj/playwright-framework/git-receive-pack HTTP/1.1
+17:10:47.588072 http.c:658              => Send header: Host: github.com
+17:10:47.588075 http.c:658              => Send header: Authorization: Basic <redacted>
+17:10:47.588079 http.c:658              => Send header: User-Agent: git/2.40.1
+17:10:47.588082 http.c:658              => Send header: Accept-Encoding: deflate, gzip
+17:10:47.588086 http.c:658              => Send header: Content-Type: application/x-git-receive-pack-request
+17:10:47.588089 http.c:658              => Send header: Accept: application/x-git-receive-pack-result
+17:10:47.588092 http.c:658              => Send header: Accept-Language: C, *;q=0.9
+17:10:47.588095 http.c:658              => Send header: Transfer-Encoding: chunked
+17:10:47.588098 http.c:658              => Send header:
+17:10:47.588106 http.c:699              == Info: upload completely sent off: 14 bytes
+17:10:47.939094 http.c:646              <= Recv header, 0000000017 bytes (0x00000011)
+17:10:47.939126 http.c:658              <= Recv header: HTTP/1.1 200 OK
+17:10:47.939135 http.c:646              <= Recv header, 0000000026 bytes (0x0000001a)
+17:10:47.939137 http.c:658              <= Recv header: Server: GitHub-Babel/3.0
+17:10:47.939143 http.c:646              <= Recv header, 0000000053 bytes (0x00000035)
+17:10:47.939145 http.c:658              <= Recv header: Content-Type: application/x-git-receive-pack-result
+17:10:47.939148 http.c:646              <= Recv header, 0000000054 bytes (0x00000036)
+17:10:47.939150 http.c:658              <= Recv header: Content-Security-Policy: default-src 'none'; sandbox
+17:10:47.939152 http.c:646              <= Recv header, 0000000040 bytes (0x00000028)
+17:10:47.939154 http.c:658              <= Recv header: expires: Fri, 01 Jan 1980 00:00:00 GMT
+17:10:47.939156 http.c:646              <= Recv header, 0000000018 bytes (0x00000012)
+17:10:47.939158 http.c:658              <= Recv header: pragma: no-cache
+17:10:47.939161 http.c:646              <= Recv header, 0000000053 bytes (0x00000035)
+17:10:47.939162 http.c:658              <= Recv header: Cache-Control: no-cache, max-age=0, must-revalidate
+17:10:47.939164 http.c:646              <= Recv header, 0000000023 bytes (0x00000017)
+17:10:47.939166 http.c:658              <= Recv header: Vary: Accept-Encoding
+17:10:47.939170 http.c:646              <= Recv header, 0000000028 bytes (0x0000001c)
+17:10:47.939172 http.c:658              <= Recv header: Transfer-Encoding: chunked
+17:10:47.939174 http.c:646              <= Recv header, 0000000037 bytes (0x00000025)
+17:10:47.939176 http.c:658              <= Recv header: Date: Fri, 19 Jun 2026 11:40:47 GMT
+17:10:47.939178 http.c:646              <= Recv header, 0000000023 bytes (0x00000017)
+17:10:47.939180 http.c:658              <= Recv header: X-Frame-Options: DENY
+17:10:47.939182 http.c:646              <= Recv header, 0000000073 bytes (0x00000049)
+17:10:47.939184 http.c:658              <= Recv header: Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+17:10:47.939186 http.c:646              <= Recv header, 0000000059 bytes (0x0000003b)
+17:10:47.939188 http.c:658              <= Recv header: X-GitHub-Request-Id: EE7F:1817AD:2BBCC33:3126610:6A352ABF
+17:10:47.939190 http.c:646              <= Recv header, 0000000002 bytes (0x00000002)
+17:10:47.939192 http.c:658              <= Recv header:
+17:10:47.939218 http.c:699              == Info: Connection #0 to host github.com left intact
+send-pack: unexpected disconnect while reading sideband packet
+17:10:47.948334 pkt-line.c:80           packet:          git> 0000
+fatal: the remote end hung up unexpectedly
+Everything up-to-date

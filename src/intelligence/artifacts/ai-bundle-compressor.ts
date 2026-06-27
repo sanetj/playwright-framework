@@ -6,6 +6,8 @@ import { FindingPriorityRanker, FindingPriorityLevel } from '../../runtime/diffe
 import { ExportProfileManager, ExportProfileMode } from '../../runtime/artifacts/export-profile';
 import { BundleRedactor } from '../../runtime/artifacts/bundle-redaction';
 import { ExploitProof } from '../../runtime/evidence/exploit-proof-capture';
+import { OwnershipLink } from '../ontology/entity-lineage';
+import { OwnershipInventory } from '../resource-analysis/ownership-intelligence';
 
 export interface ContradictionEvidenceMapping {
   findingType: string;
@@ -50,7 +52,9 @@ export interface InvestigationBundle {
   exportMode: string;
   differentialAnalysis: {
     baseRole: string;
+    baseRoleSessionId?: string;
     comparisonRole: string;
+    comparisonRoleSessionId?: string;
     findings: {
       type: 'IDOR_CANDIDATE' | 'PRIVILEGE_ESCALATION_CANDIDATE' | 'TENANT_ESCAPE_CANDIDATE' | 'STATUS_CONTRADICTION';
       targetEndpoint: string;
@@ -62,13 +66,19 @@ export interface InvestigationBundle {
       // Exploit Validation Properties
       isValidated?: boolean;
       validationConfidence?: string;
+
       proofs?: ExploitProof[];
       proofNarrative?: string;
     }[];
+    sharedReachability?: string[];
+    exclusiveToBase?: string[];
+    exclusiveToComparison?: string[];
   };
   evidenceExchanges: any[];
   lineage: LineageExtractionResult[];
   groupedContradictionSummary?: GroupedContradictionSummary;
+  ownershipLinks?: OwnershipLink[];
+  ownershipInventory?: OwnershipInventory;
 }
 
 export class AiBundleCompressor {
@@ -81,7 +91,9 @@ export class AiBundleCompressor {
     diffResult: DifferentialComparisonResult, 
     exchanges: CanonicalHttpExchange[], 
     lineageData: LineageExtractionResult[],
-    exportMode: ExportProfileMode = ExportProfileMode.CONCISE_AI
+    exportMode: ExportProfileMode = ExportProfileMode.CONCISE_AI,
+    ownershipLinks: OwnershipLink[] = [],
+    ownershipInventory?: OwnershipInventory
   ): InvestigationBundle {
     
     const roiScorer = new BountyRoiScorer();
@@ -263,14 +275,20 @@ export class AiBundleCompressor {
       exportMode,
       differentialAnalysis: {
         baseRole: diffResult.baseRoleId,
+        baseRoleSessionId: diffResult.baseRoleSessionId,
         comparisonRole: diffResult.comparisonRoleId,
-        findings
+        comparisonRoleSessionId: diffResult.comparisonRoleSessionId,
+        findings,
+        sharedReachability: diffResult.sharedReachability.map(node => node.id),
+        exclusiveToBase: diffResult.exclusiveToBase.map(node => node.id),
+        exclusiveToComparison: diffResult.exclusiveToComparison.map(node => node.id)
       },
       evidenceExchanges: compressedExchanges,
       lineage: lineageData,
-      groupedContradictionSummary
+      groupedContradictionSummary,
+      ownershipLinks,
+      ownershipInventory
     };
   }
 
 }
-

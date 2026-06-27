@@ -14,6 +14,7 @@ import { LivePerturbationInterceptor } from '../../runtime/instrumentation/live-
 import { ReplayValidationPipeline } from '../../runtime/validation/replay-validation-pipeline';
 import { ValidatedFinding } from '../../runtime/validation/exploit-validation-engine';
 import { ReplayEligibleCandidate } from '../../runtime/validation/replay-eligible-candidate';
+import { OwnershipInferencer } from '../resource-analysis/ownership-inferencer';
 
 export class InvestigationPipeline implements NetworkEvidenceHandler {
   private runtime: PlaywrightMultiSessionRuntime;
@@ -64,6 +65,8 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
     // 6. Differential Analysis (Response Aware)
     const engine = new ConcreteDifferentialEngine();
     const diffResult = engine.compare(canonBase, canonComp, baseRole.roleId, compRole.roleId);
+    diffResult.baseRoleSessionId = baseSession.sessionId;
+    diffResult.comparisonRoleSessionId = compSession.sessionId;
 
     // 7. Live Perturbation Probing (Exploit Validation)
     const validationPipeline = new ReplayValidationPipeline();
@@ -103,9 +106,21 @@ export class InvestigationPipeline implements NetworkEvidenceHandler {
       }
     }
 
+    // 7.5. Ownership Intelligence Activation (Phase 12.5)
+    const ownershipInferencer = new OwnershipInferencer();
+    const ownershipInventory = ownershipInferencer.inferOwnership(this.exchanges);
+
     // 8. Bundle & Compress
     const compressor = new AiBundleCompressor();
-    const bundle = compressor.compress(this.targetUrl, diffResult, this.exchanges, this.lineages);
+    const bundle = compressor.compress(
+      this.targetUrl, 
+      diffResult, 
+      this.exchanges, 
+      this.lineages, 
+      undefined, 
+      this.ownershipRegistry.exportAllLinks(),
+      ownershipInventory
+    );
 
     // 9. Cleanup
     await this.runtime.terminateAll();
