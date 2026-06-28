@@ -1,288 +1,117 @@
-import { DifferentialFinding } from '../differentials/differential-finding';
 import { CanonicalHttpExchange } from '../../runtime/evidence/canonical-http-evidence';
 import { LineageExtractionResult } from '../../runtime/instrumentation/entity-lineage-extractor';
-import { BountyRoiScorer } from '../../runtime/differential/bounty-roi-score';
-import { FindingPriorityRanker, FindingPriorityLevel } from '../../runtime/differential/finding-priority';
 import { ExportProfileManager, ExportProfileMode } from '../../runtime/artifacts/export-profile';
 import { BundleRedactor } from '../../runtime/artifacts/bundle-redaction';
-import { ExploitProof } from '../../runtime/evidence/exploit-proof-capture';
 import { OwnershipLink } from '../ontology/entity-lineage';
 import { OwnershipInventory } from '../resource-analysis/ownership-intelligence';
 
-export interface ContradictionEvidenceMapping {
-  findingType: string;
-  endpoint: string;
-  method: string;
-  url: string;
-  severity: 'HIGH' | 'MEDIUM' | 'LOW';
-  description: string;
-  evidenceExchangeIds: string[];
-  lineageRefs: string[];
-}
+import { DefaultInvestigationContext } from '../orchestration/investigation-context';
+import { PrioritizedCandidate } from '../scoring/candidate-scoring-contracts';
+import { InvestigationAttackGraph } from '../graphs/attack-graph-contracts';
+import { ConsistencyReport } from '../consistency/consistency-contracts';
+import { StructuralNoveltyReport } from '../novelty/novelty-contracts';
+import { EvidenceSufficiencyReport } from '../sufficiency/sufficiency-contracts';
+import { ExplanationPlan } from '../explanation/explanation-contracts';
 
-export interface SharedEvidenceSegment {
-  segmentId: string;
-  evidenceExchangeIds: string[];
-  lineageRefs: string[];
-}
-
-export interface CompressedContradictionSummary {
-  sharedEvidencePool: SharedEvidenceSegment[];
-  normalizedContradictions: {
-    findingType: string;
-    endpoint: string;
-    method: string;
-    url: string;
-    severity: 'HIGH' | 'MEDIUM' | 'LOW';
-    description: string;
-    sharedEvidenceRefId: string;
-  }[];
-}
-
-export interface GroupedContradictionSummary {
-  totalContradictions: number;
-  byType: Record<string, string[]>;
-  contradictions: ContradictionEvidenceMapping[];
-  compressedSummary?: CompressedContradictionSummary;
-}
-
+/**
+ * @architecture_authority Bundle Representation & Projection
+ * @invariants
+ * - The Bundle owns representational format and projection mapping only.
+ * - Every exported evidence item MUST maintain a traceable RuntimeExchangeId pointing to its Playwright origin.
+ * - External systems MUST NOT mutate the bundle payload in memory.
+ * - Projection NEVER generates intelligence, scoring, or conclusions.
+ */
 export interface InvestigationBundle {
-  targetDomain: string;
-  generatedAt: string;
-  exportMode: string;
-  differentialAnalysis: {
-    baseRole: string;
-    baseRoleSessionId?: string;
-    comparisonRole: string;
-    comparisonRoleSessionId?: string;
-    findings: {
-      type: 'IDOR_CANDIDATE' | 'PRIVILEGE_ESCALATION_CANDIDATE' | 'TENANT_ESCAPE_CANDIDATE' | 'STATUS_CONTRADICTION';
-      targetEndpoint: string;
-      severity: 'HIGH' | 'MEDIUM' | 'LOW';
-      priority: FindingPriorityLevel;
-      roiScore: number;
-      description: string;
-      
-      // Exploit Validation Properties
-      isValidated?: boolean;
-      validationConfidence?: string;
+  readonly targetDomain: string;
+  readonly generatedAt: string;
+  readonly exportMode: string;
+  readonly investigationId: string;
+  
+  // Projected Phase 12 Intelligence
+  readonly prioritizedCandidates: readonly PrioritizedCandidate[];
+  readonly attackGraphs: readonly InvestigationAttackGraph[];
+  readonly consistencyReports: readonly ConsistencyReport[];
+  readonly noveltyReports: readonly StructuralNoveltyReport[];
+  readonly sufficiencyReports: readonly EvidenceSufficiencyReport[];
+  readonly explanationPlans: readonly ExplanationPlan[];
 
-      proofs?: ExploitProof[];
-      proofNarrative?: string;
-    }[];
-  };
-  evidenceExchanges: any[];
-  lineage: LineageExtractionResult[];
-  groupedContradictionSummary?: GroupedContradictionSummary;
-  ownershipLinks?: OwnershipLink[];
-  ownershipInventory?: OwnershipInventory;
+  // Base Topologies & Raw Evidence
+  readonly evidenceExchanges: readonly any[];
+  readonly lineage: readonly LineageExtractionResult[];
+  readonly ownershipLinks?: readonly OwnershipLink[];
+  readonly ownershipInventory?: OwnershipInventory;
 }
 
+/**
+ * @architecture_authority Export & Bundle Serialization
+ * @responsibility Maps and projects the canonical InvestigationContext into a deterministic artifact without performing analytical generation.
+ * @allowed_dependencies Graph (DTOs), Evidence (DTOs), Redaction Utilities, Context (Readonly)
+ * @forbidden_dependencies Playwright, Execution Pipeline, Live Intelligence Analysis
+ * @determinism Strict (Array identity and sorting enforces byte-identical bundles)
+ */
 export class AiBundleCompressor {
-  /**
-   * Compresses the raw evidence, differential results, and lineage into a minimal,
-   * high-signal JSON structure designed specifically to fit into LLM context windows.
-   */
-   public compress(
+  
+  public compress(
     domain: string,
-    diffResult: { baseRole: string, baseRoleSessionId?: string, comparisonRole: string, comparisonRoleSessionId?: string, findings: DifferentialFinding[] }, 
-    exchanges: CanonicalHttpExchange[], 
+    context: DefaultInvestigationContext,
+    exchanges: CanonicalHttpExchange[],
     lineageData: LineageExtractionResult[],
     exportMode: ExportProfileMode = ExportProfileMode.CONCISE_AI,
     ownershipLinks: OwnershipLink[] = [],
     ownershipInventory?: OwnershipInventory
   ): InvestigationBundle {
     
-    const roiScorer = new BountyRoiScorer();
-    const priorityRanker = new FindingPriorityRanker();
-
-    // 1. Summarize Findings
-    const findings: InvestigationBundle['differentialAnalysis']['findings'] = [];
-    
-    for (const finding of diffResult.findings) {
-      const parts = (finding.targetEntityId || '').split(':');
-      const method = parts.length > 1 ? parts[1] : 'GET';
-      const url = parts.length > 2 ? parts.slice(2).join(':') : (finding.targetEntityId || '');
-      
-      const isSensitive = roiScorer.isSensitive(url);
-      const isPrivEsc = finding.type === 'PRIVILEGE_ESCALATION_CANDIDATE';
-      const roi = roiScorer.calculateRoiScore(method, url, isPrivEsc, method === 'DELETE', isSensitive);
-      const priority = priorityRanker.rankFinding(roi, 0.8, 1.0); // Assume high reproducibility for E2E dummy
-      
-      findings.push({
-        type: finding.type as any,
-        targetEndpoint: finding.targetEntityId || 'unknown',
-        severity: 'HIGH',
-        priority,
-        roiScore: roi,
-        description: finding.description,
-        isValidated: (finding as any).isValidated,
-        validationConfidence: (finding as any).validationConfidence,
-        proofs: (finding as any).proofs,
-        proofNarrative: (finding as any).isValidated ? `Successfully validated ${finding.type} via deterministic replay mutation.` : undefined
-      });
-    }
-
-    // 3. Build Grouped Contradiction Summary deterministically
-    const contradictionList: ContradictionEvidenceMapping[] = [];
-    const byType: Record<string, string[]> = {};
-    const requiredExchangeIds = new Set<string>();
-
-    for (const finding of findings) {
-      const parts = finding.targetEndpoint.split(':');
-      const method = parts.length > 1 ? parts[1] : 'GET';
-      const url = parts.length > 2 ? parts.slice(2).join(':') : finding.targetEndpoint;
-
-      const getPathOnly = (u: string): string => {
-        const match = u.match(/https?:\/\/[^\/]+(\/.*)/);
-        if (match && match[1]) {
-          return match[1].split('?')[0];
-        }
-        const idx = u.indexOf('/');
-        if (idx !== -1 && !u.startsWith('http')) {
-          return u.substring(idx).split('?')[0];
-        }
-        return u.split('?')[0];
-      };
-
-      const maskIds = (u: string): string => {
-        const idMaskRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\b[0-9a-f]{24}\b|\b[a-zA-Z]+_[a-zA-Z0-9]+\b|\b\d+\b/gi;
-        return u.replace(idMaskRegex, '{ID}');
-      };
-
-      const findingPath = getPathOnly(url);
-
-      const matchingExchanges = exchanges.filter(ex => {
-        if (ex.request.method.toUpperCase() !== method.toUpperCase()) return false;
-        const rawExPath = getPathOnly(ex.request.url);
-        const exPath = maskIds(rawExPath);
-        return exPath === findingPath || exPath.includes(findingPath) || findingPath.includes(exPath);
-      });
-
-      const evidenceExchangeIds = matchingExchanges.map(ex => ex.exchangeId.id).sort();
-      for (const id of evidenceExchangeIds) {
-        requiredExchangeIds.add(id);
-      }
-
-      const lineageRefs: string[] = [];
-      for (const ex of matchingExchanges) {
-        const matchingLineage = lineageData.find(l => l.exchangeId === ex.exchangeId.id);
-        if (matchingLineage) {
-          for (const ent of matchingLineage.entities) {
-            const refStr = `${ent.entityType}:${ent.value}`;
-            if (!lineageRefs.includes(refStr)) {
-              lineageRefs.push(refStr);
-            }
-          }
-        }
-      }
-      lineageRefs.sort();
-
-      const contradiction: ContradictionEvidenceMapping = {
-        findingType: finding.type,
-        endpoint: finding.targetEndpoint,
-        method,
-        url,
-        severity: finding.severity,
-        description: finding.description,
-        evidenceExchangeIds,
-        lineageRefs
-      };
-
-      contradictionList.push(contradiction);
-
-      if (!byType[finding.type]) {
-        byType[finding.type] = [];
-      }
-      if (!byType[finding.type].includes(finding.targetEndpoint)) {
-        byType[finding.type].push(finding.targetEndpoint);
-      }
-    }
-
-    for (const key of Object.keys(byType)) {
-      byType[key].sort();
-    }
-
-    // 2. Compress Exchanges Using Export Profiles
+    // === Bundle Lifecycle Stage 1: Evidence Redaction & Formatting ===
+    // This is pure Representation processing. We are redacting PII, not calculating intelligence.
     const profileManager = new ExportProfileManager();
     const config = profileManager.getConfig(exportMode);
     const redactor = new BundleRedactor();
 
-    const compressedExchanges = exchanges
-      .filter(ex => requiredExchangeIds.has(ex.exchangeId.id))
-      .map(ex => redactor.redactExchange(ex, config));
-
-    // Deterministically compress structurally repeated E2E lineage/evidence
-    const uniqueEvidenceMapStrings: string[] = [];
-    for (const contra of contradictionList) {
-      const keyStr = `ex:${[...contra.evidenceExchangeIds].sort().join(',')}|lin:${[...contra.lineageRefs].sort().join(',')}`;
-      if (!uniqueEvidenceMapStrings.includes(keyStr)) {
-        uniqueEvidenceMapStrings.push(keyStr);
+    // Only export exchanges that are explicitly referenced by the intelligence Context
+    const requiredExchangeIds = new Set<string>();
+    
+    // Aggregate IDs referenced by candidates
+    for (const cand of context.prioritizedCandidates) {
+      for (const id of cand.evidenceExchangeIds) {
+        requiredExchangeIds.add(id);
       }
     }
+    
+    // Always include any explicitly attached generic evidence from early lifecycle
+    for (const id of context.evidenceExchangeIds) {
+      requiredExchangeIds.add(id);
+    }
 
-    uniqueEvidenceMapStrings.sort();
+    // Format and redact the raw evidence DTOs deterministically
+    const compressedExchanges = exchanges
+      .filter(ex => requiredExchangeIds.has(ex.exchangeId.id))
+      .map(ex => redactor.redactExchange(ex, config))
+      .sort((a, b) => a.exchangeId.id.localeCompare(b.exchangeId.id));
 
-    const sharedEvidencePool: SharedEvidenceSegment[] = uniqueEvidenceMapStrings.map((keyStr, index) => {
-      const parts = keyStr.split('|');
-      const exPart = parts[0].substring(3);
-      const linPart = parts[1].substring(4);
-      return {
-        segmentId: `evseg_${index}`,
-        evidenceExchangeIds: exPart ? exPart.split(',') : [],
-        lineageRefs: linPart ? linPart.split(',') : []
-      };
-    });
 
-    const normalizedContradictions = contradictionList.map(contra => {
-      const keyStr = `ex:${[...contra.evidenceExchangeIds].sort().join(',')}|lin:${[...contra.lineageRefs].sort().join(',')}`;
-      const poolIndex = uniqueEvidenceMapStrings.indexOf(keyStr);
-      return {
-        findingType: contra.findingType,
-        endpoint: contra.endpoint,
-        method: contra.method,
-        url: contra.url,
-        severity: contra.severity,
-        description: contra.description,
-        sharedEvidenceRefId: `evseg_${poolIndex}`
-      };
-    });
-
-    normalizedContradictions.sort((a, b) => {
-      const entComp = a.endpoint.localeCompare(b.endpoint);
-      if (entComp !== 0) return entComp;
-      return a.findingType.localeCompare(b.findingType);
-    });
-
-    const compressedSummary: CompressedContradictionSummary = {
-      sharedEvidencePool,
-      normalizedContradictions
-    };
-
-    const groupedContradictionSummary: GroupedContradictionSummary = {
-      totalContradictions: contradictionList.length,
-      byType,
-      contradictions: contradictionList,
-      compressedSummary
-    };
-
+    // === Bundle Lifecycle Stage 2: Canonical Intelligence Projection ===
+    // We deterministically project the immutable InvestigationContext arrays directly into the Bundle DTO.
+    // We strictly map arrays by value copy.
+    // We intentionally omit execution metadata (status, transitions) to prevent orchestration leakage.
     return {
       targetDomain: domain,
       generatedAt: new Date().toISOString(),
       exportMode,
-      differentialAnalysis: {
-        baseRole: diffResult.baseRole,
-        baseRoleSessionId: diffResult.baseRoleSessionId,
-        comparisonRole: diffResult.comparisonRole,
-        comparisonRoleSessionId: diffResult.comparisonRoleSessionId,
-        findings
-      },
+      investigationId: context.investigationId,
+      
+      // Intelligence Projection (Pure DTO mapping)
+      prioritizedCandidates: [...context.prioritizedCandidates],
+      attackGraphs: [...context.attackGraphs],
+      consistencyReports: [...context.consistencyReports],
+      noveltyReports: [...context.noveltyReports],
+      sufficiencyReports: [...context.sufficiencyReports],
+      explanationPlans: [...context.explanationPlans],
+
+      // Base Topology & Raw Evidence
       evidenceExchanges: compressedExchanges,
       lineage: lineageData,
-      groupedContradictionSummary,
       ownershipLinks,
       ownershipInventory
     };
   }
-
 }

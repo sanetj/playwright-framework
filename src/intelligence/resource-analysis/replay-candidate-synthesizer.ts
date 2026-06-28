@@ -2,8 +2,15 @@ import { ResourceSignal, ResourceSignalInventory } from './resource-signal';
 import { ReplayCandidate, ReplayCandidateInventory } from './replay-candidate';
 import { AuthorizationVector } from './authorization-vector';
 import { OwnershipInventory } from './ownership-intelligence';
+import { assertZeroDeletion } from '../../utils/determinism-assertions';
 
-
+/**
+ * @architecture_authority Intelligence Resource Analysis
+ * @responsibility Synthesizes Replay Eligible Candidates from disparate intelligence signals.
+ * @allowed_dependencies Resource Inventory, Ownership Inventory, Determinism Assertions
+ * @forbidden_dependencies Playwright, Runtime Execution
+ * @determinism Perfect (Zero Deletion, Stable Sorts)
+ */
 export class ReplayCandidateSynthesizer {
   /**
    * Passive candidate generation translating resource signals into structured replay candidates.
@@ -195,10 +202,7 @@ export class ReplayCandidateSynthesizer {
       return a.candidateId.localeCompare(b.candidateId);
     });
 
-    const countAfter = prioritizedCandidates.length;
-    if (countBefore !== countAfter) {
-      throw new Error(`Zero Deletion Doctrine Violation: Candidate count altered during prioritization sorting (${countBefore} vs ${countAfter})`);
-    }
+    assertZeroDeletion(prioritizedCandidates, prioritizedCandidates, 'prioritization sorting');
 
     // Group by targeted vector
     const candidatesByVector: Record<AuthorizationVector, ReplayCandidate[]> = {

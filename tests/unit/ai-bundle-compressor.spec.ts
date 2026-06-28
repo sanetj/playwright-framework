@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { AiBundleCompressor } from '../../src/intelligence/artifacts/ai-bundle-compressor';
-import { DifferentialFinding } from '../../src/intelligence/differentials/differential-finding';
+import { DefaultInvestigationContext } from '../../src/intelligence/orchestration/investigation-context';
 import { CanonicalHttpExchange } from '../../src/runtime/evidence/canonical-http-evidence';
 import { ExportProfileMode } from '../../src/runtime/artifacts/export-profile';
 
@@ -21,116 +21,42 @@ function createMockExchange(index: number, method: string, url: string): Canonic
   };
 }
 
-test.describe('AiBundleCompressor', () => {
-  test('should retain evidence for canonicalized numeric routes', () => {
+test.describe('AiBundleCompressor - Canonical Projection', () => {
+  test('should accurately project frozen context into bundle without mutating arrays', () => {
     const compressor = new AiBundleCompressor();
-    const exchanges: CanonicalHttpExchange[] = [
+    const exchanges = [
       createMockExchange(1, 'GET', 'http://test.com/users/123')
     ];
-    const diffResult = {
-      baseRole: 'user',
-      comparisonRole: 'admin',
-      findings: [{
-        type: 'PRIVILEGE_ESCALATION_CANDIDATE',
-        targetEntityId: 'api:GET:http://test.com/users/{ID}',
-        targetRole: 'admin',
-        description: 'Mock finding',
-        isValidated: true,
-        validationConfidence: 'HIGH',
-        proofs: [{ lineageId: 'mock' } as any]
-      } as any]
-    };
-    const bundle = compressor.compress('test.com', diffResult, exchanges, [], ExportProfileMode.CONCISE_AI);
-    expect(bundle.evidenceExchanges.length).toBe(1);
-    const hasEx = JSON.stringify(bundle.evidenceExchanges).includes('ex_1');
-    expect(hasEx).toBe(true);
-  });
-
-  test('should retain evidence for canonicalized prefix routes', () => {
-    const compressor = new AiBundleCompressor();
-    const exchanges: CanonicalHttpExchange[] = [
-      createMockExchange(1, 'GET', 'http://test.com/orders/req_abc123')
-    ];
-    const diffResult = {
-      baseRole: 'user',
-      comparisonRole: 'admin',
-      findings: [{
-        type: 'PRIVILEGE_ESCALATION_CANDIDATE',
-        targetEntityId: 'api:GET:http://test.com/orders/{ID}',
-        targetRole: 'admin',
-        description: 'Mock finding'
-      } as any]
-    };
-    const bundle = compressor.compress('test.com', diffResult, exchanges, [], ExportProfileMode.CONCISE_AI);
-    expect(bundle.evidenceExchanges.length).toBe(1);
-    const hasEx = JSON.stringify(bundle.evidenceExchanges).includes('ex_1');
-    expect(hasEx).toBe(true);
-  });
-
-  test('should retain evidence for canonicalized mongo routes', () => {
-    const compressor = new AiBundleCompressor();
-    const exchanges: CanonicalHttpExchange[] = [
-      createMockExchange(1, 'GET', 'http://test.com/files/507f1f77bcf86cd799439011')
-    ];
-    const diffResult = {
-      baseRole: 'user',
-      comparisonRole: 'admin',
-      findings: [{
-        type: 'PRIVILEGE_ESCALATION_CANDIDATE',
-        targetEntityId: 'api:GET:http://test.com/files/{ID}',
-        targetRole: 'admin',
-        description: 'Mock finding'
-      } as any]
-    };
-    const bundle = compressor.compress('test.com', diffResult, exchanges, [], ExportProfileMode.CONCISE_AI);
-    expect(bundle.evidenceExchanges.length).toBe(1);
-    const hasEx = JSON.stringify(bundle.evidenceExchanges).includes('ex_1');
-    expect(hasEx).toBe(true);
-  });
-
-  test('should retain evidence for static routes', () => {
-    const compressor = new AiBundleCompressor();
-    const exchanges: CanonicalHttpExchange[] = [
-      createMockExchange(1, 'GET', 'http://test.com/api/admin/settings')
-    ];
-    const diffResult = {
-      baseRole: 'user',
-      comparisonRole: 'admin',
-      findings: [{
-        type: 'PRIVILEGE_ESCALATION_CANDIDATE',
-        targetEntityId: 'api:GET:http://test.com/api/admin/settings',
-        targetRole: 'admin',
-        description: 'Mock finding'
-      } as any]
-    };
-    const bundle = compressor.compress('test.com', diffResult, exchanges, [], ExportProfileMode.CONCISE_AI);
-    expect(bundle.evidenceExchanges.length).toBe(1);
-    const hasEx = JSON.stringify(bundle.evidenceExchanges).includes('ex_1');
-    expect(hasEx).toBe(true);
-  });
-
-  test('should preserve bundle schema', () => {
-    const compressor = new AiBundleCompressor();
-    const diffResult = {
-      baseRole: 'user',
-      comparisonRole: 'admin',
-      findings: [] as DifferentialFinding[]
-    };
-
-    const bundle = compressor.compress('test.com', diffResult, [], [], ExportProfileMode.CONCISE_AI, [
-      { entityId: 'foo', sessionId: 'sess1', linkType: 'OWNER', establishedAtTs: 123, evidenceEventId: 'ev1' }
-    ]);
     
-    expect(bundle).toHaveProperty('targetDomain');
-    expect(bundle).toHaveProperty('generatedAt');
-    expect(bundle).toHaveProperty('exportMode');
-    expect(bundle).toHaveProperty('differentialAnalysis');
-    expect(bundle).toHaveProperty('evidenceExchanges');
-    expect(bundle).toHaveProperty('lineage');
-    expect(Array.isArray(bundle.evidenceExchanges)).toBe(true);
-    expect(bundle).toHaveProperty('ownershipLinks');
-    expect(bundle.ownershipLinks?.length).toBe(1);
-    expect(bundle.ownershipLinks?.[0].entityId).toBe('foo');
-    expect(bundle.evidenceExchanges.length).toBe(0);
+    const context = new DefaultInvestigationContext('inv_123', 'http://test.com');
+    context.attachEvidence('ex_1');
+    context.attachPrioritizedCandidates([
+      {
+        candidateIdentity: 'cand_1',
+        candidateType: 'IDOR',
+        targetEntityId: 'api:GET:/user',
+        priorityRank: 1,
+        score: { totalScore: 0.9, components: [] },
+        lifecycle: 'READY_FOR_SCORING',
+        validatedFindingIds: [],
+        evidenceExchangeIds: ['ex_1'],
+        baseRoleContext: 'user',
+        comparisonRoleContext: 'admin',
+        ownershipReferences: [],
+        supportingSignals: []
+      }
+    ]);
+    context.transitionTo('COMPLETED');
+
+    const bundle = compressor.compress('test.com', context, exchanges, [], ExportProfileMode.CONCISE_AI);
+    
+    expect(bundle.investigationId).toBe('inv_123');
+    expect(bundle.prioritizedCandidates.length).toBe(1);
+    expect(bundle.prioritizedCandidates[0].candidateIdentity).toBe('cand_1');
+    expect(bundle.evidenceExchanges.length).toBe(1);
+    
+    // Ensure array references are isolated (immutable copy)
+    expect(bundle.prioritizedCandidates).not.toBe(context.prioritizedCandidates);
   });
+
 });

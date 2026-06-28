@@ -7,6 +7,13 @@ export interface SemanticValidationResult {
   semanticEvidence: string[];
 }
 
+/**
+ * @architecture_authority Semantic Evidence Assessment
+ * @responsibility Evaluates response payloads for deterministic proofs of data leakage.
+ * @allowed_dependencies Base Types, DTOs
+ * @forbidden_dependencies Live Execution, Replay Orchestration
+ * @determinism Pure function. Identical original + mutated responses MUST yield identical validation results.
+ */
 export class ProofSemanticValidator {
   public validate(
     originalResponse: CanonicalHttpResponse | undefined,

@@ -56,7 +56,6 @@ export interface DifferentialRoleEvidence {
 import { ExploitValidation } from '../investigation/exploit-validation';
 import { AuthorizationContradiction } from '../investigation/auth-contradictions';
 import { ReportNarrative } from './report-mapping';
-import { GroupedContradictionSummary } from './ai-bundle-compressor';
 
 export interface InvestigationBundle {
   bundleId: string;
@@ -75,5 +74,4 @@ export interface InvestigationBundle {
   exploitValidation?: ExploitValidation;
   authorizationContradictions?: AuthorizationContradiction[];
   aiReadyReportNarrative?: ReportNarrative;
-  groupedContradictionSummary?: GroupedContradictionSummary;
 }

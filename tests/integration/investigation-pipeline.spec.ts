@@ -105,12 +105,11 @@ test.describe('InvestigationPipeline E2E', () => {
 
     expect(bundle).toBeDefined();
     expect(bundle.targetDomain).toBe(serverUrl);
-    expect(bundle.differentialAnalysis.baseRole).toBe('user_1');
-    expect(bundle.differentialAnalysis.comparisonRole).toBe('admin_1');
+    expect(bundle.investigationId).toBeDefined();
     
-    // We expect the differential engine to have caught the 403 vs 200 contradiction 
-    // on the admin endpoint
-    expect(bundle.differentialAnalysis.findings.length).toBeGreaterThanOrEqual(1);
+    // We expect the pipeline to have synthesized and prioritized at least 1 candidate
+    expect(bundle.prioritizedCandidates).toBeDefined();
+    expect(bundle.prioritizedCandidates.length).toBeGreaterThanOrEqual(1);
     
     const serializer = new BountyReportSerializer();
     serializer.serializeToMarkdown(bundle, 'artifacts/test-results/investigation_bundle.md');

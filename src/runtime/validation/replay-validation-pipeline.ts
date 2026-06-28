@@ -8,12 +8,18 @@ import { MutationRiskClassifier, MutationRiskLevel } from '../governance/mutatio
 import { ProofSemanticValidator } from '../../runtime/validation/proof-semantic-validator';
 import { ExploitProof, ProofClassification } from '../evidence/exploit-proof-capture';
 import { ExploitValidationEngine, ValidatedFinding } from '../../runtime/validation/exploit-validation-engine';
-import { PlaywrightMultiSessionRuntime } from '../execution/playwright-multi-session';
+import { IExecutionGateway } from '../../intelligence/runtime/execution-gateway';
 import { CanonicalHttpExchange } from '../evidence/canonical-http-evidence';
 import { ReplayPerturbationEnvelope } from '../../intelligence/perturbation/governed-perturbation';
 import { RuntimeSession } from '../../intelligence/runtime/multi-session-runtime';
 import { ReplayEligibleCandidate } from './replay-eligible-candidate';
 
+/**
+ * @architecture_authority Validation Orchestration
+ * @responsibility Generates mutation plans and commands the replay execution engine to validate findings.
+ * @allowed_dependencies Execution Engine (via IExecutionGateway), Intelligence (Types only), Evidence
+ * @invariants Replay must remain the sole arbiter of truth.
+ */
 export class ReplayValidationPipeline {
   private planGen = new MutationPlanGenerator();
   private coordinator = new ReplayCoordinator();
@@ -25,10 +31,10 @@ export class ReplayValidationPipeline {
 
   public async validateFinding(
     candidate: ReplayEligibleCandidate,
-    runtime: PlaywrightMultiSessionRuntime
+    runtime: IExecutionGateway
   ): Promise<ValidatedFinding | null> {
     
-    // 1. Generate Mutation Plans
+    // === Lifecycle Stage 1: Validation Planning ===
     const plans = this.planGen.generatePlans(candidate.baselineExchange.request);
     if (plans.length === 0) return null;
     
@@ -72,7 +78,7 @@ export class ReplayValidationPipeline {
 
       if (!replayPlanReq) return null;
 
-      // 5. Execute Replay
+      // === Lifecycle Stage 2 & 3: Validation Execution & Evidence Collection ===
       const mutatedResponse = await this.coordinator.executeReplay(
         replayPlanReq,
         interceptor,
@@ -80,7 +86,7 @@ export class ReplayValidationPipeline {
         ReplayExecutionMode.HTTP_ONLY // Can use BROWSER_CONTEXT as needed
       );
 
-      // 6. Capture Proof and Semantically Validate
+      // === Lifecycle Stage 4: Evidence Assessment ===
       const semanticResult = this.semanticValidator.validate(candidate.baselineExchange.response, mutatedResponse, targetIdorValue);
 
       const proof: ExploitProof = {
@@ -102,7 +108,7 @@ export class ReplayValidationPipeline {
         intelligenceTelemetry: candidate.intelligenceTelemetry
       };
 
-      // 7. Validate Finding against engine
+      // === Lifecycle Stage 5: Validation Result Generation ===
       return this.validationEngine.validate(candidate.finding, proof);
       
     } finally {

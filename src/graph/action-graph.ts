@@ -7,6 +7,12 @@ export interface GraphEdge { from: string; to: string; kind: string; weight: num
  * @canonical
  * The definitive Semantic Graph authority for the Browser Runtime Intelligence Platform.
  */
+/**
+ * @architecture_authority Global State Topology
+ * @responsibility Provides an immutable, deterministic mapping of state transitions and workflows.
+ * @allowed_dependencies Base Types Only
+ * @forbidden_dependencies All other subsystems
+ */
 export class ActionGraph {
   private nodes = new Map<string, GraphNode>();
   private adjacency = new Map<string, GraphEdge[]>();
