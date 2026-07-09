@@ -6,3 +6,4 @@ test-results/
 **/*-snapshots/
 artifacts/
 reports/
+.DS_Store
